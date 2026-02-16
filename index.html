@@ -8,6 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <!-- Firebase SDKs (Critical for Permanent Storage) -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
@@ -206,12 +212,15 @@
     </footer>
 
     <script>
+        // =========================================================
+        // ⚙️ SYSTEM CONFIGURATION
+        // =========================================================
         const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
         let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
         let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
         let botState = {}; 
 
-        // Default Data Structure
+        // SAFE DEFAULT TIMINGS (Prevent crashes)
         let activeTimings = {
             Jumma: "02:00 PM",
             Sehri: "--:--", Iftar: "--:--",
@@ -222,20 +231,45 @@
             Isha: { azan: "--:--", jamaat: "--:--" }
         };
 
-        window.onload = function() {
-            // LOAD SAVED DATA (With repair mechanism)
+        // --- FIREBASE CLOUD STORAGE INIT ---
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
+        const auth = firebase.auth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default';
+
+        window.onload = async function() {
+            // 1. Authenticate (Required for Database)
+            try { await auth.signInAnonymously(); } catch(e) { console.error("Auth Fail", e); }
+
+            // 2. Load Local Data First (Instant Display)
             try {
-                const saved = localStorage.getItem('timings_v3'); // Changed key to v3 to force clean start
+                const saved = localStorage.getItem('timings_v4');
                 if(saved) {
                     const parsed = JSON.parse(saved);
-                    // Merge saved data with defaults to prevent crashes if keys are missing
+                    // Safe Merge to prevent missing keys
                     activeTimings = { ...activeTimings, ...parsed };
-                    // Ensure nested objects exist
+                    // Verify nested keys exist
                     ['Fajr','Zohar','Asr','Maghrib','Isha'].forEach(p => {
                         if(!activeTimings[p]) activeTimings[p] = { azan: "--:--", jamaat: "--:--" };
                     });
                 }
-            } catch(e) { console.log("Resetting corrupted data"); }
+            } catch(e) { }
+
+            // 3. LISTEN TO CLOUD (Source of Truth)
+            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
+            
+            docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    // Overwrite local with cloud data (Always fresher or same)
+                    activeTimings = { ...activeTimings, ...doc.data() };
+                    saveLocally(); // Sync back to local
+                    refreshData();
+                } else {
+                    // First run ever? Create cloud doc
+                    docRef.set(activeTimings);
+                }
+            });
 
             refreshData();
             loadFestivals();
@@ -243,18 +277,24 @@
             if(!ADMIN_CHAT_ID) findAdminChatId();
             else trackAction("Website Opened");
 
-            // Start Polling (with fail-safe)
+            // Start Bot Engine (Runs in background)
             setInterval(() => {
-                try { checkBotCommands(); } catch(e) { console.error("Poll Error", e); }
+                try { checkBotCommands(); } catch(e) {}
             }, 3000);
         };
 
-        // --- PERSISTENT SAVE FUNCTION ---
-        function saveTimings() {
-            localStorage.setItem('timings_v3', JSON.stringify(activeTimings));
+        // --- PERSISTENCE HELPERS ---
+        function saveLocally() {
+            localStorage.setItem('timings_v4', JSON.stringify(activeTimings));
         }
 
-        // --- BOT ENGINE ---
+        function saveToCloud() {
+            if(!auth.currentUser) return;
+            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
+            docRef.set(activeTimings, { merge: true });
+        }
+
+        // --- BOT ENGINE (THE BRAIN) ---
         async function checkBotCommands() {
             const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
             const res = await fetch(url);
@@ -271,6 +311,7 @@
                     const text = update.message.text.trim();
                     const chatId = update.message.chat.id;
                     
+                    // Capture Admin ID
                     if(!ADMIN_CHAT_ID && chatId) {
                         ADMIN_CHAT_ID = chatId;
                         localStorage.setItem('chat_id', chatId);
@@ -279,9 +320,10 @@
                     await processUserMessage(chatId, text);
                     updated = true;
                 }
-                // Save immediately if any message processed
+                // If bot updated timings, save to cloud so EVERYONE sees it
                 if(updated) {
-                    saveTimings();
+                    saveLocally();
+                    saveToCloud(); 
                     refreshData();
                 }
             }
@@ -309,7 +351,7 @@
             
             if (lower === '/start' || lower === '/help') {
                 botState[chatId] = { step: 'IDLE' }; 
-                const msg = `🕌 *Admin Bot Connected*\n\nYour data is now syncing.\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma, /sehri, /iftar`;
+                const msg = `🕌 *Connected to Cloud*\n\nUpdates sync to ALL users instantly.\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma`;
                 await sendReply(chatId, msg);
                 return;
             }
@@ -348,7 +390,6 @@
                 return;
             }
 
-            // CLEAN TIME & SAVE IMMEDIATELY
             const cleanTime = (t, p) => {
                 let upper = t.toUpperCase().replace('.', ':');
                 if(!upper.includes('M')) {
@@ -364,21 +405,19 @@
             const p = state.prayer;
             const t = cleanTime(text, p);
 
+            // SAVE ACTIONS - Trigger Cloud Save after update
             if (state.step === 'WAITING_TIME_SINGLE') {
                 activeTimings[p] = t;
-                saveTimings(); // SAVE
                 await sendReply(chatId, `✅ Updated ${p}`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_AZAN') {
                 activeTimings[p].azan = t;
-                saveTimings(); // SAVE
                 await sendReply(chatId, `✅ Updated ${p} Azan`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_JAMAAT') {
                 activeTimings[p].jamaat = t;
-                saveTimings(); // SAVE
                 await sendReply(chatId, `✅ Updated ${p} Jamaat`);
                 botState[chatId] = { step: 'IDLE' };
             }
@@ -390,7 +429,6 @@
             else if (state.step === 'WAITING_TIME_JAMAAT_BOTH') {
                 activeTimings[p].azan = botState[chatId].tempAzan;
                 activeTimings[p].jamaat = t;
-                saveTimings(); // SAVE
                 await sendReply(chatId, `✅ Updated ${p} (Both)`);
                 botState[chatId] = { step: 'IDLE' };
             }
