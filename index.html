@@ -97,6 +97,11 @@
                         <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-mosque text-green-700"></i> Prayer Times</h2>
                         <p class="text-xs text-slate-400 mt-1 pl-7">Bangalore • Hanafi</p>
                     </div>
+                    <!-- Sync Status Indicator -->
+                    <div class="text-[10px] text-gray-400 flex items-center gap-1">
+                        <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                        <span id="cloudStatusText">Connecting...</span>
+                    </div>
                 </div>
 
                 <!-- Grid -->
@@ -135,6 +140,7 @@
             </h3>
             
             <div id="featuredFestival" class="bg-gradient-to-br from-[#064e3b] to-[#047857] rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6">
+                <!-- Injected via JS -->
                 <div class="shimmer w-full h-40 rounded-xl opacity-20"></div>
             </div>
 
@@ -210,83 +216,120 @@
     </footer>
 
     <script>
+        // =========================================================
+        // ⚙️ UNIVERSAL CONFIGURATION
+        // =========================================================
         const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
-        let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
-        let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
+        let LAST_UPDATE_ID = 0;
+        try { LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0; } catch(e){}
+        let ADMIN_CHAT_ID = null;
+        try { ADMIN_CHAT_ID = localStorage.getItem('chat_id'); } catch(e){}
+        
         let botState = {}; 
 
-        // Default Data
+        // Data Structure (Shorthand keys for storage efficiency)
         let activeTimings = {
-            Jumma: "02:00 PM",
-            Sehri: "--:--", Iftar: "--:--",
-            Fajr: { azan: "--:--", jamaat: "--:--" },
-            Zohar: { azan: "--:--", jamaat: "--:--" },
-            Asr: { azan: "--:--", jamaat: "--:--" },
-            Maghrib: { azan: "--:--", jamaat: "--:--" },
-            Isha: { azan: "--:--", jamaat: "--:--" }
+            J: "02:00 PM", S: "--:--", K: "--:--",
+            F: { a: "--:--", j: "--:--" },
+            Z: { a: "--:--", j: "--:--" },
+            A: { a: "--:--", j: "--:--" },
+            M: { a: "--:--", j: "--:--" },
+            I: { a: "--:--", j: "--:--" }
         };
 
-        window.onload = function() {
-            // Load from Local Storage (No crash if missing)
-            try {
-                const saved = localStorage.getItem('timings_v5');
-                if(saved) {
-                    const parsed = JSON.parse(saved);
-                    activeTimings = { ...activeTimings, ...parsed };
-                    // Safe merge nested objects
-                    ['Fajr','Zohar','Asr','Maghrib','Isha'].forEach(p => {
-                        if(!activeTimings[p]) activeTimings[p] = { azan: "--:--", jamaat: "--:--" };
-                    });
-                }
-            } catch(e) {}
-
-            // LOAD DATA IMMEDIATELY
+        // =========================================================
+        // 🚀 INIT
+        // =========================================================
+        (function init() {
+            // 1. Render immediately with defaults (Prevents blank screen)
             refreshData();
-            loadFestivals();
+            setTimeout(loadFestivals, 100);
+
+            // 2. Fetch Universal Data from Cloud (Bot Description)
+            fetchCloudData();
+
+            // 3. Start Background Listeners
+            setInterval(fetchCloudData, 10000); // Sync from Cloud every 10s
+            setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000); // Check Commands every 3s
             
-            // Background Bot Tasks
             if(!ADMIN_CHAT_ID) findAdminChatId();
-            else trackAction("Website Opened");
+        })();
 
-            setInterval(checkBotCommands, 3000);
-        };
-
-        function saveLocally() {
-            localStorage.setItem('timings_v5', JSON.stringify(activeTimings));
-        }
-
-        // --- BOT ENGINE ---
-        async function checkBotCommands() {
+        // =========================================================
+        // ☁️ UNIVERSAL CLOUD SYNC (Using Bot Description as Database)
+        // =========================================================
+        async function fetchCloudData() {
             try {
-                const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
-                const res = await fetch(url);
+                // We use getMyDescription as a global, persistent JSON store
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
                 const data = await res.json();
                 
-                if (data.ok && data.result.length > 0) {
-                    let updated = false;
-                    for(const update of data.result) {
-                        LAST_UPDATE_ID = update.update_id;
-                        localStorage.setItem('last_update_id', LAST_UPDATE_ID);
-
-                        if(!update.message || !update.message.text) continue;
+                if(data.ok && data.result.description) {
+                    const cloudStr = data.result.description;
+                    // Check if it looks like our JSON data
+                    if(cloudStr.startsWith("{")) {
+                        const cloudData = JSON.parse(cloudStr);
                         
-                        const text = update.message.text.trim();
-                        const chatId = update.message.chat.id;
-                        
-                        if(!ADMIN_CHAT_ID && chatId) {
-                            ADMIN_CHAT_ID = chatId;
-                            localStorage.setItem('chat_id', chatId);
+                        // Check if data changed
+                        if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
+                            activeTimings = { ...activeTimings, ...cloudData };
+                            refreshData(); // Update UI
+                            document.getElementById('cloudStatusDot').className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
+                            document.getElementById('cloudStatusText').innerText = "Live";
                         }
-                        
-                        await processUserMessage(chatId, text);
-                        updated = true;
-                    }
-                    if(updated) {
-                        saveLocally();
-                        refreshData();
                     }
                 }
-            } catch(e) { }
+            } catch(e) { 
+                console.error("Cloud Error", e);
+                document.getElementById('cloudStatusText').innerText = "Offline";
+            }
+        }
+
+        async function saveToCloud() {
+            // Saves current timings to Bot Description so EVERYONE sees it
+            try {
+                const jsonStr = JSON.stringify(activeTimings);
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ description: jsonStr })
+                });
+                console.log("Saved to Global Cloud!");
+            } catch(e) { console.error("Save Error", e); }
+        }
+
+        // =========================================================
+        // 🤖 BOT ENGINE
+        // =========================================================
+        async function checkBotCommands() {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.ok && data.result.length > 0) {
+                let updated = false;
+                for(const update of data.result) {
+                    LAST_UPDATE_ID = update.update_id;
+                    localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+
+                    if(!update.message || !update.message.text) continue;
+                    
+                    const text = update.message.text.trim();
+                    const chatId = update.message.chat.id;
+                    
+                    if(!ADMIN_CHAT_ID && chatId) {
+                        ADMIN_CHAT_ID = chatId;
+                        localStorage.setItem('chat_id', chatId);
+                    }
+                    
+                    await processUserMessage(chatId, text);
+                    updated = true;
+                }
+                if(updated) {
+                    saveToCloud(); // PUSH CHANGES TO CLOUD
+                    refreshData();
+                }
+            }
         }
 
         async function findAdminChatId() {
@@ -311,26 +354,24 @@
             
             if (lower === '/start' || lower === '/help') {
                 botState[chatId] = { step: 'IDLE' }; 
-                const msg = `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma, /sehri, /iftar`;
+                const msg = `🕌 *Raza Jumma Masjid Bot*\n\nData syncs globally.\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma, /sehri, /iftar`;
                 await sendReply(chatId, msg);
                 return;
             }
 
             let state = botState[chatId] || { step: 'IDLE' };
-            const prayers = ['fajr', 'zohar', 'asr', 'maghrib', 'isha'];
-            const special = ['jumma', 'sehri', 'iftar'];
+            const prayers = { 'fajr':'F', 'zohar':'Z', 'asr':'A', 'maghrib':'M', 'isha':'I' };
+            const special = { 'jumma':'J', 'sehri':'S', 'iftar':'K' };
 
             if (state.step === 'IDLE') {
                 if (lower.startsWith('/')) {
                     const cmd = lower.substring(1);
-                    if (prayers.includes(cmd)) {
-                        const pName = cmd.charAt(0).toUpperCase() + cmd.slice(1);
-                        botState[chatId] = { step: 'WAITING_SELECTION', prayer: pName };
-                        await sendReply(chatId, `⚙️ *${pName}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`);
-                    } else if (special.includes(cmd)) {
-                        const pName = cmd.charAt(0).toUpperCase() + cmd.slice(1);
-                        botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayer: pName };
-                        await sendReply(chatId, `🕒 Enter time for *${pName}*:`);
+                    if (prayers[cmd]) {
+                        botState[chatId] = { step: 'WAITING_SELECTION', prayerCode: prayers[cmd], prayerName: cmd.toUpperCase() };
+                        await sendReply(chatId, `⚙️ *${cmd.toUpperCase()}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`);
+                    } else if (special[cmd]) {
+                        botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayerCode: special[cmd], prayerName: cmd.toUpperCase() };
+                        await sendReply(chatId, `🕒 Enter time for *${cmd.toUpperCase()}*:`);
                     }
                 }
                 return;
@@ -350,37 +391,33 @@
                 return;
             }
 
-            const cleanTime = (t, p) => {
+            const cleanTime = (t, pCode) => {
                 let upper = t.toUpperCase().replace('.', ':');
                 if(!upper.includes('M')) {
-                    const isMorning = ['Fajr', 'Sehri'].includes(p);
-                    const isAfternoon = ['Zohar', 'Asr', 'Maghrib', 'Isha', 'Jumma', 'Iftar'].includes(p);
-                    if(isMorning) upper += ' AM'; else if(isAfternoon) {
-                        if(p === 'Zohar' && parseInt(t) >= 11 && parseInt(t) < 12) upper += ' AM'; else upper += ' PM';
-                    }
+                    const morningCodes = ['F','S']; 
+                    if(morningCodes.includes(pCode)) upper += ' AM';
+                    else if(pCode === 'Z' && parseInt(t) >= 11 && parseInt(t) < 12) upper += ' AM';
+                    else upper += ' PM';
                 }
                 return upper;
             };
 
-            const p = state.prayer;
-            const t = cleanTime(text, p);
+            const pCode = state.prayerCode;
+            const t = cleanTime(text, pCode);
 
             if (state.step === 'WAITING_TIME_SINGLE') {
-                activeTimings[p] = t;
-                saveLocally();
-                await sendReply(chatId, `✅ Updated ${p}`);
+                activeTimings[pCode] = t;
+                await sendReply(chatId, `✅ Updated`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_AZAN') {
-                activeTimings[p].azan = t;
-                saveLocally();
-                await sendReply(chatId, `✅ Updated ${p} Azan`);
+                activeTimings[pCode].a = t;
+                await sendReply(chatId, `✅ Updated Azan`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_JAMAAT') {
-                activeTimings[p].jamaat = t;
-                saveLocally();
-                await sendReply(chatId, `✅ Updated ${p} Jamaat`);
+                activeTimings[pCode].j = t;
+                await sendReply(chatId, `✅ Updated Jamaat`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_AZAN_BOTH') {
@@ -389,10 +426,9 @@
                 await sendReply(chatId, `2️⃣ Enter *Jamaat* time:`);
             }
             else if (state.step === 'WAITING_TIME_JAMAAT_BOTH') {
-                activeTimings[p].azan = botState[chatId].tempAzan;
-                activeTimings[p].jamaat = t;
-                saveLocally();
-                await sendReply(chatId, `✅ Updated ${p} (Both)`);
+                activeTimings[pCode].a = botState[chatId].tempAzan;
+                activeTimings[pCode].j = t;
+                await sendReply(chatId, `✅ Updated Both`);
                 botState[chatId] = { step: 'IDLE' };
             }
         }
@@ -406,7 +442,6 @@
         }
 
         async function trackAction(actionName) {
-            if(!ADMIN_CHAT_ID) await findAdminChatId();
             if(!ADMIN_CHAT_ID) return;
             try {
                 let ip = "Unknown IP";
@@ -422,9 +457,9 @@
 
         // --- UI LOGIC ---
         async function refreshData() {
-            document.getElementById('jummaTimeDisplay').innerText = activeTimings.Jumma;
-            document.getElementById('sehriTime').innerText = activeTimings.Sehri;
-            document.getElementById('iftarTime').innerText = activeTimings.Iftar;
+            document.getElementById('jummaTimeDisplay').innerText = activeTimings.J;
+            document.getElementById('sehriTime').innerText = activeTimings.S;
+            document.getElementById('iftarTime').innerText = activeTimings.K;
 
             const lat = 13.0537, long = 77.5367; 
             const url = `https://api.aladhan.com/v1/timings/${new Date().getDate()}-${new Date().getMonth()+1}-${new Date().getFullYear()}?latitude=${lat}&longitude=${long}&method=1&school=1`;
@@ -438,14 +473,19 @@
 
         function renderGrid(apiTimings, hijri) {
             document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
-            if(activeTimings.Sehri === "--:--") document.getElementById('sehriTime').innerText = formatTime12(apiTimings.Fajr);
-            if(activeTimings.Iftar === "--:--") document.getElementById('iftarTime').innerText = formatTime12(apiTimings.Maghrib);
+            if(activeTimings.S === "--:--") document.getElementById('sehriTime').innerText = formatTime12(apiTimings.Fajr);
+            if(activeTimings.K === "--:--") document.getElementById('iftarTime').innerText = formatTime12(apiTimings.Maghrib);
 
             const grid = document.getElementById('prayerGrid');
             grid.innerHTML = '';
 
-            const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-            const displayNames = {'Dhuhr': 'Zohar'};
+            const prayers = [
+                { apiKey: 'Fajr', code: 'F', name: 'Fajr' },
+                { apiKey: 'Dhuhr', code: 'Z', name: 'Zohar' },
+                { apiKey: 'Asr', code: 'A', name: 'Asr' },
+                { apiKey: 'Maghrib', code: 'M', name: 'Maghrib' },
+                { apiKey: 'Isha', code: 'I', name: 'Isha' }
+            ];
 
             const now = new Date();
             const timeToDate = (t) => { const [h,m] = t.split(':').map(Number); const d = new Date(); d.setHours(h,m,0); return d; };
@@ -461,23 +501,23 @@
             else if (now>=i) current="Isha";
 
             prayers.forEach(p => {
-                const name = displayNames[p] || p;
-                let azan = activeTimings[name].azan !== "--:--" ? activeTimings[name].azan : formatTime12(apiTimings[p]);
-                let jamaat = activeTimings[name].jamaat;
+                let azan = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : formatTime12(apiTimings[p.apiKey]);
+                let jamaat = activeTimings[p.code].j;
+                
                 if(jamaat === "--:--") {
-                    let [h, m] = apiTimings[p].split(':').map(Number);
-                    let offset = p==='Maghrib'?5:15;
+                    let [h, m] = apiTimings[p.apiKey].split(':').map(Number);
+                    let offset = p.apiKey==='Maghrib'?5:15;
                     let d = new Date(); d.setHours(h,m+offset);
                     jamaat = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
                 }
 
-                const isRunning = (name === current || (p === 'Dhuhr' && current === 'Zohar'));
+                const isRunning = (p.name === current);
 
                 const card = document.createElement('div');
                 card.className = `prayer-card p-3 rounded-2xl bg-white text-center ${isRunning ? 'running-now' : ''}`;
-                card.onclick = () => openCountdown(name, apiTimings[p]);
+                card.onclick = () => openCountdown(p.name, apiTimings[p.apiKey]);
                 card.innerHTML = `
-                    <div class="text-xs uppercase font-bold text-slate-400 mb-2">${name}</div>
+                    <div class="text-xs uppercase font-bold text-slate-400 mb-2">${p.name}</div>
                     <div class="flex justify-around items-center">
                         <div><div class="text-[10px] text-green-600 font-bold">Azan</div><div class="text-lg font-bold text-slate-800 leading-none">${azan}</div></div>
                         <div class="w-px h-8 bg-slate-100"></div>
@@ -488,9 +528,7 @@
             });
         }
 
-        // =========================================================
-        // 🎉 FESTIVALS LOGIC
-        // =========================================================
+        // FESTIVALS & UTILS
         function loadFestivals() {
             const events = [
                 { name: "Ramadan Start", hijri: "1 Ramadan 1447", gregorian: "Feb 18, 2026", desc: "Why we celebrate: Ramadan is the holy month of fasting revealed in the Quran. We fast from dawn to sunset to purify our souls, practice self-discipline, and empathize with those who are hungry.", highlight: true },
@@ -506,9 +544,7 @@
             const now = new Date();
             let featuredIndex = 0;
             for(let i=0; i<events.length; i++) {
-                if(new Date(events[i].gregorian) >= now) {
-                    featuredIndex = i; break;
-                }
+                if(new Date(events[i].gregorian) >= now) { featuredIndex = i; break; }
             }
             const featured = events[featuredIndex];
             
@@ -530,10 +566,7 @@
                 if(idx === featuredIndex) return '';
                 return `
                     <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition group">
-                        <div class="flex justify-between items-start mb-2">
-                            <h5 class="font-bold text-slate-800 text-lg group-hover:text-green-700 transition">${ev.name}</h5>
-                            <span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded font-bold">${ev.gregorian}</span>
-                        </div>
+                        <div class="flex justify-between items-start mb-2"><h5 class="font-bold text-slate-800 text-lg group-hover:text-green-700 transition">${ev.name}</h5><span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded font-bold">${ev.gregorian}</span></div>
                         <div class="text-xs text-green-600 font-medium mb-3"><i class="fas fa-moon"></i> ${ev.hijri}</div>
                         <p class="text-xs text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-2">${ev.desc}</p>
                     </div>
@@ -545,7 +578,6 @@
             const list = document.getElementById('allFestivals');
             const icon = document.getElementById('toggleIcon');
             const btnText = document.querySelector('#toggleFestBtn span');
-            
             if(list.classList.contains('hidden')) {
                 list.classList.remove('hidden'); list.classList.add('grid');
                 icon.style.transform = 'rotate(180deg)'; btnText.innerText = "Hide Festivals";
