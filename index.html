@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raza Jumma Masjid - Ravetha Nagar</title>
+    <meta name="theme-color" content="#064e3b">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <style>
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#166534 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+        }
+        h1, h2, h3, .arabic-text { font-family: 'Amiri', serif; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .prayer-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .prayer-card.running-now {
+            background: linear-gradient(to bottom right, #f0fdf4, #ffffff);
+            border: 2px solid #16a34a;
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px -5px rgba(22, 163, 74, 0.2);
+            z-index: 10;
+        }
+        .prayer-card.running-now::after {
+            content: 'Active';
+            position: absolute; top: 0; right: 0;
+            background: #16a34a; color: white;
+            font-size: 9px; font-weight: bold;
+            padding: 2px 8px; border-bottom-left-radius: 8px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* Smooth fade for elements */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col pb-safe">
+
+    <!-- Countdown Modal -->
+    <div id="countdownModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="closeCountdown()">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-sm text-center shadow-2xl transform scale-95 transition-all" onclick="event.stopPropagation()">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><i class="fas fa-clock fa-2x"></i></div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2" id="modalPrayerName">Fajr</h3>
+            <p class="text-gray-500 mb-6 text-sm">Time Remaining until Start</p>
+            <div class="text-4xl font-mono font-bold text-amber-600 mb-8" id="modalTimer">00:00:00</div>
+            <button onclick="closeCountdown()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold hover:bg-slate-200">Close</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative bg-[#064e3b] text-white pb-24 pt-12 overflow-hidden rounded-b-[2.5rem] shadow-2xl">
+        <div class="absolute inset-0 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');"></div>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2 tracking-tight">Raza Jumma Masjid</h1>
+            <p class="text-xl md:text-2xl text-green-200/80 font-light arabic-text mb-6">رضا جمعة مسجد</p>
+            <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-5 py-2.5 rounded-full text-sm font-medium shadow-lg">
+                <i class="far fa-calendar-alt text-amber-400"></i>
+                <span id="hijriDate">Loading Date...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 -mt-16 relative z-20 space-y-8 pb-12">
+
+        <!-- Prayer Times Grid -->
+        <section class="max-w-5xl mx-auto">
+            <div class="glass-panel rounded-3xl p-6 md:p-8 bg-white/95">
+                <div class="flex justify-between items-end mb-6 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-mosque text-green-700"></i> Prayer Times</h2>
+                        <p class="text-xs text-slate-400 mt-1 pl-7">Bangalore • Hanafi</p>
+                    </div>
+                </div>
+
+                <!-- Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8" id="prayerGrid"></div>
+
+                <!-- Special Times Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex justify-between items-center relative overflow-hidden">
+                        <div class="text-center w-1/2 border-r border-slate-200 pr-4">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Sehri Ends</div>
+                            <div class="text-xl font-bold text-slate-700" id="sehriTime">--:--</div>
+                        </div>
+                        <div class="text-center w-1/2 pl-4">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Iftar Start</div>
+                            <div class="text-xl font-bold text-slate-700" id="iftarTime">--:--</div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-100 flex items-center justify-between relative overflow-hidden">
+                        <div class="relative z-10">
+                            <div class="text-amber-800 font-bold text-lg flex items-center gap-2 mb-1"><i class="fas fa-star-and-crescent"></i> Jumu'ah</div>
+                            <div class="text-xs text-amber-700/70">Khutbah 30 mins prior</div>
+                        </div>
+                        <div class="text-right relative z-10">
+                            <div class="text-[10px] text-amber-600 uppercase font-bold tracking-wider">Jamaat</div>
+                            <div class="text-3xl font-bold text-amber-600" id="jummaTimeDisplay">--:--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Islamic Festivals -->
+        <section class="max-w-4xl mx-auto">
+            <h3 class="text-lg font-bold text-slate-700 mb-4 px-2 flex items-center gap-2">
+                <i class="fas fa-star text-amber-500"></i> Upcoming Islamic Events
+            </h3>
+            
+            <div id="featuredFestival" class="bg-gradient-to-br from-[#064e3b] to-[#047857] rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6">
+                <!-- Injected via JS -->
+                <div class="shimmer w-full h-40 rounded-xl opacity-20"></div>
+            </div>
+
+            <button onclick="toggleFestivals()" id="toggleFestBtn" class="w-full py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-sm shadow-sm hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                <span>See More Festivals</span>
+                <i class="fas fa-chevron-down transition-transform duration-300" id="toggleIcon"></i>
+            </button>
+
+            <div id="allFestivals" class="hidden grid-cols-1 md:grid-cols-2 gap-4 mt-4 transition-all duration-300">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- Donation Section -->
+        <section class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div class="glass-panel rounded-3xl overflow-hidden h-full flex flex-col">
+                <div class="flex text-center bg-slate-50 border-b border-slate-200">
+                    <button onclick="switchTab('money')" id="tab-money" class="flex-1 py-4 font-bold text-green-700 border-b-2 border-green-600 bg-white text-sm uppercase transition-all">Chanda for Masjid</button>
+                    <button onclick="switchTab('material')" id="tab-material" class="flex-1 py-4 font-bold text-slate-400 text-sm uppercase hover:text-green-600 transition-all">Donate Materials</button>
+                </div>
+                
+                <!-- Money Content -->
+                <div id="content-money" class="p-8 text-center flex-grow flex flex-col justify-center items-center fade-in">
+                    <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4"><i class="fas fa-hand-holding-dollar fa-lg"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800">Mumtaz Raza</h3>
+                    <p class="text-sm text-slate-500 mb-6">Authorized for Masjid Chanda</p>
+                    <a href="tel:+919110251749" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"><i class="fas fa-phone"></i> Call to Donate</a>
+                </div>
+                
+                <!-- Material Content -->
+                <div id="content-material" class="hidden p-6 fade-in">
+                    <div class="bg-amber-50 rounded-lg p-3 mb-4 text-center border border-amber-100"><p class="text-sm text-amber-800 font-bold">Donate Material for Masjid</p><p class="text-xs text-amber-700 opacity-90">Accepting: Cement, Carpets, Lights</p></div>
+                    <div class="space-y-3">
+                        <!-- Sadar -->
+                        <div class="flex justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                            <div class="flex gap-3 items-center"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><i class="fas fa-user-shield text-xs"></i></div><div><div class="font-bold text-xs">Arif (Sadar)</div><div class="text-[10px] text-slate-400">Admin</div></div></div>
+                            <a href="tel:+919448265613" onclick="trackAction('Call Sadar')" class="text-green-600 bg-green-50 p-2 rounded-full"><i class="fas fa-phone text-sm"></i></a>
+                        </div>
+                        <!-- Secretary -->
+                        <div class="flex justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                            <div class="flex gap-3 items-center"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><i class="fas fa-pen text-xs"></i></div><div><div class="font-bold text-xs">Saja (Secretary)</div><div class="text-[10px] text-slate-400">Ops</div></div></div>
+                            <a href="tel:+919972747315" onclick="trackAction('Call Secretary')" class="text-green-600 bg-green-50 p-2 rounded-full"><i class="fas fa-phone text-sm"></i></a>
+                        </div>
+                        <!-- Mumtaz Raza (Recommended) -->
+                        <div class="flex justify-between p-3 bg-green-50 border border-green-200 rounded-xl shadow-sm ring-1 ring-green-400 relative overflow-hidden">
+                            <div class="flex gap-3 items-center relative z-10">
+                                <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white"><i class="fas fa-user text-xs"></i></div>
+                                <div>
+                                    <div class="font-bold text-xs flex items-center gap-1">Mumtaz Raza <span class="bg-green-600 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 tracking-wide">RECOMMENDED</span></div>
+                                    <div class="text-[10px] text-green-800">Coordinator</div>
+                                </div>
+                            </div>
+                            <a href="tel:+919110251749" onclick="trackAction('Call Mumtaz Material')" class="text-white bg-green-600 p-2 rounded-full hover:bg-green-700 shadow-md relative z-10"><i class="fas fa-phone text-sm"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Address -->
+            <div class="glass-panel rounded-3xl p-6 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-map-marked-alt text-red-500"></i> Location</h3>
+                    <address class="not-italic text-sm text-slate-600 leading-relaxed mb-6"><strong>Raza Jumma Masjid</strong><br>Ravetha Nagar, Shetty Halli,<br>Jalahalli West, Bengaluru,<br>Karnataka 560057</address>
+                </div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Raza+Jumma+Masjid+Ravetha+Nagar+Shetty+Halli+Bengaluru" target="_blank" onclick="trackAction('Open Map')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"><i class="fas fa-directions text-amber-400"></i> Get Directions</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#0f172a] text-slate-400 py-8 text-center mt-auto text-xs border-t-4 border-amber-600 px-4">
+        &copy; 2026 Raza Jumma Masjid. All Rights Reserved website is handling and created by tajushshariya youth
+    </footer>
+
+    <script>
+        const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
+        let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
+        let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
+        let botState = {}; 
+
+        let activeTimings = {
+            Jumma: "02:00 PM",
+            Sehri: "--:--", Iftar: "--:--",
+            Fajr: { azan: "--:--", jamaat: "--:--" },
+            Zohar: { azan: "--:--", jamaat: "--:--" },
+            Asr: { azan: "--:--", jamaat: "--:--" },
+            Maghrib: { azan: "--:--", jamaat: "--:--" },
+            Isha: { azan: "--:--", jamaat: "--:--" }
+        };
+
+        window.onload = function() {
+            const saved = localStorage.getItem('timings_v2');
+            if(saved) activeTimings = JSON.parse(saved);
+            refreshData();
+            loadFestivals();
+            
+            // Try to find Chat ID immediately
+            if(!ADMIN_CHAT_ID) findAdminChatId();
+            else trackAction("Website Opened");
+
+            setInterval(checkBotCommands, 3000);
+        };
+
+        // --- BOT ENGINE & NOTIFICATIONS ---
+        async function checkBotCommands() {
+            try {
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.ok && data.result.length > 0) {
+                    for(const update of data.result) {
+                        LAST_UPDATE_ID = update.update_id;
+                        localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+
+                        if(!update.message || !update.message.text) continue;
+                        
+                        const text = update.message.text.trim();
+                        const chatId = update.message.chat.id;
+                        
+                        // Auto-Capture Admin ID from ANY message
+                        if(!ADMIN_CHAT_ID && chatId) {
+                            ADMIN_CHAT_ID = chatId;
+                            localStorage.setItem('chat_id', chatId);
+                        }
+                        
+                        await processUserMessage(chatId, text);
+                    }
+                    localStorage.setItem('timings_v2', JSON.stringify(activeTimings));
+                    refreshData();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function findAdminChatId() {
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`);
+                const data = await res.json();
+                if(data.ok && data.result.length > 0) {
+                     // Find the last valid chat ID
+                     for(let i=data.result.length-1; i>=0; i--) {
+                         const chat = data.result[i].message?.chat;
+                         if(chat && chat.id) {
+                             ADMIN_CHAT_ID = chat.id;
+                             localStorage.setItem('chat_id', ADMIN_CHAT_ID);
+                             break;
+                         }
+                     }
+                }
+            } catch(e) {}
+        }
+
+        async function processUserMessage(chatId, text) {
+            const lower = text.toLowerCase();
+            
+            if (lower === '/start' || lower === '/help') {
+                botState[chatId] = { step: 'IDLE' }; 
+                const msg = `🕌 *Raza Jumma Masjid Admin Bot*\n\nTo update timings, tap a command:\n\n/fajr - Update Fajr\n/zohar - Update Zohar\n/asr - Update Asr\n/maghrib - Update Maghrib\n/isha - Update Isha\n/jumma - Update Jumma\n\n/sehri - Manual Sehri\n/iftar - Manual Iftar`;
+                await sendReply(chatId, msg);
+                return;
+            }
+
+            let state = botState[chatId] || { step: 'IDLE' };
+            const prayers = ['fajr', 'zohar', 'asr', 'maghrib', 'isha'];
+            const special = ['jumma', 'sehri', 'iftar'];
+
+            if (state.step === 'IDLE') {
+                if (lower.startsWith('/')) {
+                    const cmd = lower.substring(1);
+                    if (prayers.includes(cmd)) {
+                        const pName = cmd.charAt(0).toUpperCase() + cmd.slice(1);
+                        botState[chatId] = { step: 'WAITING_SELECTION', prayer: pName };
+                        await sendReply(chatId, `⚙️ *Update ${pName}*\n\nWhat do you want to change?\n\n1️⃣ Azan Time\n2️⃣ Jamaat Time\n3️⃣ Both\n\n(Reply 1, 2, or 3)`);
+                    } else if (special.includes(cmd)) {
+                        const pName = cmd.charAt(0).toUpperCase() + cmd.slice(1);
+                        botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayer: pName };
+                        await sendReply(chatId, `🕒 Enter new time for *${pName}* (e.g. 5:30):`);
+                    }
+                }
+                return;
+            }
+
+            if (state.step === 'WAITING_SELECTION') {
+                if (['1', 'azan', 'a'].includes(lower)) {
+                    botState[chatId].step = 'WAITING_TIME_AZAN';
+                    await sendReply(chatId, `📢 Enter *Azan* time for ${state.prayer}:`);
+                } else if (['2', 'jamaat', 'j'].includes(lower)) {
+                    botState[chatId].step = 'WAITING_TIME_JAMAAT';
+                    await sendReply(chatId, `👥 Enter *Jamaat* time for ${state.prayer}:`);
+                } else if (['3', 'both', 'b'].includes(lower)) {
+                    botState[chatId].step = 'WAITING_TIME_AZAN_BOTH';
+                    await sendReply(chatId, `1️⃣ First, enter *Azan* time:`);
+                } else {
+                    await sendReply(chatId, "⚠️ Invalid. Reply 1, 2, or 3.");
+                }
+                return;
+            }
+
+            const cleanTime = (t, p) => {
+                let upper = t.
