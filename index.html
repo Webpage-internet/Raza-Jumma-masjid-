@@ -5,15 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raza Jumma Masjid - Ravetha Nagar</title>
     <meta name="theme-color" content="#064e3b">
+    
+    <!-- Core Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
-    <!-- Firebase SDKs (Critical for Permanent Storage) -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
-
+    <!-- Notifications -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
@@ -57,6 +55,7 @@
         }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
+        /* Smooth fade for elements */
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -136,7 +135,6 @@
             </h3>
             
             <div id="featuredFestival" class="bg-gradient-to-br from-[#064e3b] to-[#047857] rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6">
-                <!-- Injected via JS -->
                 <div class="shimmer w-full h-40 rounded-xl opacity-20"></div>
             </div>
 
@@ -212,15 +210,12 @@
     </footer>
 
     <script>
-        // =========================================================
-        // ⚙️ SYSTEM CONFIGURATION
-        // =========================================================
         const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
         let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
         let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
         let botState = {}; 
 
-        // SAFE DEFAULT TIMINGS (Prevent crashes)
+        // Default Data
         let activeTimings = {
             Jumma: "02:00 PM",
             Sehri: "--:--", Iftar: "--:--",
@@ -231,102 +226,67 @@
             Isha: { azan: "--:--", jamaat: "--:--" }
         };
 
-        // --- FIREBASE CLOUD STORAGE INIT ---
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(app);
-        const auth = firebase.auth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default';
-
-        window.onload = async function() {
-            // 1. Authenticate (Required for Database)
-            try { await auth.signInAnonymously(); } catch(e) { console.error("Auth Fail", e); }
-
-            // 2. Load Local Data First (Instant Display)
+        window.onload = function() {
+            // Load from Local Storage (No crash if missing)
             try {
-                const saved = localStorage.getItem('timings_v4');
+                const saved = localStorage.getItem('timings_v5');
                 if(saved) {
                     const parsed = JSON.parse(saved);
-                    // Safe Merge to prevent missing keys
                     activeTimings = { ...activeTimings, ...parsed };
-                    // Verify nested keys exist
+                    // Safe merge nested objects
                     ['Fajr','Zohar','Asr','Maghrib','Isha'].forEach(p => {
                         if(!activeTimings[p]) activeTimings[p] = { azan: "--:--", jamaat: "--:--" };
                     });
                 }
-            } catch(e) { }
+            } catch(e) {}
 
-            // 3. LISTEN TO CLOUD (Source of Truth)
-            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
-            
-            docRef.onSnapshot((doc) => {
-                if (doc.exists) {
-                    // Overwrite local with cloud data (Always fresher or same)
-                    activeTimings = { ...activeTimings, ...doc.data() };
-                    saveLocally(); // Sync back to local
-                    refreshData();
-                } else {
-                    // First run ever? Create cloud doc
-                    docRef.set(activeTimings);
-                }
-            });
-
+            // LOAD DATA IMMEDIATELY
             refreshData();
             loadFestivals();
             
+            // Background Bot Tasks
             if(!ADMIN_CHAT_ID) findAdminChatId();
             else trackAction("Website Opened");
 
-            // Start Bot Engine (Runs in background)
-            setInterval(() => {
-                try { checkBotCommands(); } catch(e) {}
-            }, 3000);
+            setInterval(checkBotCommands, 3000);
         };
 
-        // --- PERSISTENCE HELPERS ---
         function saveLocally() {
-            localStorage.setItem('timings_v4', JSON.stringify(activeTimings));
+            localStorage.setItem('timings_v5', JSON.stringify(activeTimings));
         }
 
-        function saveToCloud() {
-            if(!auth.currentUser) return;
-            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
-            docRef.set(activeTimings, { merge: true });
-        }
-
-        // --- BOT ENGINE (THE BRAIN) ---
+        // --- BOT ENGINE ---
         async function checkBotCommands() {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            if (data.ok && data.result.length > 0) {
-                let updated = false;
-                for(const update of data.result) {
-                    LAST_UPDATE_ID = update.update_id;
-                    localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+            try {
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.ok && data.result.length > 0) {
+                    let updated = false;
+                    for(const update of data.result) {
+                        LAST_UPDATE_ID = update.update_id;
+                        localStorage.setItem('last_update_id', LAST_UPDATE_ID);
 
-                    if(!update.message || !update.message.text) continue;
-                    
-                    const text = update.message.text.trim();
-                    const chatId = update.message.chat.id;
-                    
-                    // Capture Admin ID
-                    if(!ADMIN_CHAT_ID && chatId) {
-                        ADMIN_CHAT_ID = chatId;
-                        localStorage.setItem('chat_id', chatId);
+                        if(!update.message || !update.message.text) continue;
+                        
+                        const text = update.message.text.trim();
+                        const chatId = update.message.chat.id;
+                        
+                        if(!ADMIN_CHAT_ID && chatId) {
+                            ADMIN_CHAT_ID = chatId;
+                            localStorage.setItem('chat_id', chatId);
+                        }
+                        
+                        await processUserMessage(chatId, text);
+                        updated = true;
                     }
-                    
-                    await processUserMessage(chatId, text);
-                    updated = true;
+                    if(updated) {
+                        saveLocally();
+                        refreshData();
+                    }
                 }
-                // If bot updated timings, save to cloud so EVERYONE sees it
-                if(updated) {
-                    saveLocally();
-                    saveToCloud(); 
-                    refreshData();
-                }
-            }
+            } catch(e) { }
         }
 
         async function findAdminChatId() {
@@ -351,7 +311,7 @@
             
             if (lower === '/start' || lower === '/help') {
                 botState[chatId] = { step: 'IDLE' }; 
-                const msg = `🕌 *Connected to Cloud*\n\nUpdates sync to ALL users instantly.\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma`;
+                const msg = `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma, /sehri, /iftar`;
                 await sendReply(chatId, msg);
                 return;
             }
@@ -370,7 +330,7 @@
                     } else if (special.includes(cmd)) {
                         const pName = cmd.charAt(0).toUpperCase() + cmd.slice(1);
                         botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayer: pName };
-                        await sendReply(chatId, `🕒 Enter new time for *${pName}*:`);
+                        await sendReply(chatId, `🕒 Enter time for *${pName}*:`);
                     }
                 }
                 return;
@@ -405,19 +365,21 @@
             const p = state.prayer;
             const t = cleanTime(text, p);
 
-            // SAVE ACTIONS - Trigger Cloud Save after update
             if (state.step === 'WAITING_TIME_SINGLE') {
                 activeTimings[p] = t;
+                saveLocally();
                 await sendReply(chatId, `✅ Updated ${p}`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_AZAN') {
                 activeTimings[p].azan = t;
+                saveLocally();
                 await sendReply(chatId, `✅ Updated ${p} Azan`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_JAMAAT') {
                 activeTimings[p].jamaat = t;
+                saveLocally();
                 await sendReply(chatId, `✅ Updated ${p} Jamaat`);
                 botState[chatId] = { step: 'IDLE' };
             }
@@ -429,6 +391,7 @@
             else if (state.step === 'WAITING_TIME_JAMAAT_BOTH') {
                 activeTimings[p].azan = botState[chatId].tempAzan;
                 activeTimings[p].jamaat = t;
+                saveLocally();
                 await sendReply(chatId, `✅ Updated ${p} (Both)`);
                 botState[chatId] = { step: 'IDLE' };
             }
