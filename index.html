@@ -51,7 +51,6 @@
         }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* Smooth fade for elements */
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -212,6 +211,7 @@
         let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
         let botState = {}; 
 
+        // Default Data Structure
         let activeTimings = {
             Jumma: "02:00 PM",
             Sehri: "--:--", Iftar: "--:--",
@@ -223,47 +223,68 @@
         };
 
         window.onload = function() {
-            const saved = localStorage.getItem('timings_v2');
-            if(saved) activeTimings = JSON.parse(saved);
+            // LOAD SAVED DATA (With repair mechanism)
+            try {
+                const saved = localStorage.getItem('timings_v3'); // Changed key to v3 to force clean start
+                if(saved) {
+                    const parsed = JSON.parse(saved);
+                    // Merge saved data with defaults to prevent crashes if keys are missing
+                    activeTimings = { ...activeTimings, ...parsed };
+                    // Ensure nested objects exist
+                    ['Fajr','Zohar','Asr','Maghrib','Isha'].forEach(p => {
+                        if(!activeTimings[p]) activeTimings[p] = { azan: "--:--", jamaat: "--:--" };
+                    });
+                }
+            } catch(e) { console.log("Resetting corrupted data"); }
+
             refreshData();
             loadFestivals();
             
-            // Try to find Chat ID immediately
             if(!ADMIN_CHAT_ID) findAdminChatId();
             else trackAction("Website Opened");
 
-            setInterval(checkBotCommands, 3000);
+            // Start Polling (with fail-safe)
+            setInterval(() => {
+                try { checkBotCommands(); } catch(e) { console.error("Poll Error", e); }
+            }, 3000);
         };
 
-        // --- BOT ENGINE & NOTIFICATIONS ---
-        async function checkBotCommands() {
-            try {
-                const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if (data.ok && data.result.length > 0) {
-                    for(const update of data.result) {
-                        LAST_UPDATE_ID = update.update_id;
-                        localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+        // --- PERSISTENT SAVE FUNCTION ---
+        function saveTimings() {
+            localStorage.setItem('timings_v3', JSON.stringify(activeTimings));
+        }
 
-                        if(!update.message || !update.message.text) continue;
-                        
-                        const text = update.message.text.trim();
-                        const chatId = update.message.chat.id;
-                        
-                        // Auto-Capture Admin ID from ANY message
-                        if(!ADMIN_CHAT_ID && chatId) {
-                            ADMIN_CHAT_ID = chatId;
-                            localStorage.setItem('chat_id', chatId);
-                        }
-                        
-                        await processUserMessage(chatId, text);
+        // --- BOT ENGINE ---
+        async function checkBotCommands() {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.ok && data.result.length > 0) {
+                let updated = false;
+                for(const update of data.result) {
+                    LAST_UPDATE_ID = update.update_id;
+                    localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+
+                    if(!update.message || !update.message.text) continue;
+                    
+                    const text = update.message.text.trim();
+                    const chatId = update.message.chat.id;
+                    
+                    if(!ADMIN_CHAT_ID && chatId) {
+                        ADMIN_CHAT_ID = chatId;
+                        localStorage.setItem('chat_id', chatId);
                     }
-                    localStorage.setItem('timings_v2', JSON.stringify(activeTimings));
+                    
+                    await processUserMessage(chatId, text);
+                    updated = true;
+                }
+                // Save immediately if any message processed
+                if(updated) {
+                    saveTimings();
                     refreshData();
                 }
-            } catch(e) { console.error(e); }
+            }
         }
 
         async function findAdminChatId() {
@@ -271,7 +292,6 @@
                 const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`);
                 const data = await res.json();
                 if(data.ok && data.result.length > 0) {
-                     // Find the last valid chat ID
                      for(let i=data.result.length-1; i>=0; i--) {
                          const chat = data.result[i].message?.chat;
                          if(chat && chat.id) {
@@ -289,7 +309,7 @@
             
             if (lower === '/start' || lower === '/help') {
                 botState[chatId] = { step: 'IDLE' }; 
-                const msg = `🕌 *Raza Jumma Masjid Admin Bot*\n\nTo update timings, tap a command:\n\n/fajr - Update Fajr\n/zohar - Update Zohar\n/asr - Update Asr\n/maghrib - Update Maghrib\n/isha - Update Isha\n/jumma - Update Jumma\n\n/sehri - Manual Sehri\n/iftar - Manual Iftar`;
+                const msg = `🕌 *Admin Bot Connected*\n\nYour data is now syncing.\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma, /sehri, /iftar`;
                 await sendReply(chatId, msg);
                 return;
             }
@@ -304,11 +324,11 @@
                     if (prayers.includes(cmd)) {
                         const pName = cmd.charAt(0).toUpperCase() + cmd.slice(1);
                         botState[chatId] = { step: 'WAITING_SELECTION', prayer: pName };
-                        await sendReply(chatId, `⚙️ *Update ${pName}*\n\nWhat do you want to change?\n\n1️⃣ Azan Time\n2️⃣ Jamaat Time\n3️⃣ Both\n\n(Reply 1, 2, or 3)`);
+                        await sendReply(chatId, `⚙️ *${pName}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`);
                     } else if (special.includes(cmd)) {
                         const pName = cmd.charAt(0).toUpperCase() + cmd.slice(1);
                         botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayer: pName };
-                        await sendReply(chatId, `🕒 Enter new time for *${pName}* (e.g. 5:30):`);
+                        await sendReply(chatId, `🕒 Enter new time for *${pName}*:`);
                     }
                 }
                 return;
@@ -317,57 +337,61 @@
             if (state.step === 'WAITING_SELECTION') {
                 if (['1', 'azan', 'a'].includes(lower)) {
                     botState[chatId].step = 'WAITING_TIME_AZAN';
-                    await sendReply(chatId, `📢 Enter *Azan* time for ${state.prayer}:`);
+                    await sendReply(chatId, `Enter *Azan* time:`);
                 } else if (['2', 'jamaat', 'j'].includes(lower)) {
                     botState[chatId].step = 'WAITING_TIME_JAMAAT';
-                    await sendReply(chatId, `👥 Enter *Jamaat* time for ${state.prayer}:`);
+                    await sendReply(chatId, `Enter *Jamaat* time:`);
                 } else if (['3', 'both', 'b'].includes(lower)) {
                     botState[chatId].step = 'WAITING_TIME_AZAN_BOTH';
-                    await sendReply(chatId, `1️⃣ First, enter *Azan* time:`);
-                } else {
-                    await sendReply(chatId, "⚠️ Invalid. Reply 1, 2, or 3.");
+                    await sendReply(chatId, `1️⃣ Enter *Azan* time:`);
                 }
                 return;
             }
 
+            // CLEAN TIME & SAVE IMMEDIATELY
             const cleanTime = (t, p) => {
                 let upper = t.toUpperCase().replace('.', ':');
                 if(!upper.includes('M')) {
                     const isMorning = ['Fajr', 'Sehri'].includes(p);
                     const isAfternoon = ['Zohar', 'Asr', 'Maghrib', 'Isha', 'Jumma', 'Iftar'].includes(p);
-                    if(isMorning) upper += ' AM';
-                    else if(isAfternoon) {
-                        if(p === 'Zohar' && parseInt(t) >= 11 && parseInt(t) < 12) upper += ' AM';
-                        else upper += ' PM';
+                    if(isMorning) upper += ' AM'; else if(isAfternoon) {
+                        if(p === 'Zohar' && parseInt(t) >= 11 && parseInt(t) < 12) upper += ' AM'; else upper += ' PM';
                     }
                 }
                 return upper;
             };
 
+            const p = state.prayer;
+            const t = cleanTime(text, p);
+
             if (state.step === 'WAITING_TIME_SINGLE') {
-                activeTimings[state.prayer] = cleanTime(text, state.prayer);
-                await sendReply(chatId, `✅ Updated ${state.prayer} to ${activeTimings[state.prayer]}`);
+                activeTimings[p] = t;
+                saveTimings(); // SAVE
+                await sendReply(chatId, `✅ Updated ${p}`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_AZAN') {
-                activeTimings[state.prayer].azan = cleanTime(text, state.prayer);
-                await sendReply(chatId, `✅ Updated ${state.prayer} Azan to ${activeTimings[state.prayer].azan}`);
+                activeTimings[p].azan = t;
+                saveTimings(); // SAVE
+                await sendReply(chatId, `✅ Updated ${p} Azan`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_JAMAAT') {
-                activeTimings[state.prayer].jamaat = cleanTime(text, state.prayer);
-                await sendReply(chatId, `✅ Updated ${state.prayer} Jamaat to ${activeTimings[state.prayer].jamaat}`);
+                activeTimings[p].jamaat = t;
+                saveTimings(); // SAVE
+                await sendReply(chatId, `✅ Updated ${p} Jamaat`);
                 botState[chatId] = { step: 'IDLE' };
             }
             else if (state.step === 'WAITING_TIME_AZAN_BOTH') {
-                botState[chatId].tempAzan = cleanTime(text, state.prayer);
+                botState[chatId].tempAzan = t;
                 botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH';
-                await sendReply(chatId, `Got it (${botState[chatId].tempAzan}).\n\n2️⃣ Now enter *Jamaat* time:`);
+                await sendReply(chatId, `2️⃣ Enter *Jamaat* time:`);
             }
             else if (state.step === 'WAITING_TIME_JAMAAT_BOTH') {
-                activeTimings[state.prayer].azan = botState[chatId].tempAzan;
-                activeTimings[state.prayer].jamaat = cleanTime(text, state.prayer);
-                await sendReply(chatId, `✅ Complete!\n\n*${state.prayer}*\n📢 Azan: ${activeTimings[state.prayer].azan}\n👥 Jamaat: ${activeTimings[state.prayer].jamaat}`);
+                activeTimings[p].azan = botState[chatId].tempAzan;
+                activeTimings[p].jamaat = t;
+                saveTimings(); // SAVE
+                await sendReply(chatId, `✅ Updated ${p} (Both)`);
                 botState[chatId] = { step: 'IDLE' };
             }
         }
@@ -381,11 +405,8 @@
         }
 
         async function trackAction(actionName) {
-            // Aggressively try to find ID if we don't have it
             if(!ADMIN_CHAT_ID) await findAdminChatId();
-            
             if(!ADMIN_CHAT_ID) return;
-
             try {
                 let ip = "Unknown IP";
                 try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); ip = d.ip; } catch(e) {}
@@ -555,6 +576,7 @@
         }
         let cdInt;
         function openCountdown(name, time24) {
+            trackAction(`Checked Countdown for ${name}`);
             const modal = document.getElementById('countdownModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
