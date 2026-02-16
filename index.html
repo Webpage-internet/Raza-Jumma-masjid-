@@ -331,4 +331,255 @@
             }
 
             const cleanTime = (t, p) => {
-                let upper = t.
+                let upper = t.toUpperCase().replace('.', ':');
+                if(!upper.includes('M')) {
+                    const isMorning = ['Fajr', 'Sehri'].includes(p);
+                    const isAfternoon = ['Zohar', 'Asr', 'Maghrib', 'Isha', 'Jumma', 'Iftar'].includes(p);
+                    if(isMorning) upper += ' AM';
+                    else if(isAfternoon) {
+                        if(p === 'Zohar' && parseInt(t) >= 11 && parseInt(t) < 12) upper += ' AM';
+                        else upper += ' PM';
+                    }
+                }
+                return upper;
+            };
+
+            if (state.step === 'WAITING_TIME_SINGLE') {
+                activeTimings[state.prayer] = cleanTime(text, state.prayer);
+                await sendReply(chatId, `✅ Updated ${state.prayer} to ${activeTimings[state.prayer]}`);
+                botState[chatId] = { step: 'IDLE' };
+            }
+            else if (state.step === 'WAITING_TIME_AZAN') {
+                activeTimings[state.prayer].azan = cleanTime(text, state.prayer);
+                await sendReply(chatId, `✅ Updated ${state.prayer} Azan to ${activeTimings[state.prayer].azan}`);
+                botState[chatId] = { step: 'IDLE' };
+            }
+            else if (state.step === 'WAITING_TIME_JAMAAT') {
+                activeTimings[state.prayer].jamaat = cleanTime(text, state.prayer);
+                await sendReply(chatId, `✅ Updated ${state.prayer} Jamaat to ${activeTimings[state.prayer].jamaat}`);
+                botState[chatId] = { step: 'IDLE' };
+            }
+            else if (state.step === 'WAITING_TIME_AZAN_BOTH') {
+                botState[chatId].tempAzan = cleanTime(text, state.prayer);
+                botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH';
+                await sendReply(chatId, `Got it (${botState[chatId].tempAzan}).\n\n2️⃣ Now enter *Jamaat* time:`);
+            }
+            else if (state.step === 'WAITING_TIME_JAMAAT_BOTH') {
+                activeTimings[state.prayer].azan = botState[chatId].tempAzan;
+                activeTimings[state.prayer].jamaat = cleanTime(text, state.prayer);
+                await sendReply(chatId, `✅ Complete!\n\n*${state.prayer}*\n📢 Azan: ${activeTimings[state.prayer].azan}\n👥 Jamaat: ${activeTimings[state.prayer].jamaat}`);
+                botState[chatId] = { step: 'IDLE' };
+            }
+        }
+
+        async function sendReply(chatId, text) {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
+            });
+        }
+
+        async function trackAction(actionName) {
+            // Aggressively try to find ID if we don't have it
+            if(!ADMIN_CHAT_ID) await findAdminChatId();
+            
+            if(!ADMIN_CHAT_ID) return;
+
+            try {
+                let ip = "Unknown IP";
+                try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); ip = d.ip; } catch(e) {}
+                const text = `🚨 *Activity Alert*\n\n👤 *User:* ${ip}\n✅ *Action:* ${actionName}\n⏰ *Time:* ${new Date().toLocaleTimeString()}`;
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: text, parse_mode: 'Markdown' })
+                });
+            } catch(e) {}
+        }
+
+        // --- UI LOGIC ---
+        async function refreshData() {
+            document.getElementById('jummaTimeDisplay').innerText = activeTimings.Jumma;
+            document.getElementById('sehriTime').innerText = activeTimings.Sehri;
+            document.getElementById('iftarTime').innerText = activeTimings.Iftar;
+
+            const lat = 13.0537, long = 77.5367; 
+            const url = `https://api.aladhan.com/v1/timings/${new Date().getDate()}-${new Date().getMonth()+1}-${new Date().getFullYear()}?latitude=${lat}&longitude=${long}&method=1&school=1`;
+            
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                renderGrid(data.data.timings, data.data.date.hijri);
+            } catch(e) { }
+        }
+
+        function renderGrid(apiTimings, hijri) {
+            document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
+            if(activeTimings.Sehri === "--:--") document.getElementById('sehriTime').innerText = formatTime12(apiTimings.Fajr);
+            if(activeTimings.Iftar === "--:--") document.getElementById('iftarTime').innerText = formatTime12(apiTimings.Maghrib);
+
+            const grid = document.getElementById('prayerGrid');
+            grid.innerHTML = '';
+
+            const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+            const displayNames = {'Dhuhr': 'Zohar'};
+
+            const now = new Date();
+            const timeToDate = (t) => { const [h,m] = t.split(':').map(Number); const d = new Date(); d.setHours(h,m,0); return d; };
+            const f = timeToDate(apiTimings.Fajr); const z = timeToDate(apiTimings.Dhuhr); 
+            const a = timeToDate(apiTimings.Asr); const m = timeToDate(apiTimings.Maghrib); 
+            const i = timeToDate(apiTimings.Isha); const s = timeToDate(apiTimings.Sunrise);
+            
+            let current = "";
+            if (now>=f && now<s) current="Fajr";
+            else if (now>=z && now<a) current="Zohar";
+            else if (now>=a && now<m) current="Asr";
+            else if (now>=m && now<i) current="Maghrib";
+            else if (now>=i) current="Isha";
+
+            prayers.forEach(p => {
+                const name = displayNames[p] || p;
+                let azan = activeTimings[name].azan !== "--:--" ? activeTimings[name].azan : formatTime12(apiTimings[p]);
+                let jamaat = activeTimings[name].jamaat;
+                if(jamaat === "--:--") {
+                    let [h, m] = apiTimings[p].split(':').map(Number);
+                    let offset = p==='Maghrib'?5:15;
+                    let d = new Date(); d.setHours(h,m+offset);
+                    jamaat = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
+                }
+
+                const isRunning = (name === current || (p === 'Dhuhr' && current === 'Zohar'));
+
+                const card = document.createElement('div');
+                card.className = `prayer-card p-3 rounded-2xl bg-white text-center ${isRunning ? 'running-now' : ''}`;
+                card.onclick = () => openCountdown(name, apiTimings[p]);
+                card.innerHTML = `
+                    <div class="text-xs uppercase font-bold text-slate-400 mb-2">${name}</div>
+                    <div class="flex justify-around items-center">
+                        <div><div class="text-[10px] text-green-600 font-bold">Azan</div><div class="text-lg font-bold text-slate-800 leading-none">${azan}</div></div>
+                        <div class="w-px h-8 bg-slate-100"></div>
+                        <div><div class="text-[10px] text-amber-600 font-bold">Jamaat</div><div class="text-lg font-bold text-slate-800 leading-none">${jamaat}</div></div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // =========================================================
+        // 🎉 FESTIVALS LOGIC
+        // =========================================================
+        function loadFestivals() {
+            const events = [
+                { name: "Ramadan Start", hijri: "1 Ramadan 1447", gregorian: "Feb 18, 2026", desc: "Why we celebrate: Ramadan is the holy month of fasting revealed in the Quran. We fast from dawn to sunset to purify our souls, practice self-discipline, and empathize with those who are hungry.", highlight: true },
+                { name: "Laylat al-Qadr", hijri: "27 Ramadan 1447", gregorian: "Mar 16, 2026", desc: "Significance: Known as the 'Night of Power', this is when the first verses of the Quran were revealed to Prophet Muhammad (PBUH)." },
+                { name: "Eid al-Fitr", hijri: "1 Shawwal 1447", gregorian: "Mar 20, 2026", desc: "Why we celebrate: It marks the successful completion of Ramadan. It is a day of joy, thanksgiving to Allah for the strength to fast, and giving Zakat al-Fitr to the poor." },
+                { name: "Eid al-Adha", hijri: "10 Dhul Hijjah 1447", gregorian: "May 27, 2026", desc: "Why we celebrate: It honors the willingness of Prophet Ibrahim (AS) to sacrifice his son Ismail (AS) as an act of obedience to God." },
+                { name: "Islamic New Year", hijri: "1 Muharram 1448", gregorian: "June 16, 2026", desc: "Significance: Marks the migration (Hijra) of Prophet Muhammad (PBUH) from Mecca to Medina." },
+                { name: "Ashura", hijri: "10 Muharram 1448", gregorian: "June 25, 2026", desc: "Significance: For Sunnis, it marks when Musa (AS) was saved from Pharaoh. It is also a day of deep sorrow marking the martyrdom of Imam Hussain (AS)." },
+                { name: "Eid Milad-un-Nabi", hijri: "12 Rabi' al-Awwal 1448", gregorian: "Aug 26, 2026", desc: "Why we celebrate: It is the birth anniversary of our beloved Prophet Muhammad (PBUH). We celebrate by reciting Naats and discussing his Seerah." },
+                { name: "Gyarvi Sharif", hijri: "11 Rabi' al-Thani 1448", gregorian: "Sep 23, 2026", desc: "Significance: This is the Urs (remembrance) of the King of Saints, Sheikh Abdul Qadir Jilani (RA)." }
+            ];
+
+            const now = new Date();
+            let featuredIndex = 0;
+            for(let i=0; i<events.length; i++) {
+                if(new Date(events[i].gregorian) >= now) {
+                    featuredIndex = i; break;
+                }
+            }
+            const featured = events[featuredIndex];
+            
+            document.getElementById('featuredFestival').innerHTML = `
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-10 -translate-y-10"><i class="fas fa-mosque fa-10x"></i></div>
+                <div class="relative z-10">
+                    <div class="inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest mb-3 border border-white/20">Upcoming Event</div>
+                    <h4 class="text-3xl md:text-4xl font-bold mb-2">${featured.name}</h4>
+                    <div class="flex flex-wrap gap-4 text-sm font-medium opacity-90 mb-4">
+                        <span class="flex items-center gap-1"><i class="far fa-calendar-alt"></i> ${featured.gregorian}</span>
+                        <span class="flex items-center gap-1"><i class="fas fa-moon"></i> ${featured.hijri}</span>
+                    </div>
+                    <p class="text-green-100 text-sm md:text-base leading-relaxed max-w-2xl border-l-4 border-amber-400 pl-4 bg-black/10 p-2 rounded">${featured.desc}</p>
+                </div>
+            `;
+
+            const listContainer = document.getElementById('allFestivals');
+            listContainer.innerHTML = events.map((ev, idx) => {
+                if(idx === featuredIndex) return '';
+                return `
+                    <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition group">
+                        <div class="flex justify-between items-start mb-2">
+                            <h5 class="font-bold text-slate-800 text-lg group-hover:text-green-700 transition">${ev.name}</h5>
+                            <span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded font-bold">${ev.gregorian}</span>
+                        </div>
+                        <div class="text-xs text-green-600 font-medium mb-3"><i class="fas fa-moon"></i> ${ev.hijri}</div>
+                        <p class="text-xs text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-2">${ev.desc}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleFestivals() {
+            const list = document.getElementById('allFestivals');
+            const icon = document.getElementById('toggleIcon');
+            const btnText = document.querySelector('#toggleFestBtn span');
+            
+            if(list.classList.contains('hidden')) {
+                list.classList.remove('hidden'); list.classList.add('grid');
+                icon.style.transform = 'rotate(180deg)'; btnText.innerText = "Hide Festivals";
+            } else {
+                list.classList.add('hidden'); list.classList.remove('grid');
+                icon.style.transform = 'rotate(0deg)'; btnText.innerText = "See More Festivals";
+            }
+        }
+
+        function formatTime12(time) {
+            let [h, m] = time.split(':'); h = parseInt(h);
+            const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+            return `${h}:${m} ${ampm}`;
+        }
+        function switchTab(t) {
+            const m = document.getElementById('content-money'); const mt = document.getElementById('content-material');
+            const btM = document.getElementById('tab-money'); const btMt = document.getElementById('tab-material');
+            if(t==='money') { 
+                m.classList.remove('hidden'); mt.classList.add('hidden'); 
+                btM.classList.add('text-green-700','border-green-600','bg-white'); btM.classList.remove('text-slate-400');
+                btMt.classList.remove('text-green-700','border-green-600','bg-white'); btMt.classList.add('text-slate-400');
+                trackAction("Viewed Chanda Tab");
+            } else { 
+                m.classList.add('hidden'); mt.classList.remove('hidden'); 
+                btMt.classList.add('text-green-700','border-green-600','bg-white'); btMt.classList.remove('text-slate-400');
+                btM.classList.remove('text-green-700','border-green-600','bg-white'); btM.classList.add('text-slate-400');
+                trackAction("Viewed Material Tab");
+            }
+        }
+        let cdInt;
+        function openCountdown(name, time24) {
+            const modal = document.getElementById('countdownModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            document.getElementById('modalPrayerName').innerText = `${name} Starts In`;
+            clearInterval(cdInt);
+            const [h,m] = time24.split(':').map(Number);
+            const target = new Date(); target.setHours(h,m,0);
+            const now = new Date(); if(target < now) target.setDate(target.getDate() + 1);
+            cdInt = setInterval(() => {
+                const diff = target - new Date();
+                if(diff <= 0) { document.getElementById('modalTimer').innerText = "Now!"; return; }
+                const hrs = Math.floor((diff % 86400000) / 3600000);
+                const mins = Math.floor((diff % 3600000) / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                document.getElementById('modalTimer').innerText = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+        }
+        function closeCountdown() {
+            const modal = document.getElementById('countdownModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            clearInterval(cdInt);
+        }
+    </script>
+</body>
+</html>
+
+
