@@ -83,37 +83,21 @@
     <div id="zakatModal" class="fixed inset-0 bg-black/80 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative overflow-hidden">
             <button onclick="document.getElementById('zakatModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times fa-lg"></i></button>
-            
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-600"><i class="fas fa-calculator fa-2x"></i></div>
                 <h3 class="text-2xl font-bold text-slate-800">Zakat Calculator</h3>
                 <p class="text-xs text-slate-500">Calculate 2.5% of your eligible wealth</p>
             </div>
-
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase">Cash & Bank Balance</label>
-                    <div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_cash" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase">Gold & Silver Value</label>
-                    <div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_gold" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase">Investments & Shares</label>
-                    <div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_invest" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-red-400 uppercase">Liabilities (Debts)</label>
-                    <div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50 focus-within:ring-2 ring-red-500"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div>
-                </div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase">Cash & Bank Balance</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_cash" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase">Gold & Silver Value</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_gold" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase">Investments & Shares</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_invest" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-red-400 uppercase">Liabilities (Debts)</label><div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50 focus-within:ring-2 ring-red-500"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
             </div>
-
             <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-100 text-center">
                 <p class="text-sm text-green-800 mb-1">Total Zakat Payable</p>
                 <div class="text-3xl font-bold text-green-700" id="zakatResult">₹ 0</div>
             </div>
-
             <button onclick="calculateZakat()" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition">Calculate</button>
         </div>
     </div>
@@ -327,12 +311,12 @@
         <section class="max-w-4xl mx-auto mt-8 mb-4">
             <div class="glass-panel rounded-3xl p-6 text-center border-l-4 border-green-600 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center">
-                    <img src="masjid logo.png" onerror="this.style.display='none'" alt="Masjid Logo" class="w-24 h-auto mb-4 object-contain">
+                    <img src="masjid logo.png" onerror="this.style.display='none'" alt="Masjid Logo" class="w-24 h-24 object-cover rounded-full mx-auto mb-4 shadow-sm border-2 border-white">
                     <h3 class="font-bold text-slate-800 text-lg mb-1">Download Our App</h3>
                     <p class="text-xs text-slate-500 mb-4 max-w-xs mx-auto">
                         Download Our App to see Raza Jumma Masjid Namaz timings from anywhere
                     </p>
-                    <a href="Raza Jumma App.apk" download="Raza Jumma App.apk"
+                    <a href="https://github.com/TajushshariyaYouth/RazaJummaApp/raw/main/Raza%20Jumma%20App.apk" 
                        class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition transform active:scale-95 text-sm"
                        onclick="trackAction('Downloaded App')">
                         <i class="fas fa-download mr-2"></i> Download App
@@ -390,13 +374,20 @@
                 }
             });
 
-            // Local fallback
+            // Local fallback & Instant Render
             try {
                 const saved = localStorage.getItem('timings_v9');
                 if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) };
             } catch(e) {}
 
+            // SAFETY RENDER (Fixes "Time not loading" bug)
+            // Render immediately with whatever data we have
+            const safeDefaultAPI = {Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"};
+            renderGrid(safeDefaultAPI, {day:"--", month:{en:"--"}, year:"--"});
+
+            // Then try to fetch live data
             refreshData();
+            
             setTimeout(() => {
                 loadFestivals();
                 populateSurahList();
@@ -603,7 +594,7 @@
                 const data = await res.json();
                 renderGrid(data.data.timings, data.data.date.hijri);
             } catch(e) { 
-                // Fallback for safety - renders grid even if API fails
+                // Fallback: Use safety defaults so grid is never empty
                 renderGrid({Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:10"}, {day:"--", month:{en:"--"}, year:"--"});
             }
         }
@@ -625,7 +616,11 @@
             ];
 
             const now = new Date();
-            const timeToDate = (t) => { const [h,m] = t.split(':').map(Number); const d = new Date(); d.setHours(h,m,0); return d; };
+            // Highlight & Next Prayer Logic
+            const timeToDate = (t) => { 
+                if(!t) return new Date(); // Safety
+                const [h,m] = t.split(':').map(Number); const d = new Date(); d.setHours(h,m,0); return d; 
+            };
             const f = timeToDate(apiTimings.Fajr); const z = timeToDate(apiTimings.Dhuhr); 
             const a = timeToDate(apiTimings.Asr); const m = timeToDate(apiTimings.Maghrib); 
             const i = timeToDate(apiTimings.Isha); const s = timeToDate(apiTimings.Sunrise);
@@ -645,7 +640,7 @@
                 let azan = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : formatTime12(apiTimings[p.apiKey]);
                 let jamaat = activeTimings[p.code].j;
                 if(jamaat === "--:--") {
-                    let [h, m] = apiTimings[p.apiKey].split(':').map(Number);
+                    let [h, m] = (apiTimings[p.apiKey] || "00:00").split(':').map(Number); // Safety fallback
                     let offset = p.apiKey==='Maghrib'?5:15;
                     let d = new Date(); d.setHours(h,m+offset);
                     jamaat = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
@@ -683,7 +678,10 @@
             else { list.classList.add('hidden'); list.classList.remove('grid'); icon.style.transform = 'rotate(0deg)'; btnText.innerText = "See More Festivals"; }
         }
 
-        function formatTime12(time) { let [h, m] = time.split(':'); h = parseInt(h); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${m} ${ampm}`; }
+        function formatTime12(time) { 
+             if(!time) return "--:--";
+             let [h, m] = time.split(':'); h = parseInt(h); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${m} ${ampm}`; 
+        }
         function switchTab(t) {
             const m = document.getElementById('content-money'); const mt = document.getElementById('content-material');
             const btM = document.getElementById('tab-money'); const btMt = document.getElementById('tab-material');
@@ -698,7 +696,7 @@
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
             document.getElementById('modalPrayerName').innerText = `${name} Starts In`;
             clearInterval(cdInt);
-            const [h,m] = time24.split(':').map(Number);
+            const [h,m] = (time24 || "00:00").split(':').map(Number);
             const target = new Date(); target.setHours(h,m,0);
             const now = new Date(); if(target < now) target.setDate(target.getDate() + 1);
             cdInt = setInterval(() => {
