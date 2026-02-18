@@ -15,11 +15,6 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
-
     <style>
         body {
             font-family: 'Noto Sans', sans-serif;
@@ -307,7 +302,7 @@
             </div>
         </section>
 
-        <!-- DOWNLOAD APP SECTION -->
+        <!-- DOWNLOAD APP SECTION (NEW) -->
         <section class="max-w-4xl mx-auto mt-8 mb-4 px-4">
             <div class="glass-panel rounded-3xl p-6 text-center border-l-4 border-green-600 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center">
@@ -366,42 +361,23 @@
             "3-18": {s:"5:11 AM", i:"6:34 PM"}, "3-19": {s:"5:11 AM", i:"6:34 PM"}, "3-20": {s:"5:10 AM", i:"6:34 PM"}
         };
 
-        // --- FIREBASE INIT FOR UNIVERSAL SYNC ---
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(app);
-        const auth = firebase.auth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default';
-
-        window.onload = async function() {
-            try { await auth.signInAnonymously(); } catch(e) {}
-
-            // UNIVERSAL SYNC: Listen to Cloud Database
-            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
-            
-            docRef.onSnapshot((doc) => {
-                if (doc.exists) {
-                    activeTimings = { ...activeTimings, ...doc.data() };
-                    saveLocally();
-                    refreshData();
-                } else {
-                    docRef.set(activeTimings);
-                }
-            });
-
-            // Local fallback & Instant Render
+        // --- INIT ---
+        window.onload = function() {
+            // SAFETY RENDER (Fixes "Time not loading" bug)
             try {
-                const saved = localStorage.getItem('timings_v9');
+                // Try to load cached data
+                const saved = localStorage.getItem('timings_v10');
                 if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) };
             } catch(e) {}
-
-            // SAFETY RENDER (Fixes "Time not loading" bug)
+            
+            // Force render immediately with what we have
             const safeDefaultAPI = {Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"};
             renderGrid(safeDefaultAPI, {day:"--", month:{en:"--"}, year:"--"});
 
-            // Then try to fetch live data
+            // Then refresh with live data
             refreshData();
-            
+            fetchCloudData();
+
             setTimeout(() => {
                 loadFestivals();
                 populateSurahList();
@@ -412,11 +388,39 @@
             }, 100);
         };
 
-        function saveLocally() { localStorage.setItem('timings_v9', JSON.stringify(activeTimings)); }
-        function saveToCloud() {
-            if(!auth.currentUser) return;
-            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
-            docRef.set(activeTimings, { merge: true });
+        function saveLocally() { localStorage.setItem('timings_v10', JSON.stringify(activeTimings)); }
+        
+        // --- UNIVERSAL CLOUD SYNC (Using Bot Description) ---
+        async function fetchCloudData() {
+            try {
+                // Get global data from Bot's Description
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
+                const data = await res.json();
+                
+                if(data.ok && data.result.description) {
+                    const cloudStr = data.result.description;
+                    if(cloudStr.startsWith("{")) {
+                        const cloudData = JSON.parse(cloudStr);
+                        // Update if different
+                        if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
+                            activeTimings = { ...activeTimings, ...cloudData };
+                            saveLocally();
+                            refreshData();
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function saveToCloud() {
+            try {
+                const jsonStr = JSON.stringify(activeTimings);
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ description: jsonStr })
+                });
+            } catch(e) { console.error("Save Error", e); }
         }
 
         // --- BOT ENGINE ---
@@ -440,7 +444,11 @@
                         await processUserMessage(chatId, text);
                         updated = true;
                     }
-                    if(updated) saveToCloud();
+                    if(updated) {
+                        saveToCloud(); // Save to global cloud
+                        saveLocally();
+                        refreshData();
+                    }
                 }
             } catch(e) { }
         }
@@ -600,16 +608,6 @@
             document.getElementById('sehriTime').innerText = activeTimings.S;
             document.getElementById('iftarTime').innerText = activeTimings.K;
 
-            // Check Ramadan Logic
-            const now = new Date();
-            const todayKey = `${now.getMonth()+1}-${now.getDate()}`;
-            
-            // Only overwrite if it is a Ramadan date AND manual sync hasn't set it recently
-            if(ramadanSchedule[todayKey]) {
-                document.getElementById('sehriTime').innerText = ramadanSchedule[todayKey].s;
-                document.getElementById('iftarTime').innerText = ramadanSchedule[todayKey].i;
-            }
-
             const lat = 13.0537, long = 77.5367; 
             const url = `https://api.aladhan.com/v1/timings/${new Date().getDate()}-${new Date().getMonth()+1}-${new Date().getFullYear()}?latitude=${lat}&longitude=${long}&method=1&school=1`;
             
@@ -626,9 +624,12 @@
         function renderGrid(apiTimings, hijri) {
             document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
             
-            // If not Ramadan date, use defaults
+            // Check for Ramadan Dates (Static Schedule Override)
             const todayKey = `${new Date().getMonth()+1}-${new Date().getDate()}`;
-            if(!ramadanSchedule[todayKey]) {
+            if(ramadanSchedule[todayKey]) {
+                if(activeTimings.S === "--:--") document.getElementById('sehriTime').innerText = ramadanSchedule[todayKey].s;
+                if(activeTimings.K === "--:--") document.getElementById('iftarTime').innerText = ramadanSchedule[todayKey].i;
+            } else {
                 if(activeTimings.S === "--:--") document.getElementById('sehriTime').innerText = formatTime12(apiTimings.Fajr);
                 if(activeTimings.K === "--:--") document.getElementById('iftarTime').innerText = formatTime12(apiTimings.Maghrib);
             }
