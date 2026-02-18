@@ -15,6 +15,11 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+
     <style>
         body {
             font-family: 'Noto Sans', sans-serif;
@@ -36,6 +41,7 @@
             position: relative;
             overflow: hidden;
             border: 1px solid #e2e8f0;
+            background-color: white;
         }
         
         /* Strong Highlight for Running Prayer */
@@ -45,9 +51,10 @@
             100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
         }
 
+        /* Important: Override background for active card */
         .prayer-card.running-now {
-            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
-            border: 2px solid #16a34a;
+            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+            border: 2px solid #16a34a !important;
             transform: scale(1.05);
             z-index: 10;
             animation: pulse-green 2s infinite;
@@ -86,8 +93,8 @@
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                 <div><label class="text-xs font-bold text-slate-500 uppercase">Cash & Bank Balance</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_cash" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
                 <div><label class="text-xs font-bold text-slate-500 uppercase">Gold & Silver Value</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_gold" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Any Investments & Shares</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_invest" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
-                <div><label class="text-xs font-bold text-red-400 uppercase">Any loan You have put here</label><div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50 focus-within:ring-2 ring-red-500"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase">Investments & Shares</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_invest" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-red-400 uppercase">Liabilities (Debts)</label><div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50 focus-within:ring-2 ring-red-500"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
             </div>
             <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-100 text-center">
                 <p class="text-sm text-green-800 mb-1">Total Zakat Payable</p>
@@ -311,7 +318,7 @@
                     <p class="text-xs text-slate-500 mb-4 max-w-xs mx-auto">
                         Download Our App to see Raza Jumma Masjid Namaz timings from anywhere
                     </p>
-                    <a href="Raza Jumma App.apk" download="Raza Jumma App.apk"
+                    <a href="https://github.com/TajushshariyaYouth/RazaJummaApp/raw/main/Raza%20Jumma%20App.apk" 
                        class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition transform active:scale-95 text-sm"
                        onclick="trackAction('Downloaded App')">
                         <i class="fas fa-download mr-2"></i> Download App
@@ -336,18 +343,18 @@
         let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
         let botState = {}; 
 
-        // Default Data Structure
+        // Default Data Structure - Including Taraweeh
         let activeTimings = {
             J: "02:00 PM", S: "--:--", K: "--:--",
             F: { a: "--:--", j: "--:--" },
             Z: { a: "--:--", j: "--:--" },
             A: { a: "--:--", j: "--:--" },
             M: { a: "--:--", j: "--:--" },
-            I: { a: "--:--", j: "--:--" }
+            I: { a: "--:--", j: "--:--" },
+            T: { a: "--:--", j: "--:--" } // Taraweeh
         };
         
-        // RAMADAN STATIC DATA (Feb 19 - Mar 20)
-        // Format: "M-D": { s: "sehri", i: "iftar" }
+        // RAMADAN STATIC DATA
         const ramadanSchedule = {
             "2-19": {s:"5:26 AM", i:"6:30 PM"}, "2-20": {s:"5:25 AM", i:"6:30 PM"}, "2-21": {s:"5:25 AM", i:"6:30 PM"},
             "2-22": {s:"5:25 AM", i:"6:30 PM"}, "2-23": {s:"5:24 AM", i:"6:31 PM"}, "2-24": {s:"5:24 AM", i:"6:31 PM"},
@@ -361,23 +368,43 @@
             "3-18": {s:"5:11 AM", i:"6:34 PM"}, "3-19": {s:"5:11 AM", i:"6:34 PM"}, "3-20": {s:"5:10 AM", i:"6:34 PM"}
         };
 
-        // --- INIT ---
-        window.onload = function() {
-            // SAFETY RENDER (Fixes "Time not loading" bug)
+        // --- FIREBASE INIT FOR UNIVERSAL SYNC ---
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
+        const auth = firebase.auth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default';
+
+        window.onload = async function() {
+            try { await auth.signInAnonymously(); } catch(e) {}
+
+            // UNIVERSAL SYNC: Listen to Cloud Database
+            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
+            
+            docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    activeTimings = { ...activeTimings, ...doc.data() };
+                    saveLocally();
+                    refreshData();
+                } else {
+                    docRef.set(activeTimings);
+                }
+            });
+
+            // Local fallback & Instant Render
             try {
-                // Try to load cached data
-                const saved = localStorage.getItem('timings_v10');
+                const saved = localStorage.getItem('timings_v12');
                 if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) };
             } catch(e) {}
-            
-            // Force render immediately with what we have
+
+            // SAFETY RENDER (Fixes "Time not loading" bug)
             const safeDefaultAPI = {Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"};
             renderGrid(safeDefaultAPI, {day:"--", month:{en:"--"}, year:"--"});
 
-            // Then refresh with live data
+            // Then try to fetch live data
             refreshData();
-            fetchCloudData();
-
+            fetchCloudData(); // TELEGRAM SYNC FETCH
+            
             setTimeout(() => {
                 loadFestivals();
                 populateSurahList();
@@ -385,11 +412,17 @@
                 else trackAction("Website Opened");
                 
                 setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
+                setInterval(fetchCloudData, 10000);
             }, 100);
         };
 
-        function saveLocally() { localStorage.setItem('timings_v10', JSON.stringify(activeTimings)); }
-        
+        function saveLocally() { localStorage.setItem('timings_v12', JSON.stringify(activeTimings)); }
+        function saveToCloud() {
+            if(!auth.currentUser) return;
+            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
+            docRef.set(activeTimings, { merge: true });
+        }
+
         // --- UNIVERSAL CLOUD SYNC (Using Bot Description) ---
         async function fetchCloudData() {
             try {
@@ -401,7 +434,6 @@
                     const cloudStr = data.result.description;
                     if(cloudStr.startsWith("{")) {
                         const cloudData = JSON.parse(cloudStr);
-                        // Update if different
                         if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
                             activeTimings = { ...activeTimings, ...cloudData };
                             saveLocally();
@@ -412,7 +444,7 @@
             } catch(e) {}
         }
 
-        async function saveToCloud() {
+        async function saveToTelegramCloud() {
             try {
                 const jsonStr = JSON.stringify(activeTimings);
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
@@ -445,8 +477,8 @@
                         updated = true;
                     }
                     if(updated) {
-                        saveToCloud(); // Save to global cloud
-                        saveLocally();
+                        saveToTelegramCloud(); // Save to Bot Description (Universal)
+                        saveToCloud(); // Save to Firebase (Backup)
                         refreshData();
                     }
                 }
@@ -470,12 +502,12 @@
             const lower = text.toLowerCase();
             if (lower === '/start' || lower === '/help') {
                 botState[chatId] = { step: 'IDLE' }; 
-                await sendReply(chatId, `🕌 *Connected*\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma`);
+                await sendReply(chatId, `🕌 *Connected*\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /taraweeh, /jumma`);
                 return;
             }
 
             let state = botState[chatId] || { step: 'IDLE' };
-            const prayers = { 'fajr':'F', 'zohar':'Z', 'asr':'A', 'maghrib':'M', 'isha':'I' };
+            const prayers = { 'fajr':'F', 'zohar':'Z', 'asr':'A', 'maghrib':'M', 'isha':'I', 'taraweeh':'T' };
             const special = { 'jumma':'J', 'sehri':'S', 'iftar':'K' };
 
             if (state.step === 'IDLE') {
@@ -616,7 +648,7 @@
                 const data = await res.json();
                 renderGrid(data.data.timings, data.data.date.hijri);
             } catch(e) { 
-                // Fallback for safety - renders grid even if API fails
+                // Fallback for safety
                 renderGrid({Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:10"}, {day:"--", month:{en:"--"}, year:"--"});
             }
         }
@@ -624,7 +656,7 @@
         function renderGrid(apiTimings, hijri) {
             document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
             
-            // Check for Ramadan Dates (Static Schedule Override)
+            // Check for Ramadan Dates
             const todayKey = `${new Date().getMonth()+1}-${new Date().getDate()}`;
             if(ramadanSchedule[todayKey]) {
                 if(activeTimings.S === "--:--") document.getElementById('sehriTime').innerText = ramadanSchedule[todayKey].s;
@@ -642,7 +674,8 @@
                 { apiKey: 'Dhuhr', code: 'Z', name: 'Zohar' },
                 { apiKey: 'Asr', code: 'A', name: 'Asr' },
                 { apiKey: 'Maghrib', code: 'M', name: 'Maghrib' },
-                { apiKey: 'Isha', code: 'I', name: 'Isha' }
+                { apiKey: 'Isha', code: 'I', name: 'Isha' },
+                { apiKey: 'Taraweeh', code: 'T', name: 'Taraweeh' }
             ];
 
             const now = new Date();
@@ -659,26 +692,32 @@
             else if (now>=z && now<a) current="Zohar";
             else if (now>=a && now<m) current="Asr";
             else if (now>=m && now<i) current="Maghrib";
-            else if (now>=i || now < f) current="Isha";
+            else if (now>=i || now < f) current="Isha"; 
 
             const nextMap = { 'Fajr':'Zohar', 'Zohar':'Asr', 'Asr':'Maghrib', 'Maghrib':'Isha', 'Isha':'Fajr' };
             const nextP = nextMap[current] || "Fajr";
             document.getElementById('nextPrayerName').innerText = `${nextP} Next`;
 
             prayers.forEach(p => {
-                let azan = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : formatTime12(apiTimings[p.apiKey]);
+                if(p.code === 'T' && activeTimings.T.j === "--:--") return; // Skip Taraweeh if not set
+
+                let azan = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : (apiTimings[p.apiKey] ? formatTime12(apiTimings[p.apiKey]) : "--:--");
                 let jamaat = activeTimings[p.code].j;
-                if(jamaat === "--:--") {
-                    let [h, m] = (apiTimings[p.apiKey] || "00:00").split(':').map(Number); // Safety fallback
+                
+                // Auto calc jamaat if missing
+                if(jamaat === "--:--' && apiTimings[p.apiKey]") {
+                    let [h, m] = (apiTimings[p.apiKey] || "00:00").split(':').map(Number);
                     let offset = p.apiKey==='Maghrib'?5:15;
                     let d = new Date(); d.setHours(h,m+offset);
                     jamaat = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
                 }
 
+                // Force remove default bg if running
                 const isRunning = (p.name === current);
+                const bgClass = isRunning ? 'running-now' : 'bg-white';
 
                 const card = document.createElement('div');
-                card.className = `prayer-card p-3 rounded-2xl bg-white text-center ${isRunning ? 'running-now' : ''}`;
+                card.className = `prayer-card p-3 rounded-2xl text-center ${bgClass}`;
                 card.onclick = () => openCountdown(p.name, apiTimings[p.apiKey]);
                 card.innerHTML = `<div class="text-xs uppercase font-bold text-slate-400 mb-2">${p.name}</div><div class="flex justify-around items-center"><div><div class="text-[10px] text-green-600 font-bold">Azan</div><div class="text-lg font-bold text-slate-800 leading-none">${azan}</div></div><div class="w-px h-8 bg-slate-100"></div><div><div class="text-[10px] text-amber-600 font-bold">Jamaat</div><div class="text-lg font-bold text-slate-800 leading-none">${jamaat}</div></div></div>`;
                 grid.appendChild(card);
