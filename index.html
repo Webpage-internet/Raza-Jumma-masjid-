@@ -6,13 +6,13 @@
     <title>Raza Jumma Masjid - Ravetha Nagar</title>
     <meta name="theme-color" content="#064e3b">
     
-    <!-- Core Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <!-- Firebase -->
+
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
@@ -22,12 +22,9 @@
         h1, h2, h3, .arabic-text, .surah-name { font-family: 'Amiri', serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1); }
         .prayer-card { transition: all 0.3s ease; position: relative; overflow: hidden; border: 1px solid #e2e8f0; background-color: white; }
-        
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(22, 163, 74, 0); } 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); } }
-        
         .prayer-card.running-now { background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important; border: 2px solid #16a34a !important; transform: scale(1.05); z-index: 10; animation: pulse-green 2s infinite; }
         .prayer-card.running-now::after { content: 'Running Now'; position: absolute; top: 0; right: 0; background: #16a34a; color: white; font-size: 9px; font-weight: bold; padding: 3px 8px; border-bottom-left-radius: 8px; box-shadow: -2px 2px 4px rgba(0,0,0,0.1); }
-        
         .surah-item:hover { background-color: #f0fdf4; border-color: #16a34a; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -42,15 +39,18 @@
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-600"><i class="fas fa-calculator fa-2x"></i></div>
                 <h3 class="text-2xl font-bold text-slate-800">Zakat Calculator</h3>
-                <p class="text-xs text-slate-500">Calculate 2.5%</p>
+                <p class="text-xs text-slate-500">Calculate 2.5% of your eligible wealth</p>
             </div>
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Cash</label><div class="flex items-center border rounded-lg px-3 bg-slate-50"><span class="text-slate-400">₹</span><input type="number" id="z_cash" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Gold</label><div class="flex items-center border rounded-lg px-3 bg-slate-50"><span class="text-slate-400">₹</span><input type="number" id="z_gold" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
-                <div><label class="text-xs font-bold text-slate-500 uppercase">Investments</label><div class="flex items-center border rounded-lg px-3 bg-slate-50"><span class="text-slate-400">₹</span><input type="number" id="z_invest" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
-                <div><label class="text-xs font-bold text-red-400 uppercase">Debts</label><div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase">Cash & Bank</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_cash" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase">Gold & Silver</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_gold" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase">Investments</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_invest" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-red-400 uppercase">Debts</label><div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50 focus-within:ring-2 ring-red-500"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
             </div>
-            <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-100 text-center"><p class="text-sm text-green-800 mb-1">Total Zakat Payable</p><div class="text-3xl font-bold text-green-700" id="zakatResult">₹ 0</div></div>
+            <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-100 text-center">
+                <p class="text-sm text-green-800 mb-1">Total Zakat Payable</p>
+                <div class="text-3xl font-bold text-green-700" id="zakatResult">₹ 0</div>
+            </div>
             <button onclick="calculateZakat()" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition">Calculate</button>
         </div>
     </div>
@@ -61,7 +61,7 @@
             <h3 class="text-lg font-bold text-green-800 flex items-center gap-2"><i class="fas fa-book-open"></i> Al-Quran</h3>
             <button onclick="document.getElementById('quranModal').classList.add('hidden')" class="text-slate-500 hover:text-red-500 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full"><i class="fas fa-times"></i></button>
         </div>
-        <div class="p-4 bg-slate-50 border-b"><input type="text" id="surahSearch" placeholder="Search Surah..." class="w-full p-3 rounded-xl border border-slate-200 outline-none" oninput="filterSurahs()"></div>
+        <div class="p-4 bg-slate-50 border-b"><input type="text" id="surahSearch" placeholder="Search Surah (e.g. Yasin)..." class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-green-500" oninput="filterSurahs()"></div>
         <div id="surahList" class="flex-grow overflow-y-auto p-4 space-y-2 pb-20"></div>
         <div id="readerView" class="hidden absolute inset-0 bg-white z-20 flex flex-col">
             <div class="bg-green-800 text-white p-4 shadow-md flex justify-between items-center"><button onclick="document.getElementById('readerView').classList.add('hidden')" class="text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i> Back</button><h3 id="readerTitle" class="font-bold font-serif text-lg">Surah</h3><div class="w-6"></div></div>
@@ -100,15 +100,9 @@
         <section class="max-w-4xl mx-auto transform hover:scale-[1.01] transition duration-500">
             <div class="glass-panel rounded-3xl p-8 text-center relative overflow-hidden group">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50"></div>
-                <div class="mb-4 inline-block">
-                    <span class="text-[10px] font-bold text-green-600 uppercase tracking-[0.2em] border border-green-200 px-3 py-1 rounded-full bg-green-50">Ayat of the Day</span>
-                </div>
-                <p class="arabic-text text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-loose dir-rtl drop-shadow-sm">
-                    إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا
-                </p>
-                <p class="text-slate-600 font-medium italic text-base md:text-lg">
-                    "Beshak Namaz momino par muqarrar waqt mein farz ki gayi hai."
-                </p>
+                <div class="mb-4 inline-block"><span class="text-[10px] font-bold text-green-600 uppercase tracking-[0.2em] border border-green-200 px-3 py-1 rounded-full bg-green-50">Ayat of the Day</span></div>
+                <p class="arabic-text text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-loose dir-rtl drop-shadow-sm">إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا</p>
+                <p class="text-slate-600 font-medium italic text-base md:text-lg">"Beshak Namaz momino par muqarrar waqt mein farz ki gayi hai."</p>
                 <div class="text-xs text-slate-400 mt-3 font-semibold tracking-wide">(Surah An-Nisa: 103)</div>
             </div>
         </section>
@@ -131,37 +125,19 @@
                         <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-mosque text-green-700"></i> Prayer Times</h2>
                         <p class="text-xs text-slate-400 mt-1 pl-7">Bangalore • Hanafi</p>
                     </div>
-                    <!-- Next Prayer Indicator -->
-                    <div class="text-right">
-                        <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Next Prayer</div>
-                        <div id="nextPrayerName" class="text-sm font-bold text-green-700">Loading...</div>
-                    </div>
+                    <div class="text-right"><div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Next Prayer</div><div id="nextPrayerName" class="text-sm font-bold text-green-700">Loading...</div></div>
                 </div>
 
-                <!-- Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8" id="prayerGrid"></div>
 
-                <!-- Special Times Row -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex justify-between items-center relative overflow-hidden">
-                        <div class="text-center w-1/2 border-r border-slate-200 pr-4">
-                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Sehri Ends</div>
-                            <div class="text-xl font-bold text-slate-700" id="sehriTime">--:--</div>
-                        </div>
-                        <div class="text-center w-1/2 pl-4">
-                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Iftar Start</div>
-                            <div class="text-xl font-bold text-slate-700" id="iftarTime">--:--</div>
-                        </div>
+                        <div class="text-center w-1/2 border-r border-slate-200 pr-4"><div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Sehri Ends</div><div class="text-xl font-bold text-slate-700" id="sehriTime">05:30 AM</div></div>
+                        <div class="text-center w-1/2 pl-4"><div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Iftar Start</div><div class="text-xl font-bold text-slate-700" id="iftarTime">06:30 PM</div></div>
                     </div>
                     <div class="lg:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-100 flex items-center justify-between relative overflow-hidden">
-                        <div class="relative z-10">
-                            <div class="text-amber-800 font-bold text-lg flex items-center gap-2 mb-1"><i class="fas fa-star-and-crescent"></i> Jumu'ah</div>
-                            <div class="text-xs text-amber-700/70">Khutbah 30 mins prior</div>
-                        </div>
-                        <div class="text-right relative z-10">
-                            <div class="text-[10px] text-amber-600 uppercase font-bold tracking-wider">Jamaat</div>
-                            <div class="text-3xl font-bold text-amber-600" id="jummaTimeDisplay">--:--</div>
-                        </div>
+                        <div class="relative z-10"><div class="text-amber-800 font-bold text-lg flex items-center gap-2 mb-1"><i class="fas fa-star-and-crescent"></i> Jumu'ah</div><div class="text-xs text-amber-700/70">Khutbah 30 mins prior</div></div>
+                        <div class="text-right relative z-10"><div class="text-[10px] text-amber-600 uppercase font-bold tracking-wider">Jamaat</div><div class="text-3xl font-bold text-amber-600" id="jummaTimeDisplay">02:00 PM</div></div>
                     </div>
                 </div>
             </div>
@@ -169,9 +145,7 @@
 
         <!-- Islamic Festivals -->
         <section class="max-w-4xl mx-auto">
-            <h3 class="text-lg font-bold text-slate-700 mb-4 px-2 flex items-center gap-2">
-                <i class="fas fa-star text-amber-500"></i> Upcoming Islamic Events
-            </h3>
+            <h3 class="text-lg font-bold text-slate-700 mb-4 px-2 flex items-center gap-2"><i class="fas fa-star text-amber-500"></i> Upcoming Islamic Events</h3>
             <div id="featuredFestival" class="bg-gradient-to-br from-[#064e3b] to-[#047857] rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6"><div class="shimmer w-full h-40 rounded-xl opacity-20"></div></div>
             <button onclick="toggleFestivals()" id="toggleFestBtn" class="w-full py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-sm shadow-sm hover:bg-slate-50 transition flex items-center justify-center gap-2"><span>See More Festivals</span><i class="fas fa-chevron-down transition-transform duration-300" id="toggleIcon"></i></button>
             <div id="allFestivals" class="hidden grid-cols-1 md:grid-cols-2 gap-4 mt-4 transition-all duration-300"></div>
@@ -184,33 +158,28 @@
                     <button onclick="switchTab('money')" id="tab-money" class="flex-1 py-4 font-bold text-green-700 border-b-2 border-green-600 bg-white text-sm uppercase transition-all">Chanda for Masjid</button>
                     <button onclick="switchTab('material')" id="tab-material" class="flex-1 py-4 font-bold text-slate-400 text-sm uppercase hover:text-green-600 transition-all">Donate Materials</button>
                 </div>
-                
                 <div id="content-money" class="p-8 text-center flex-grow flex flex-col justify-center items-center fade-in">
                     <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4"><i class="fas fa-hand-holding-dollar fa-lg"></i></div>
                     <h3 class="text-lg font-bold text-slate-800">Mumtaz Raza</h3>
                     <p class="text-sm text-slate-500 mb-6">Authorized for Masjid Chanda</p>
                     <a href="tel:+919110251749" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"><i class="fas fa-phone"></i> Call to Donate</a>
                 </div>
-                
                 <div id="content-material" class="hidden p-6 fade-in">
                     <div class="bg-amber-50 rounded-lg p-3 mb-4 text-center border border-amber-100"><p class="text-sm text-amber-800 font-bold">Donate Material for Masjid</p><p class="text-xs text-amber-700 opacity-90">Accepting: Cement, Carpets, Lights</p></div>
                     <div class="space-y-3">
                         <div class="flex justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm"><div class="flex gap-3 items-center"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><i class="fas fa-user-shield text-xs"></i></div><div><div class="font-bold text-xs">Arif (Sadar)</div><div class="text-[10px] text-slate-400">Admin</div></div></div><a href="tel:+919448265613" onclick="trackAction('Call Sadar')" class="text-green-600 bg-green-50 p-2 rounded-full"><i class="fas fa-phone text-sm"></i></a></div>
                         <div class="flex justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm"><div class="flex gap-3 items-center"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><i class="fas fa-pen text-xs"></i></div><div><div class="font-bold text-xs">Saja (Secretary)</div><div class="text-[10px] text-slate-400">Ops</div></div></div><a href="tel:+919972747315" onclick="trackAction('Call Secretary')" class="text-green-600 bg-green-50 p-2 rounded-full"><i class="fas fa-phone text-sm"></i></a></div>
-                        <div class="flex justify-between p-3 bg-green-50 border border-green-200 rounded-xl shadow-sm ring-1 ring-green-400 relative overflow-hidden">
-                            <div class="flex gap-3 items-center relative z-10"><div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white"><i class="fas fa-user text-xs"></i></div><div><div class="font-bold text-xs flex items-center gap-1">Mumtaz Raza <span class="bg-green-600 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 tracking-wide">RECOMMENDED</span></div><div class="text-[10px] text-green-800">Coordinator</div></div></div><a href="tel:+919110251749" onclick="trackAction('Call Mumtaz Material')" class="text-white bg-green-600 p-2 rounded-full hover:bg-green-700 shadow-md relative z-10"><i class="fas fa-phone text-sm"></i></a>
-                        </div>
+                        <div class="flex justify-between p-3 bg-green-50 border border-green-200 rounded-xl shadow-sm ring-1 ring-green-400 relative overflow-hidden"><div class="flex gap-3 items-center relative z-10"><div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white"><i class="fas fa-user text-xs"></i></div><div><div class="font-bold text-xs flex items-center gap-1">Mumtaz Raza <span class="bg-green-600 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 tracking-wide">RECOMMENDED</span></div><div class="text-[10px] text-green-800">Coordinator</div></div></div><a href="tel:+919110251749" onclick="trackAction('Call Mumtaz Material')" class="text-white bg-green-600 p-2 rounded-full hover:bg-green-700 shadow-md relative z-10"><i class="fas fa-phone text-sm"></i></a></div>
                     </div>
                 </div>
             </div>
-            
             <div class="glass-panel rounded-3xl p-6 flex flex-col justify-between">
                 <div><h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-map-marked-alt text-red-500"></i> Location</h3><address class="not-italic text-sm text-slate-600 leading-relaxed mb-6"><strong>Raza Jumma Masjid</strong><br>Ravetha Nagar, Shetty Halli,<br>Jalahalli West, Bengaluru,<br>Karnataka 560057</address></div>
                 <a href="https://www.google.com/maps/search/?api=1&query=Raza+Jumma+Masjid+Ravetha+Nagar+Shetty+Halli+Bengaluru" target="_blank" onclick="trackAction('Open Map')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"><i class="fas fa-directions text-amber-400"></i> Get Directions</a>
             </div>
         </section>
 
-        <!-- DOWNLOAD APP -->
+        <!-- DOWNLOAD APP SECTION -->
         <section class="max-w-4xl mx-auto mt-8 mb-4 px-4">
             <div class="glass-panel rounded-3xl p-6 text-center border-l-4 border-green-600 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center">
@@ -235,29 +204,25 @@
         let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
         let botState = {}; 
 
-        // Default Data with Taraweeh
+        // Default Data (Pre-filled to prevent blank screen)
         let activeTimings = {
-            J: "02:00 PM", S: "--:--", K: "--:--",
-            F: { a: "--:--", j: "--:--" },
-            Z: { a: "--:--", j: "--:--" },
-            A: { a: "--:--", j: "--:--" },
-            M: { a: "--:--", j: "--:--" },
-            I: { a: "--:--", j: "--:--" },
-            T: { a: "--:--", j: "--:--" } // Taraweeh added
+            J: "02:00 PM", S: "05:15 AM", K: "06:30 PM",
+            F: { a: "05:30 AM", j: "06:15 AM" },
+            Z: { a: "01:15 PM", j: "01:30 PM" },
+            A: { a: "04:30 PM", j: "05:00 PM" },
+            M: { a: "06:30 PM", j: "06:45 PM" },
+            I: { a: "08:15 PM", j: "08:30 PM" },
+            T: { a: "--:--", j: "--:--" }
         };
         
         // RAMADAN STATIC DATA
         const ramadanSchedule = {
-            "2-19": {s:"5:26 AM", i:"6:30 PM"}, "2-20": {s:"5:25 AM", i:"6:30 PM"}, "2-21": {s:"5:25 AM", i:"6:30 PM"},
-            "2-22": {s:"5:25 AM", i:"6:30 PM"}, "2-23": {s:"5:24 AM", i:"6:31 PM"}, "2-24": {s:"5:24 AM", i:"6:31 PM"},
-            "2-25": {s:"5:23 AM", i:"6:31 PM"}, "2-26": {s:"5:23 AM", i:"6:31 PM"}, "2-27": {s:"5:22 AM", i:"6:32 PM"},
-            "2-28": {s:"5:22 AM", i:"6:32 PM"}, "3-1": {s:"5:22 AM", i:"6:32 PM"}, "3-2": {s:"5:21 AM", i:"6:32 PM"},
-            "3-3": {s:"5:21 AM", i:"6:32 PM"}, "3-4": {s:"5:20 AM", i:"6:32 PM"}, "3-5": {s:"5:20 AM", i:"6:32 PM"},
-            "3-6": {s:"5:19 AM", i:"6:32 PM"}, "3-7": {s:"5:18 AM", i:"6:33 PM"}, "3-8": {s:"5:18 AM", i:"6:33 PM"},
-            "3-9": {s:"5:18 AM", i:"6:33 PM"}, "3-10": {s:"5:17 AM", i:"6:33 PM"}, "3-11": {s:"5:16 AM", i:"6:33 PM"},
-            "3-12": {s:"5:15 AM", i:"6:33 PM"}, "3-13": {s:"5:15 AM", i:"6:33 PM"}, "3-14": {s:"5:14 AM", i:"6:33 PM"},
-            "3-15": {s:"5:14 AM", i:"6:33 PM"}, "3-16": {s:"5:13 AM", i:"6:34 PM"}, "3-17": {s:"5:12 AM", i:"6:34 PM"},
-            "3-18": {s:"5:11 AM", i:"6:34 PM"}, "3-19": {s:"5:11 AM", i:"6:34 PM"}, "3-20": {s:"5:10 AM", i:"6:34 PM"}
+            "2-19": {s:"5:26 AM", i:"6:30 PM"}, "2-20": {s:"5:25 AM", i:"6:30 PM"}, "2-21": {s:"5:25 AM", i:"6:30 PM"}, "2-22": {s:"5:25 AM", i:"6:30 PM"}, "2-23": {s:"5:24 AM", i:"6:31 PM"},
+            "2-24": {s:"5:24 AM", i:"6:31 PM"}, "2-25": {s:"5:23 AM", i:"6:31 PM"}, "2-26": {s:"5:23 AM", i:"6:31 PM"}, "2-27": {s:"5:22 AM", i:"6:32 PM"}, "2-28": {s:"5:22 AM", i:"6:32 PM"},
+            "3-1": {s:"5:22 AM", i:"6:32 PM"}, "3-2": {s:"5:21 AM", i:"6:32 PM"}, "3-3": {s:"5:21 AM", i:"6:32 PM"}, "3-4": {s:"5:20 AM", i:"6:32 PM"}, "3-5": {s:"5:20 AM", i:"6:32 PM"},
+            "3-6": {s:"5:19 AM", i:"6:32 PM"}, "3-7": {s:"5:18 AM", i:"6:33 PM"}, "3-8": {s:"5:18 AM", i:"6:33 PM"}, "3-9": {s:"5:18 AM", i:"6:33 PM"}, "3-10": {s:"5:17 AM", i:"6:33 PM"},
+            "3-11": {s:"5:16 AM", i:"6:33 PM"}, "3-12": {s:"5:15 AM", i:"6:33 PM"}, "3-13": {s:"5:15 AM", i:"6:33 PM"}, "3-14": {s:"5:14 AM", i:"6:33 PM"}, "3-15": {s:"5:14 AM", i:"6:33 PM"},
+            "3-16": {s:"5:13 AM", i:"6:34 PM"}, "3-17": {s:"5:12 AM", i:"6:34 PM"}, "3-18": {s:"5:11 AM", i:"6:34 PM"}, "3-19": {s:"5:11 AM", i:"6:34 PM"}, "3-20": {s:"5:10 AM", i:"6:34 PM"}
         };
 
         const firebaseConfig = JSON.parse(__firebase_config);
@@ -268,35 +233,57 @@
 
         window.onload = async function() {
             try { await auth.signInAnonymously(); } catch(e) {}
+            // Sync from Firebase (Secondary)
             const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
             docRef.onSnapshot((doc) => { if (doc.exists) { activeTimings = { ...activeTimings, ...doc.data() }; saveLocally(); refreshData(); } else { docRef.set(activeTimings); } });
-            try { const saved = localStorage.getItem('timings_v14'); if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) }; } catch(e) {}
 
-            // Render Instantly with fallback
+            // Load Saved Data
+            try { const saved = localStorage.getItem('timings_v15'); if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) }; } catch(e) {}
+
+            // 1. Force Render with Safety Defaults
             renderGrid({Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"}, {day:"--", month:{en:"--"}, year:"--"});
             
+            // 2. Refresh with Live data
             refreshData();
-            fetchCloudData();
+            fetchCloudData(); // TELEGRAM SYNC
 
-            setTimeout(() => { loadFestivals(); populateSurahList(); if(!ADMIN_CHAT_ID) findAdminChatId(); else trackAction("Website Opened"); setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000); setInterval(fetchCloudData, 10000); }, 100);
+            setTimeout(() => {
+                loadFestivals();
+                populateSurahList();
+                if(!ADMIN_CHAT_ID) findAdminChatId();
+                setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
+                setInterval(fetchCloudData, 8000); // Poll Telegram Cloud frequently
+            }, 100);
         };
 
-        function saveLocally() { localStorage.setItem('timings_v14', JSON.stringify(activeTimings)); }
-        function saveToCloud() { if(!auth.currentUser) return; db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main').set(activeTimings, { merge: true }); }
+        function saveLocally() { localStorage.setItem('timings_v15', JSON.stringify(activeTimings)); }
+        function saveToFirebase() { if(!auth.currentUser) return; db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main').set(activeTimings, { merge: true }); }
 
-        // --- UNIVERSAL CLOUD SYNC ---
+        // --- UNIVERSAL CLOUD SYNC (Using Bot Description) ---
         async function fetchCloudData() {
             try {
                 const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
                 const data = await res.json();
                 if(data.ok && data.result.description && data.result.description.startsWith("{")) {
                     const cloudData = JSON.parse(data.result.description);
-                    if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) { activeTimings = { ...activeTimings, ...cloudData }; saveLocally(); refreshData(); }
+                    if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
+                        activeTimings = { ...activeTimings, ...cloudData };
+                        saveLocally();
+                        refreshData();
+                    }
                 }
             } catch(e) {}
         }
+
         async function saveToTelegramCloud() {
-            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ description: JSON.stringify(activeTimings) }) }); } catch(e){}
+            try {
+                const jsonStr = JSON.stringify(activeTimings);
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ description: jsonStr })
+                });
+            } catch(e) { console.error("Save Error", e); }
         }
 
         // --- BOT ENGINE ---
@@ -305,19 +292,26 @@
                 const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
                 const res = await fetch(url);
                 const data = await res.json();
+                
                 if (data.ok && data.result.length > 0) {
                     let updated = false;
                     for(const update of data.result) {
                         LAST_UPDATE_ID = update.update_id;
                         localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+
                         if(!update.message || !update.message.text) continue;
                         const text = update.message.text.trim();
                         const chatId = update.message.chat.id;
+                        
                         if(!ADMIN_CHAT_ID && chatId) { ADMIN_CHAT_ID = chatId; localStorage.setItem('chat_id', chatId); }
                         await processUserMessage(chatId, text);
                         updated = true;
                     }
-                    if(updated) { saveToTelegramCloud(); saveToCloud(); refreshData(); }
+                    if(updated) {
+                        saveToTelegramCloud(); // MAIN SYNC
+                        saveToFirebase(); // BACKUP SYNC
+                        refreshData();
+                    }
                 }
             } catch(e) { }
         }
@@ -326,7 +320,12 @@
 
         async function processUserMessage(chatId, text) {
             const lower = text.toLowerCase();
-            if (lower === '/start' || lower === '/help') { botState[chatId] = { step: 'IDLE' }; await sendReply(chatId, `🕌 *Connected*\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /taraweeh, /jumma`); return; }
+            if (lower === '/start' || lower === '/help') {
+                botState[chatId] = { step: 'IDLE' }; 
+                await sendReply(chatId, `🕌 *Connected*\n\n/fajr, /zohar, /asr, /maghrib, /isha, /taraweeh, /jumma`);
+                return;
+            }
+
             let state = botState[chatId] || { step: 'IDLE' };
             const prayers = { 'fajr':'F', 'zohar':'Z', 'asr':'A', 'maghrib':'M', 'isha':'I', 'taraweeh':'T' };
             const special = { 'jumma':'J', 'sehri':'S', 'iftar':'K' };
@@ -334,17 +333,24 @@
             if (state.step === 'IDLE') {
                 if (lower.startsWith('/')) {
                     const cmd = lower.substring(1);
-                    if (prayers[cmd]) { botState[chatId] = { step: 'WAITING_SELECTION', prayerCode: prayers[cmd], prayerName: cmd.toUpperCase() }; await sendReply(chatId, `⚙️ *${cmd.toUpperCase()}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`); } 
-                    else if (special[cmd]) { botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayerCode: special[cmd], prayerName: cmd.toUpperCase() }; await sendReply(chatId, `🕒 Enter time:`); }
+                    if (prayers[cmd]) {
+                        botState[chatId] = { step: 'WAITING_SELECTION', prayerCode: prayers[cmd], prayerName: cmd.toUpperCase() };
+                        await sendReply(chatId, `⚙️ *${cmd.toUpperCase()}*\n\n1 = Azan\n2 = Jamaat\n3 = Both`);
+                    } else if (special[cmd]) {
+                        botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayerCode: special[cmd], prayerName: cmd.toUpperCase() };
+                        await sendReply(chatId, `🕒 Enter time:`);
+                    }
                 }
                 return;
             }
+
             if (state.step === 'WAITING_SELECTION') {
-                if (['1', 'azan', 'a'].includes(lower)) { botState[chatId].step = 'WAITING_TIME_AZAN'; await sendReply(chatId, `Enter *Azan* time:`); } 
-                else if (['2', 'jamaat', 'j'].includes(lower)) { botState[chatId].step = 'WAITING_TIME_JAMAAT'; await sendReply(chatId, `Enter *Jamaat* time:`); } 
+                if (['1', 'azan', 'a'].includes(lower)) { botState[chatId].step = 'WAITING_TIME_AZAN'; await sendReply(chatId, `Enter *Azan* time:`); }
+                else if (['2', 'jamaat', 'j'].includes(lower)) { botState[chatId].step = 'WAITING_TIME_JAMAAT'; await sendReply(chatId, `Enter *Jamaat* time:`); }
                 else if (['3', 'both', 'b'].includes(lower)) { botState[chatId].step = 'WAITING_TIME_AZAN_BOTH'; await sendReply(chatId, `1️⃣ Enter *Azan* time:`); }
                 return;
             }
+
             const cleanTime = (t, pCode) => {
                 let upper = t.toUpperCase().replace('.', ':');
                 if(!upper.includes('M')) {
@@ -355,8 +361,10 @@
                 }
                 return upper;
             };
+
             const pCode = state.prayerCode;
             const t = cleanTime(text, pCode);
+
             if (state.step === 'WAITING_TIME_SINGLE') { activeTimings[pCode] = t; await sendReply(chatId, `✅ Updated`); botState[chatId] = { step: 'IDLE' }; }
             else if (state.step === 'WAITING_TIME_AZAN') { activeTimings[pCode].a = t; await sendReply(chatId, `✅ Updated Azan`); botState[chatId] = { step: 'IDLE' }; }
             else if (state.step === 'WAITING_TIME_JAMAAT') { activeTimings[pCode].j = t; await sendReply(chatId, `✅ Updated Jamaat`); botState[chatId] = { step: 'IDLE' }; }
@@ -365,7 +373,6 @@
         }
 
         async function sendReply(chatId, text) { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' }) }); }
-        async function trackAction(actionName) { if(!ADMIN_CHAT_ID) return; try { let ip="Unknown"; try{const r=await fetch('https://api.ipify.org?format=json'); const d=await r.json(); ip=d.ip;}catch(e){} await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: `🚨 *Activity Alert*\n\n👤 *User:* ${ip}\n✅ *Action:* ${actionName}\n⏰ *Time:* ${new Date().toLocaleTimeString()}`, parse_mode: 'Markdown' }) }); } catch(e){} }
 
         function calculateZakat() {
             const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
@@ -376,8 +383,8 @@
             trackAction("Used Zakat Calculator");
         }
 
-        const surahsList = [{i:1,n:"Al-Fatihah",a:"الفاتحة"},{i:2,n:"Al-Baqarah",a:"البقرة"},{i:3,n:"Ali 'Imran",a:"آل عمران"},{i:4,n:"An-Nisa",a:"النساء"},{i:5,n:"Al-Ma'idah",a:"المائدة"},{i:6,n:"Al-An'am",a:"الأنعام"},{i:7,n:"Al-A'raf",a:"الأعراف"},{i:8,n:"Al-Anfal",a:"الأنفال"},{i:36,n:"Ya-Sin",a:"يس"},{i:55,n:"Ar-Rahman",a:"الرحمن"},{i:67,n:"Al-Mulk",a:"الملك"},{i:112,n:"Al-Ikhlas",a:"الإخلاص"},{i:113,n:"Al-Falaq",a:"الفلق"},{i:114,n:"An-Nas",a:"الناس"}]; 
-        function populateSurahList() { const list = document.getElementById('surahList'); const fullList = []; for(let i=1; i<=114; i++) fullList.push({i:i, n:`Surah ${i}`, a:"سورة"}); surahsList.forEach(k => { fullList[k.i-1] = k; }); list.innerHTML = fullList.map(s => `<div onclick="readSurah(${s.i}, '${s.n}')" class="surah-item p-3 bg-white rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center">${s.i}</div><div><div class="font-bold text-slate-800">${s.n}</div></div></div><div class="font-serif text-lg text-green-700">${s.a}</div></div>`).join(''); }
+        const surahsList = [{i:1,n:"Al-Fatihah",a:"الفاتحة"},{i:2,n:"Al-Baqarah",a:"البقرة"},{i:3,n:"Ali 'Imran",a:"آل عمران"},{i:4,n:"An-Nisa",a:"النساء"},{i:5,n:"Al-Ma'idah",a:"المائدة"},{i:6,n:"Al-An'am",a:"الأنعام"},{i:7,n:"Al-A'raf",a:"الأعراف"},{i:8,n:"Al-Anfal",a:"الأنفال"},{i:9,n:"At-Tawbah",a:"التوبة"},{i:10,n:"Yunus",a:"يونس"},{i:11,n:"Hud",a:"هود"},{i:12,n:"Yusuf",a:"يوسف"},{i:13,n:"Ar-Ra'd",a:"الرعد"},{i:14,n:"Ibrahim",a:"ابراهيم"},{i:15,n:"Al-Hijr",a:"الحجر"},{i:16,n:"An-Nahl",a:"النحل"},{i:17,n:"Al-Isra",a:"الإسراء"},{i:18,n:"Al-Kahf",a:"الكهف"},{i:19,n:"Maryam",a:"مريم"},{i:20,n:"Taha",a:"طه"},{i:21,n:"Al-Anbya",a:"الأنبياء"},{i:22,n:"Al-Hajj",a:"الحج"},{i:23,n:"Al-Mu'minun",a:"المؤمنون"},{i:24,n:"An-Nur",a:"النور"},{i:25,n:"Al-Furqan",a:"الفرقان"},{i:26,n:"Ash-Shu'ara",a:"الشعراء"},{i:27,n:"An-Naml",a:"النمل"},{i:28,n:"Al-Qasas",a:"القصص"},{i:29,n:"Al-'Ankabut",a:"العنكبوت"},{i:30,n:"Ar-Rum",a:"الروم"},{i:31,n:"Luqman",a:"لقمان"},{i:32,n:"As-Sajdah",a:"السجدة"},{i:33,n:"Al-Ahzab",a:"الأحزاب"},{i:34,n:"Saba",a:"سبإ"},{i:35,n:"Fatir",a:"فاطر"},{i:36,n:"Ya-Sin",a:"يس"},{i:37,n:"As-Saffat",a:"الصافات"},{i:38,n:"Sad",a:"ص"},{i:39,n:"Az-Zumar",a:"الزمر"},{i:40,n:"Ghafir",a:"غافر"},{i:41,n:"Fussilat",a:"فصلت"},{i:42,n:"Ash-Shura",a:"الشورى"},{i:43,n:"Az-Zukhruf",a:"الزخرف"},{i:44,n:"Ad-Dukhan",a:"الدخان"},{i:45,n:"Al-Jathiyah",a:"الجاثية"},{i:46,n:"Al-Ahqaf",a:"الأحقاف"},{i:47,n:"Muhammad",a:"محمد"},{i:48,n:"Al-Fath",a:"الفتح"},{i:49,n:"Al-Hujurat",a:"الحجرات"},{i:50,n:"Qaf",a:"ق"},{i:51,n:"Adh-Dhariyat",a:"الذاريات"},{i:52,n:"At-Tur",a:"الطور"},{i:53,n:"An-Najm",a:"النجم"},{i:54,n:"Al-Qamar",a:"القمر"},{i:55,n:"Ar-Rahman",a:"الرحمن"},{i:56,n:"Al-Waqi'ah",a:"الواقعة"},{i:57,n:"Al-Hadid",a:"الحديد"},{i:58,n:"Al-Mujadila",a:"المجادلة"},{i:59,n:"Al-Hashr",a:"الحشر"},{i:60,n:"Al-Mumtahanah",a:"الممتحنة"},{i:61,n:"As-Saf",a:"الصف"},{i:62,n:"Al-Jumu'ah",a:"الجمعة"},{i:63,n:"Al-Munafiqun",a:"المنافقون"},{i:64,n:"At-Taghabun",a:"التغابن"},{i:65,n:"At-Talaq",a:"الطلاق"},{i:66,n:"At-Tahrim",a:"التحريم"},{i:67,n:"Al-Mulk",a:"الملك"},{i:68,n:"Al-Qalam",a:"القلم"},{i:69,n:"Al-Haqqah",a:"الحاقة"},{i:70,n:"Al-Ma'arij",a:"المعارج"},{i:71,n:"Nuh",a:"نوح"},{i:72,n:"Al-Jinn",a:"الجن"},{i:73,n:"Al-Muzzammil",a:"المزمل"},{i:74,n:"Al-Muddaththir",a:"المدثر"},{i:75,n:"Al-Qiyamah",a:"القيامة"},{i:76,n:"Al-Insan",a:"الانسان"},{i:77,n:"Al-Mursalat",a:"المرسلات"},{i:78,n:"An-Naba",a:"النبإ"},{i:79,n:"An-Nazi'at",a:"النازعات"},{i:80,n:"'Abasa",a:"عبس"},{i:81,n:"At-Takwir",a:"التكوير"},{i:82,n:"Al-Infitar",a:"الإنفطار"},{i:83,n:"Al-Mutaffifin",a:"المطففين"},{i:84,n:"Al-Inshiqaq",a:"الإنشقاق"},{i:85,n:"Al-Buruj",a:"البروج"},{i:86,n:"At-Tariq",a:"الطارق"},{i:87,n:"Al-A'la",a:"الأعلى"},{i:88,n:"Al-Ghashiyah",a:"الغاشية"},{i:89,n:"Al-Fajr",a:"الفجر"},{i:90,n:"Al-Balad",a:"البلد"},{i:91,n:"Ash-Shams",a:"الشمس"},{i:92,n:"Al-Layl",a:"الليل"},{i:93,n:"Ad-Duhaa",a:"الضحى"},{i:94,n:"Ash-Sharh",a:"الشرح"},{i:95,n:"At-Tin",a:"التين"},{i:96,n:"Al-'Alaq",a:"العلق"},{i:97,n:"Al-Qadr",a:"القدر"},{i:98,n:"Al-Bayyinah",a:"البينة"},{i:99,n:"Az-Zalzalah",a:"الزلزلة"},{i:100,n:"Al-'Adiyat",a:"العاديات"},{i:101,n:"Al-Qari'ah",a:"القارعة"},{i:102,n:"At-Takathur",a:"التكاثر"},{i:103,n:"Al-'Asr",a:"العصر"},{i:104,n:"Al-Humazah",a:"الهمزة"},{i:105,n:"Al-Fil",a:"الفيل"},{i:106,n:"Quraysh",a:"قريش"},{i:107,n:"Al-Ma'un",a:"الماعون"},{i:108,n:"Al-Kawthar",a:"الكوثر"},{i:109,n:"Al-Kafirun",a:"الكافرون"},{i:110,n:"An-Nasr",a:"النصر"},{i:111,n:"Al-Masad",a:"المسد"},{i:112,n:"Al-Ikhlas",a:"الإخلاص"},{i:113,n:"Al-Falaq",a:"الفلق"},{i:114,n:"An-Nas",a:"الناس"}];
+        function populateSurahList() { const list = document.getElementById('surahList'); list.innerHTML = surahsList.map(s => `<div onclick="readSurah(${s.i}, '${s.n}')" class="surah-item p-3 bg-white rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center">${s.i}</div><div><div class="font-bold text-slate-800">${s.n}</div></div></div><div class="font-serif text-lg text-green-700">${s.a}</div></div>`).join(''); }
         function filterSurahs() { const query = document.getElementById('surahSearch').value.toLowerCase(); document.querySelectorAll('.surah-item').forEach(item => { item.style.display = item.innerText.toLowerCase().includes(query) ? 'flex' : 'none'; }); }
         function openQuran() { document.getElementById('quranModal').classList.remove('hidden'); trackAction("Opened Quran"); }
         async function readSurah(id, name) { document.getElementById('readerView').classList.remove('hidden'); document.getElementById('readerTitle').innerText = name; document.getElementById('readerContent').innerHTML = '<div class="text-center mt-10"><i class="fas fa-circle-notch fa-spin text-green-600 fa-2x"></i></div>'; try { const res = await fetch(`https://api.alquran.cloud/v1/surah/${id}/editions/quran-simple,en.sahih`); const data = await res.json(); let html = ''; if(id !== 1 && id !== 9) html += `<div class="text-center font-serif text-2xl mb-8 text-green-800">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`; for(let i=0; i<data.data[0].ayahs.length; i++) { let arText = data.data[0].ayahs[i].text; if(id !== 1 && i === 0) arText = arText.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', '').trim(); html += `<div class="border-b border-slate-100 pb-4 mb-4"><div class="flex justify-between items-start mb-2"><span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">${data.data[0].ayahs[i].numberInSurah}</span><p class="text-right font-serif text-2xl text-slate-800 leading-loose dir-rtl w-full">${arText}</p></div><p class="text-sm text-slate-600 leading-relaxed mt-2">${data.data[1].ayahs[i].text}</p></div>`; } document.getElementById('readerContent').innerHTML = html; trackAction(`Reading Surah ${id}`); } catch(e) { document.getElementById('readerContent').innerHTML = '<p class="text-center text-red-500 mt-10">Error loading. Check internet.</p>'; } }
@@ -389,7 +396,9 @@
 
             const lat = 13.0537, long = 77.5367; 
             const url = `https://api.aladhan.com/v1/timings/${new Date().getDate()}-${new Date().getMonth()+1}-${new Date().getFullYear()}?latitude=${lat}&longitude=${long}&method=1&school=1`;
-            try { const res = await fetch(url); const data = await res.json(); renderGrid(data.data.timings, data.data.date.hijri); } catch(e) { renderGrid({Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:10"}, {day:"--", month:{en:"--"}, year:"--"}); }
+            try { const res = await fetch(url); const data = await res.json(); renderGrid(data.data.timings, data.data.date.hijri); } catch(e) { 
+                renderGrid({Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:10"}, {day:"--", month:{en:"--"}, year:"--"});
+            }
         }
 
         function renderGrid(apiTimings, hijri) {
