@@ -15,6 +15,11 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
+    <!-- Firebase SDKs (Included for future-proofing, but Telegram is Main Sync) -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+
     <style>
         body {
             font-family: 'Noto Sans', sans-serif;
@@ -36,6 +41,7 @@
             position: relative;
             overflow: hidden;
             border: 1px solid #e2e8f0;
+            background-color: white; /* Default background */
         }
         
         /* Strong Highlight for Running Prayer */
@@ -45,9 +51,10 @@
             100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
         }
 
+        /* Important: Override background for active card */
         .prayer-card.running-now {
-            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
-            border: 2px solid #16a34a;
+            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+            border: 2px solid #16a34a !important;
             transform: scale(1.05);
             z-index: 10;
             animation: pulse-green 2s infinite;
@@ -311,7 +318,7 @@
                     <p class="text-xs text-slate-500 mb-4 max-w-xs mx-auto">
                         Download Our App to see Raza Jumma Masjid Namaz timings from anywhere
                     </p>
-                    <a href="Raza Jumma App.apk" download="Raza Jumma App.apk"
+                    <a href="https://github.com/TajushshariyaYouth/RazaJummaApp/raw/main/Raza%20Jumma%20App.apk" 
                        class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition transform active:scale-95 text-sm"
                        onclick="trackAction('Downloaded App')">
                         <i class="fas fa-download mr-2"></i> Download App
@@ -346,8 +353,7 @@
             I: { a: "--:--", j: "--:--" }
         };
         
-        // RAMADAN STATIC DATA (Feb 19 - Mar 20)
-        // Format: "M-D": { s: "sehri", i: "iftar" }
+        // RAMADAN STATIC DATA
         const ramadanSchedule = {
             "2-19": {s:"5:26 AM", i:"6:30 PM"}, "2-20": {s:"5:25 AM", i:"6:30 PM"}, "2-21": {s:"5:25 AM", i:"6:30 PM"},
             "2-22": {s:"5:25 AM", i:"6:30 PM"}, "2-23": {s:"5:24 AM", i:"6:31 PM"}, "2-24": {s:"5:24 AM", i:"6:31 PM"},
@@ -361,23 +367,43 @@
             "3-18": {s:"5:11 AM", i:"6:34 PM"}, "3-19": {s:"5:11 AM", i:"6:34 PM"}, "3-20": {s:"5:10 AM", i:"6:34 PM"}
         };
 
-        // --- INIT ---
-        window.onload = function() {
-            // SAFETY RENDER (Fixes "Time not loading" bug)
+        // --- FIREBASE INIT FOR UNIVERSAL SYNC ---
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
+        const auth = firebase.auth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default';
+
+        window.onload = async function() {
+            try { await auth.signInAnonymously(); } catch(e) {}
+
+            // UNIVERSAL SYNC: Listen to Cloud Database
+            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
+            
+            docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    activeTimings = { ...activeTimings, ...doc.data() };
+                    saveLocally();
+                    refreshData();
+                } else {
+                    docRef.set(activeTimings);
+                }
+            });
+
+            // Local fallback & Instant Render
             try {
-                // Try to load cached data
-                const saved = localStorage.getItem('timings_v10');
+                const saved = localStorage.getItem('timings_v9');
                 if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) };
             } catch(e) {}
-            
-            // Force render immediately with what we have
+
+            // SAFETY RENDER (Fixes "Time not loading" bug)
             const safeDefaultAPI = {Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"};
             renderGrid(safeDefaultAPI, {day:"--", month:{en:"--"}, year:"--"});
 
-            // Then refresh with live data
+            // Then try to fetch live data
             refreshData();
-            fetchCloudData();
-
+            fetchCloudData(); // TELEGRAM SYNC FETCH
+            
             setTimeout(() => {
                 loadFestivals();
                 populateSurahList();
@@ -385,15 +411,20 @@
                 else trackAction("Website Opened");
                 
                 setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
+                setInterval(fetchCloudData, 15000); // Poll Telegram Cloud every 15s
             }, 100);
         };
 
-        function saveLocally() { localStorage.setItem('timings_v10', JSON.stringify(activeTimings)); }
-        
+        function saveLocally() { localStorage.setItem('timings_v9', JSON.stringify(activeTimings)); }
+        function saveToCloud() {
+            if(!auth.currentUser) return;
+            const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('timings').doc('main');
+            docRef.set(activeTimings, { merge: true });
+        }
+
         // --- UNIVERSAL CLOUD SYNC (Using Bot Description) ---
         async function fetchCloudData() {
             try {
-                // Get global data from Bot's Description
                 const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
                 const data = await res.json();
                 
@@ -401,7 +432,6 @@
                     const cloudStr = data.result.description;
                     if(cloudStr.startsWith("{")) {
                         const cloudData = JSON.parse(cloudStr);
-                        // Update if different
                         if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
                             activeTimings = { ...activeTimings, ...cloudData };
                             saveLocally();
@@ -412,7 +442,7 @@
             } catch(e) {}
         }
 
-        async function saveToCloud() {
+        async function saveToTelegramCloud() {
             try {
                 const jsonStr = JSON.stringify(activeTimings);
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
@@ -445,8 +475,8 @@
                         updated = true;
                     }
                     if(updated) {
-                        saveToCloud(); // Save to global cloud
-                        saveLocally();
+                        saveToCloud(); // Firebase
+                        saveToTelegramCloud(); // Telegram
                         refreshData();
                     }
                 }
@@ -616,7 +646,7 @@
                 const data = await res.json();
                 renderGrid(data.data.timings, data.data.date.hijri);
             } catch(e) { 
-                // Fallback for safety - renders grid even if API fails
+                // Fallback for safety
                 renderGrid({Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:10"}, {day:"--", month:{en:"--"}, year:"--"});
             }
         }
@@ -624,7 +654,7 @@
         function renderGrid(apiTimings, hijri) {
             document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
             
-            // Check for Ramadan Dates (Static Schedule Override)
+            // Check for Ramadan Dates
             const todayKey = `${new Date().getMonth()+1}-${new Date().getDate()}`;
             if(ramadanSchedule[todayKey]) {
                 if(activeTimings.S === "--:--") document.getElementById('sehriTime').innerText = ramadanSchedule[todayKey].s;
@@ -647,7 +677,7 @@
 
             const now = new Date();
             const timeToDate = (t) => { 
-                if(!t) return new Date(); // Safety
+                if(!t) return new Date(); 
                 const [h,m] = t.split(':').map(Number); const d = new Date(); d.setHours(h,m,0); return d; 
             };
             const f = timeToDate(apiTimings.Fajr); const z = timeToDate(apiTimings.Dhuhr); 
@@ -659,7 +689,7 @@
             else if (now>=z && now<a) current="Zohar";
             else if (now>=a && now<m) current="Asr";
             else if (now>=m && now<i) current="Maghrib";
-            else if (now>=i || now < f) current="Isha";
+            else if (now>=i || now < f) current="Isha"; 
 
             const nextMap = { 'Fajr':'Zohar', 'Zohar':'Asr', 'Asr':'Maghrib', 'Maghrib':'Isha', 'Isha':'Fajr' };
             const nextP = nextMap[current] || "Fajr";
@@ -675,10 +705,12 @@
                     jamaat = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
                 }
 
+                // Force remove default bg if running
                 const isRunning = (p.name === current);
+                const bgClass = isRunning ? 'running-now' : 'bg-white';
 
                 const card = document.createElement('div');
-                card.className = `prayer-card p-3 rounded-2xl bg-white text-center ${isRunning ? 'running-now' : ''}`;
+                card.className = `prayer-card p-3 rounded-2xl text-center ${bgClass}`;
                 card.onclick = () => openCountdown(p.name, apiTimings[p.apiKey]);
                 card.innerHTML = `<div class="text-xs uppercase font-bold text-slate-400 mb-2">${p.name}</div><div class="flex justify-around items-center"><div><div class="text-[10px] text-green-600 font-bold">Azan</div><div class="text-lg font-bold text-slate-800 leading-none">${azan}</div></div><div class="w-px h-8 bg-slate-100"></div><div><div class="text-[10px] text-amber-600 font-bold">Jamaat</div><div class="text-lg font-bold text-slate-800 leading-none">${jamaat}</div></div></div>`;
                 grid.appendChild(card);
