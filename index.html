@@ -189,7 +189,7 @@
                 <div class="flex justify-between items-end mb-6 border-b border-slate-100 pb-4">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-mosque text-green-700"></i> Prayer Times</h2>
-                        <p class="text-xs text-slate-400 mt-1 pl-7">Bangalore • Hanafi</p>
+                        <p class="text-xs text-slate-400 mt-1 pl-7">Raza Jumma Masjid Timmings • Bangalore </p>
                     </div>
                     <!-- Next Prayer Indicator -->
                     <div class="text-right">
@@ -661,7 +661,7 @@
             else if (now>=m && now<i) current="Maghrib";
             else if (now>=i || now < f) current="Isha";
 
-            const nextMap = { 'Fajr':'Zohar', 'Zohar':'Asr', 'Asr':'Maghrib', 'Maghrib':'Isha', 'Isha':'Fajr' };
+            const nextMap = { 'Fajr':'Zohar', 'Zohar':'Asr', 'Asr':'Maghrib', 'Maghrib':'Isha', '':'Fajr' };
             const nextP = nextMap[current] || "Fajr";
             document.getElementById('nextPrayerName').innerText = `${nextP} Next`;
 
