@@ -247,50 +247,6 @@
             </div>
         </section>
 
-        <!-- Donation Section -->
-        <section class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div class="glass-panel rounded-3xl overflow-hidden h-full flex flex-col">
-                <div class="flex text-center bg-slate-50 border-b border-slate-200">
-                    <button onclick="switchTab('money')" id="tab-money" class="flex-1 py-4 font-bold text-green-700 border-b-2 border-green-600 bg-white text-sm uppercase transition-all">Chanda for Masjid</button>
-                    <button onclick="switchTab('material')" id="tab-material" class="flex-1 py-4 font-bold text-slate-400 text-sm uppercase hover:text-green-600 transition-all">Donate Materials</button>
-                </div>
-                
-                <!-- Money Content -->
-                <div id="content-money" class="p-8 text-center flex-grow flex flex-col justify-center items-center fade-in">
-                    <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4"><i class="fas fa-hand-holding-dollar fa-lg"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800">Mumtaz Raza</h3>
-                    <p class="text-sm text-slate-500 mb-6">Authorized for Masjid Chanda</p>
-                    <a href="tel:+919110251749" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"><i class="fas fa-phone"></i> Call to Donate</a>
-                </div>
-                
-                <!-- Material Content -->
-                <div id="content-material" class="hidden p-6 fade-in">
-                    <div class="bg-amber-50 rounded-lg p-3 mb-4 text-center border border-amber-100"><p class="text-sm text-amber-800 font-bold">Donate Material for Masjid</p><p class="text-xs text-amber-700 opacity-90">Accepting: Cement, Carpets, Lights</p></div>
-                    <div class="space-y-3">
-                        <!-- Sadar -->
-                        <div class="flex justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
-                            <div class="flex gap-3 items-center"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><i class="fas fa-user-shield text-xs"></i></div><div><div class="font-bold text-xs">Arif (Sadar)</div><div class="text-[10px] text-slate-400">Admin</div></div></div>
-                            <a href="tel:+919448265613" onclick="trackAction('Call Sadar')" class="text-green-600 bg-green-50 p-2 rounded-full"><i class="fas fa-phone text-sm"></i></a>
-                        </div>
-                        <!-- Secretary -->
-                        <div class="flex justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
-                            <div class="flex gap-3 items-center"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><i class="fas fa-pen text-xs"></i></div><div><div class="font-bold text-xs">Saja (Secretary)</div><div class="text-[10px] text-slate-400">Ops</div></div></div>
-                            <a href="tel:+919972747315" onclick="trackAction('Call Secretary')" class="text-green-600 bg-green-50 p-2 rounded-full"><i class="fas fa-phone text-sm"></i></a>
-                        </div>
-                        <!-- Mumtaz Raza (Recommended) -->
-                        <div class="flex justify-between p-3 bg-green-50 border border-green-200 rounded-xl shadow-sm ring-1 ring-green-400 relative overflow-hidden">
-                            <div class="flex gap-3 items-center relative z-10">
-                                <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white"><i class="fas fa-user text-xs"></i></div>
-                                <div>
-                                    <div class="font-bold text-xs flex items-center gap-1">Mumtaz Raza <span class="bg-green-600 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 tracking-wide">RECOMMENDED</span></div>
-                                    <div class="text-[10px] text-green-800">Coordinator</div>
-                                </div>
-                            </div>
-                            <a href="tel:+919110251749" onclick="trackAction('Call Mumtaz Material')" class="text-white bg-green-600 p-2 rounded-full hover:bg-green-700 shadow-md relative z-10"><i class="fas fa-phone text-sm"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
             
             <!-- Address -->
             <div class="glass-panel rounded-3xl p-6 flex flex-col justify-between">
