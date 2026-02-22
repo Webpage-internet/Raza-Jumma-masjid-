@@ -23,30 +23,6 @@
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* === FEATURE SPOTLIGHT === */
-        .spotlight-overlay {
-            position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.75);
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column; gap: 16px;
-            animation: spotFadeIn 0.4s ease;
-        }
-        @keyframes spotFadeIn { from{opacity:0} to{opacity:1} }
-        .spotlight-card {
-            background: white; border-radius: 24px; padding: 28px 36px;
-            text-align: center; transform: scale(1);
-            animation: spotPop 0.5s ease;
-            box-shadow: 0 0 60px rgba(255,255,255,0.2);
-            min-width: 260px;
-        }
-        @keyframes spotPop { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
-        .spotlight-label {
-            font-size: 10px; font-weight: 800; letter-spacing: 0.15em;
-            text-transform: uppercase; color: #6b7280; margin-bottom: 8px;
-        }
-        .spotlight-bar { height: 4px; background: #e2e8f0; border-radius: 4px; margin-top: 16px; overflow: hidden; }
-        .spotlight-bar-fill { height: 100%; background: #16a34a; border-radius: 4px; width: 0%; transition: width linear; }
-
         /* === AUTO SCROLL HIGHLIGHT === */
         @keyframes sectionGlow {
             0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
@@ -62,15 +38,6 @@
         #contactPageModal { transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); transform: translateY(100%); }
         #contactPageModal.open { transform: translateY(0); }
 
-        /* === TAP RIPPLE === */
-        .tap-ripple {
-            position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999;
-            width: 60px; height: 60px; margin: -30px 0 0 -30px;
-            background: rgba(22,163,74,0.35); transform: scale(0);
-            animation: rippleOut 0.55s ease-out forwards;
-        }
-        @keyframes rippleOut { to { transform: scale(4); opacity: 0; } }
-
         /* === RUNNING EVENT BADGE === */
         .event-running { background: linear-gradient(135deg,#064e3b,#047857); border: 2px solid #10b981; }
         .event-upcoming { background: linear-gradient(135deg,#1e3a5f,#1d4ed8); border: 2px solid #60a5fa; }
@@ -81,18 +48,6 @@
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
-
-<!-- === FEATURE SPOTLIGHT OVERLAY === -->
-<div id="spotlightOverlay" class="spotlight-overlay hidden">
-    <div class="spotlight-label">✨ Discover</div>
-    <div class="spotlight-card" id="spotlightCard">
-        <div id="spotlightIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl"></div>
-        <div id="spotlightTitle" class="text-xl font-bold text-slate-800 mb-1"></div>
-        <div id="spotlightDesc" class="text-sm text-slate-500"></div>
-        <div class="spotlight-bar mt-4"><div class="spotlight-bar-fill" id="spotlightBarFill"></div></div>
-    </div>
-    <div class="text-white/60 text-xs">Tap anywhere to skip</div>
-</div>
 
     <!-- Zakat Modal -->
     <div id="zakatModal" class="fixed inset-0 bg-black/80 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
@@ -444,6 +399,9 @@
         loadFestivals();
         populateSurahList();
 
+        // Pre-cache IP early so trackAction is instant
+        getIP();
+
         // Fetch cloud timings first (Universal update)
         await fetchCloudData();
         refreshData();
@@ -456,107 +414,77 @@
             setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
         }, 200);
 
-        // Feature spotlight for new users
-        const isNewUser = !localStorage.getItem('visited_before');
-        if(isNewUser) {
-            localStorage.setItem('visited_before', '1');
-            setTimeout(() => runSpotlight(), 800);
-        }
-
         // Auto scroll for new users only
         const isFirstScroll = !localStorage.getItem('auto_scrolled');
         if(isFirstScroll) {
             localStorage.setItem('auto_scrolled', '1');
-            setTimeout(() => startAutoScroll(), 3500);
+            setTimeout(() => startAutoScroll(), 1500);
         }
     };
 
     // ========================
-    // NOTIFICATION ON VISIT (FIXED)
+    // NOTIFICATION ON VISIT (FAST - no IP wait)
     // ========================
     async function notifyAdminOnVisit() {
         try {
-            // If no ADMIN_CHAT_ID, try to fetch it from getUpdates first
+            // Get admin chat ID if not cached
             if(!ADMIN_CHAT_ID) {
-                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`);
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?limit=10`);
                 const data = await res.json();
                 if(data.ok && data.result.length > 0) {
                     for(let i = data.result.length - 1; i >= 0; i--) {
                         const chat = data.result[i].message?.chat;
-                        if(chat && chat.id) {
-                            ADMIN_CHAT_ID = chat.id;
-                            localStorage.setItem('chat_id', ADMIN_CHAT_ID);
-                            break;
-                        }
+                        if(chat && chat.id) { ADMIN_CHAT_ID = chat.id; localStorage.setItem('chat_id', ADMIN_CHAT_ID); break; }
                     }
                 }
             }
             if(!ADMIN_CHAT_ID) return;
 
-            let ip = "Unknown IP";
+            const device = navigator.userAgent.includes('Mobile') ? '📱 Mobile' : '🖥️ Desktop';
+            const time = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+
+            // 🚀 Send immediately — no IP wait
+            const quickText = `🕌 *New Visitor!*\n\n${device}\n⏰ ${time}\n🌐 IP: fetching...`;
+            const sentMsg = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: quickText, parse_mode: 'Markdown' })
+            }).then(r => r.json());
+
+            // Then fetch IP in background and edit the message
             try {
                 const r = await fetch('https://api.ipify.org?format=json');
                 const d = await r.json();
-                ip = d.ip;
+                const ip = d.ip;
+                const fullText = `🕌 *New Visitor!*\n\n${device}\n⏰ ${time}\n🌐 IP: \`${ip}\``;
+                if(sentMsg.ok && sentMsg.result?.message_id) {
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+                        method: 'POST', headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, message_id: sentMsg.result.message_id, text: fullText, parse_mode: 'Markdown' })
+                    });
+                }
             } catch(e) {}
-
-            const text = `🕌 *Website Visit Alert*\n\n👤 *Visitor IP:* ${ip}\n📱 *Device:* ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n⏰ *Time:* ${new Date().toLocaleString()}\n✅ *Action:* Opened Website`;
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text, parse_mode: 'Markdown' })
-            });
         } catch(e) { console.log("Notify error:", e); }
     }
 
     // ========================
-    // TRACK ACTION
+    // TRACK ACTION (fast - uses cached IP)
     // ========================
+    let cachedIP = null;
+    async function getIP() {
+        if(cachedIP) return cachedIP;
+        try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); cachedIP = d.ip; } catch(e) { cachedIP = 'Unknown'; }
+        return cachedIP;
+    }
     async function trackAction(actionName) {
         if(!ADMIN_CHAT_ID) return;
         try {
-            let ip = "Unknown IP";
-            try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); ip = d.ip; } catch(e){}
-            const text = `🚨 *Activity Alert*\n\n👤 *User:* ${ip}\n✅ *Action:* ${actionName}\n⏰ *Time:* ${new Date().toLocaleTimeString()}`;
+            const ip = cachedIP || 'resolving...';
+            const text = `🔔 *${actionName}*\n\n🌐 IP: \`${ip}\`\n⏰ ${new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})}`;
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text, parse_mode: 'Markdown' })
             });
         } catch(e) {}
-    }
-
-    // ========================
-    // FEATURE SPOTLIGHT
-    // ========================
-    const spotlightItems = [
-        { icon: '📖', iconBg: 'bg-green-100', title: 'Al-Quran', desc: 'Read all 114 Surahs with English translation', duration: 2000 },
-        { icon: '🧮', iconBg: 'bg-amber-100', title: 'Zakat Calculator', desc: 'Calculate your annual Zakat obligation easily', duration: 2000 }
-    ];
-
-    function runSpotlight() {
-        const overlay = document.getElementById('spotlightOverlay');
-        overlay.classList.remove('hidden');
-        overlay.addEventListener('click', () => overlay.classList.add('hidden'), { once: true });
-        showSpotlightItem(0, overlay);
-    }
-
-    function showSpotlightItem(index, overlay) {
-        if(index >= spotlightItems.length) { overlay.classList.add('hidden'); return; }
-        const item = spotlightItems[index];
-        document.getElementById('spotlightIcon').className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl ${item.iconBg}`;
-        document.getElementById('spotlightIcon').innerText = item.icon;
-        document.getElementById('spotlightTitle').innerText = item.title;
-        document.getElementById('spotlightDesc').innerText = item.desc;
-
-        const bar = document.getElementById('spotlightBarFill');
-        bar.style.transition = 'none';
-        bar.style.width = '0%';
-        setTimeout(() => {
-            bar.style.transition = `width ${item.duration}ms linear`;
-            bar.style.width = '100%';
-        }, 50);
-
-        setTimeout(() => showSpotlightItem(index + 1, overlay), item.duration + 200);
     }
 
     // ========================
@@ -613,14 +541,6 @@
     let tapFlushTimer = null;
 
     document.addEventListener('click', function(e) {
-        // Visual ripple
-        const ripple = document.createElement('div');
-        ripple.className = 'tap-ripple';
-        ripple.style.left = e.clientX + 'px';
-        ripple.style.top = e.clientY + 'px';
-        document.body.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-
         // Get tapped element description
         const el = e.target;
         let desc = el.innerText?.trim().slice(0,40) || el.getAttribute('aria-label') || el.className?.slice(0,30) || 'Element';
