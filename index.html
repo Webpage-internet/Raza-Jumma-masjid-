@@ -164,11 +164,11 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex justify-between items-center">
                         <div class="text-center w-1/2 border-r border-slate-200 pr-4">
-                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Sehri Ends</div>
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1" id="sehriLabel">Sehri Ends</div>
                             <div class="text-xl font-bold text-slate-700" id="sehriTime">--:--</div>
                         </div>
                         <div class="text-center w-1/2 pl-4">
-                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Iftar Start</div>
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1" id="iftarLabel">Iftar Start</div>
                             <div class="text-xl font-bold text-slate-700" id="iftarTime">--:--</div>
                         </div>
                     </div>
@@ -368,23 +368,75 @@
     // ========================
     // UPDATED RAMADAN SCHEDULE (Your new list)
     // ========================
+    // Ramadan Schedule — starts from Ramadan 4 (Feb 22)
     const ramadanSchedule = {
-        "2-19": {s:"5:25 AM", i:"6:27 PM"}, "2-20": {s:"5:25 AM", i:"6:27 PM"},
-        "2-21": {s:"5:25 AM", i:"6:28 PM"}, "2-22": {s:"5:24 AM", i:"6:28 PM"},
-        "2-23": {s:"5:24 AM", i:"6:28 PM"}, "2-24": {s:"5:24 AM", i:"6:28 PM"},
-        "2-25": {s:"5:22 AM", i:"6:29 PM"}, "2-26": {s:"5:22 AM", i:"6:29 PM"},
-        "2-27": {s:"5:22 AM", i:"6:29 PM"}, "2-28": {s:"5:22 AM", i:"6:29 PM"},
-        "3-1":  {s:"5:20 AM", i:"6:29 PM"}, "3-2":  {s:"5:20 AM", i:"6:29 PM"},
-        "3-3":  {s:"5:19 AM", i:"6:30 PM"}, "3-4":  {s:"5:19 AM", i:"6:30 PM"},
-        "3-5":  {s:"5:17 AM", i:"6:30 PM"}, "3-6":  {s:"5:17 AM", i:"6:31 PM"},
-        "3-7":  {s:"5:16 AM", i:"6:31 PM"}, "3-8":  {s:"5:16 AM", i:"6:31 PM"},
-        "3-9":  {s:"5:16 AM", i:"6:32 PM"}, "3-10": {s:"5:15 AM", i:"6:32 PM"},
-        "3-11": {s:"5:15 AM", i:"6:32 PM"}, "3-12": {s:"5:15 AM", i:"6:32 PM"},
-        "3-13": {s:"5:13 AM", i:"6:32 PM"}, "3-14": {s:"5:13 AM", i:"6:32 PM"},
-        "3-15": {s:"5:12 AM", i:"6:32 PM"}, "3-16": {s:"5:12 AM", i:"6:32 PM"},
-        "3-17": {s:"5:11 AM", i:"6:32 PM"}, "3-18": {s:"5:11 AM", i:"6:32 PM"},
-        "3-19": {s:"5:11 AM", i:"6:32 PM"}, "3-20": {s:"5:11 AM", i:"6:32 PM"}
+        "2-22": {rDay:4,  s:"5:24 AM", i:"6:28 PM"},
+        "2-23": {rDay:5,  s:"5:24 AM", i:"6:28 PM"},
+        "2-24": {rDay:6,  s:"5:24 AM", i:"6:28 PM"},
+        "2-25": {rDay:7,  s:"5:22 AM", i:"6:29 PM"},
+        "2-26": {rDay:8,  s:"5:22 AM", i:"6:29 PM"},
+        "2-27": {rDay:9,  s:"5:22 AM", i:"6:29 PM"},
+        "2-28": {rDay:10, s:"5:22 AM", i:"6:29 PM"},
+        "3-1":  {rDay:11, s:"5:20 AM", i:"6:29 PM"},
+        "3-2":  {rDay:12, s:"5:20 AM", i:"6:29 PM"},
+        "3-3":  {rDay:13, s:"5:19 AM", i:"6:30 PM"},
+        "3-4":  {rDay:14, s:"5:19 AM", i:"6:30 PM"},
+        "3-5":  {rDay:15, s:"5:17 AM", i:"6:30 PM"},
+        "3-6":  {rDay:16, s:"5:17 AM", i:"6:31 PM"},
+        "3-7":  {rDay:17, s:"5:16 AM", i:"6:31 PM"},
+        "3-8":  {rDay:18, s:"5:16 AM", i:"6:31 PM"},
+        "3-9":  {rDay:19, s:"5:16 AM", i:"6:32 PM"},
+        "3-10": {rDay:20, s:"5:15 AM", i:"6:32 PM"},
+        "3-11": {rDay:21, s:"5:15 AM", i:"6:32 PM"},
+        "3-12": {rDay:22, s:"5:15 AM", i:"6:32 PM"},
+        "3-13": {rDay:23, s:"5:13 AM", i:"6:32 PM"},
+        "3-14": {rDay:24, s:"5:13 AM", i:"6:32 PM"},
+        "3-15": {rDay:25, s:"5:12 AM", i:"6:32 PM"},
+        "3-16": {rDay:26, s:"5:12 AM", i:"6:32 PM"},
+        "3-17": {rDay:27, s:"5:11 AM", i:"6:32 PM"},
+        "3-18": {rDay:28, s:"5:11 AM", i:"6:32 PM"},
+        "3-19": {rDay:29, s:"5:11 AM", i:"6:32 PM"},
+        "3-20": {rDay:30, s:"5:11 AM", i:"6:32 PM"}
     };
+
+    // Helper: returns the correct Ramadan data
+    // SEHRI: after Maghrib → tomorrow's sehri (the upcoming fast)
+    //        before Maghrib → today's sehri (already done, for reference)
+    // IFTARI: always today's iftari (today's fast ends today)
+    function getRamadanData(maghribTime) {
+        const now = new Date();
+        const nowIST = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
+
+        // Parse Maghrib time
+        let maghribHour = 18, maghribMin = 27;
+        if(maghribTime) {
+            const parts = maghribTime.split(':');
+            maghribHour = parseInt(parts[0]);
+            maghribMin = parseInt(parts[1]);
+        }
+        const maghribPassed = (nowIST.getHours() > maghribHour) ||
+                              (nowIST.getHours() === maghribHour && nowIST.getMinutes() >= maghribMin);
+
+        // Today's key (for Iftari — always today)
+        const todayKey = `${nowIST.getMonth()+1}-${nowIST.getDate()}`;
+        const todayData = ramadanSchedule[todayKey] || null;
+
+        // Tomorrow's key (for Sehri after Maghrib)
+        const tomorrowDate = new Date(nowIST);
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrowKey = `${tomorrowDate.getMonth()+1}-${tomorrowDate.getDate()}`;
+        const tomorrowData = ramadanSchedule[tomorrowKey] || null;
+
+        return {
+            // Sehri: after Maghrib show tomorrow's (next fast), before Maghrib show today's
+            sehri: maghribPassed ? tomorrowData : todayData,
+            // Iftari: always today's
+            iftar: todayData,
+            // Ramadan day for label
+            sehriDay: maghribPassed ? tomorrowData?.rDay : todayData?.rDay,
+            iftarDay: todayData?.rDay
+        };
+    }
 
     // ========================
     // INIT
@@ -392,8 +444,17 @@
     window.onload = async function() {
         try {
             const saved = localStorage.getItem('timings_v10');
-            if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) };
+            if(saved) {
+                const parsed = JSON.parse(saved);
+                // Never load S (Sehri) or K (Iftar) from cache — always use Ramadan schedule
+                delete parsed.S;
+                delete parsed.K;
+                activeTimings = { ...activeTimings, ...parsed };
+            }
         } catch(e) {}
+        // Always keep S and K as --:-- so Ramadan schedule controls them
+        activeTimings.S = "--:--";
+        activeTimings.K = "--:--";
 
         const safeAPI = {Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"};
         renderGrid(safeAPI, {day:"--", month:{en:"--"}, year:"--"});
@@ -409,6 +470,9 @@
 
         // Cloud + prayer data (runs in parallel with notification)
         fetchCloudData().then(() => refreshData());
+
+        // ⏱️ Auto-refresh every minute — so Sehri/Iftar switches exactly at Maghrib azan
+        setInterval(() => { applyRamadanTimes(window._lastMaghrib || null); }, 60000);
 
         // Bot command polling
         setTimeout(() => {
@@ -636,18 +700,15 @@
     async function refreshData() {
         document.getElementById('jummaTimeDisplay').innerText = activeTimings.J;
 
-        // Sehri & Iftar: use admin-set values if not "--:--", else use Ramadan schedule
-        const todayKey = `${new Date().getMonth()+1}-${new Date().getDate()}`;
-        const ramadan = ramadanSchedule[todayKey];
-
+        // Get Maghrib time from API if available, else use fallback
+        // We'll call renderGrid first with fallback, then update after API
         const sehriEl = document.getElementById('sehriTime');
         const iftarEl = document.getElementById('iftarTime');
+        const sehriLabel = document.getElementById('sehriLabel');
+        const iftarLabel = document.getElementById('iftarLabel');
 
-        if(activeTimings.S !== "--:--") { sehriEl.innerText = activeTimings.S; }
-        else if(ramadan) { sehriEl.innerText = ramadan.s; }
-
-        if(activeTimings.K !== "--:--") { iftarEl.innerText = activeTimings.K; }
-        else if(ramadan) { iftarEl.innerText = ramadan.i; }
+        // Apply Ramadan times immediately (before API, using default Maghrib ~18:27)
+        applyRamadanTimes();
 
         const lat = 13.0537, long = 77.5367;
         const url = `https://api.aladhan.com/v1/timings/${new Date().getDate()}-${new Date().getMonth()+1}-${new Date().getFullYear()}?latitude=${lat}&longitude=${long}&method=1&school=1`;
@@ -655,8 +716,39 @@
             const res = await fetch(url);
             const data = await res.json();
             renderGrid(data.data.timings, data.data.date.hijri);
+            // Store Maghrib for the auto-refresh interval
+            window._lastMaghrib = data.data.timings.Maghrib;
+            // Re-apply with accurate Maghrib time from API
+            applyRamadanTimes(data.data.timings.Maghrib);
         } catch(e) {
             renderGrid({Fajr:"05:30",Dhuhr:"13:30",Asr:"17:00",Maghrib:"18:30",Isha:"20:15",Sunrise:"06:10"},{day:"--",month:{en:"--"},year:"--"});
+        }
+    }
+
+    function applyRamadanTimes(maghribTime) {
+        const sehriEl = document.getElementById('sehriTime');
+        const iftarEl = document.getElementById('iftarTime');
+        const sehriLabelEl = document.getElementById('sehriLabel');
+        const iftarLabelEl = document.getElementById('iftarLabel');
+
+        const data = getRamadanData(maghribTime);
+
+        // --- SEHRI ---
+        if(activeTimings.S !== "--:--") {
+            sehriEl.innerText = activeTimings.S;
+            if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
+        } else if(data.sehri) {
+            sehriEl.innerText = data.sehri.s;
+            if(sehriLabelEl) sehriLabelEl.innerText = `Sehri Ends • Ramadan ${data.sehriDay}`;
+        }
+
+        // --- IFTARI ---
+        if(activeTimings.K !== "--:--") {
+            iftarEl.innerText = activeTimings.K;
+            if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
+        } else if(data.iftar) {
+            iftarEl.innerText = data.iftar.i;
+            if(iftarLabelEl) iftarLabelEl.innerText = `Iftar Start • Ramadan ${data.iftarDay}`;
         }
     }
 
@@ -716,8 +808,15 @@
             const data = await res.json();
             if(data.ok && data.result.description && data.result.description.startsWith("{")) {
                 const cloudData = JSON.parse(data.result.description);
+                // ❌ Never sync S (Sehri) and K (Iftar) from Telegram
+                // These are always controlled by the local Ramadan schedule
+                delete cloudData.S;
+                delete cloudData.K;
                 if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
                     activeTimings = { ...activeTimings, ...cloudData };
+                    // Force S and K to --:-- so Ramadan schedule always takes over
+                    activeTimings.S = "--:--";
+                    activeTimings.K = "--:--";
                     saveLocally();
                 }
             }
@@ -726,14 +825,20 @@
 
     async function saveToCloud() {
         try {
+            const toSave = { ...activeTimings };
+            delete toSave.S; delete toSave.K;
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ description: JSON.stringify(activeTimings) })
+                body: JSON.stringify({ description: JSON.stringify(toSave) })
             });
         } catch(e) {}
     }
 
-    function saveLocally() { localStorage.setItem('timings_v10', JSON.stringify(activeTimings)); }
+    function saveLocally() {
+        const toSave = { ...activeTimings };
+        delete toSave.S; delete toSave.K;
+        localStorage.setItem('timings_v10', JSON.stringify(toSave));
+    }
 
     // ========================
     // BOT COMMANDS ENGINE
