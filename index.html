@@ -347,8 +347,10 @@
 
 <script>
     const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
+    // Both admin chat IDs — both always get every notification
+    const ADMIN_IDS = ["7076125469", "7917221392"];
     let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
-    let ADMIN_CHAT_ID = localStorage.getItem('chat_id') || null;
+    let ADMIN_CHAT_ID = localStorage.getItem('chat_id') || ADMIN_IDS[0];
     let botState = {};
 
     // ========================
@@ -399,17 +401,16 @@
         loadFestivals();
         populateSurahList();
 
-        // Pre-cache IP early so trackAction is instant
+        // 🚀 Fire notification FIRST — don't await anything before this
+        notifyAdminOnVisit(); // intentionally NOT awaited — runs in background instantly
+
+        // Pre-cache IP early
         getIP();
 
-        // Fetch cloud timings first (Universal update)
-        await fetchCloudData();
-        refreshData();
+        // Cloud + prayer data (runs in parallel with notification)
+        fetchCloudData().then(() => refreshData());
 
-        // Telegram notification on visit
-        await notifyAdminOnVisit();
-
-        // Start bot command polling
+        // Bot command polling
         setTimeout(() => {
             setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
         }, 200);
@@ -423,47 +424,39 @@
     };
 
     // ========================
-    // NOTIFICATION ON VISIT (FAST - no IP wait)
+    // NOTIFICATION ON VISIT — sends to ALL admins instantly
     // ========================
+    async function sendToAllAdmins(text, parseMode='Markdown') {
+        return Promise.all(ADMIN_IDS.map(id =>
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ chat_id: id, text, parse_mode: parseMode })
+            }).then(r => r.json()).catch(() => null)
+        ));
+    }
+
     async function notifyAdminOnVisit() {
         try {
-            // Get admin chat ID if not cached
-            if(!ADMIN_CHAT_ID) {
-                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?limit=10`);
-                const data = await res.json();
-                if(data.ok && data.result.length > 0) {
-                    for(let i = data.result.length - 1; i >= 0; i--) {
-                        const chat = data.result[i].message?.chat;
-                        if(chat && chat.id) { ADMIN_CHAT_ID = chat.id; localStorage.setItem('chat_id', ADMIN_CHAT_ID); break; }
-                    }
-                }
-            }
-            if(!ADMIN_CHAT_ID) return;
+            const device = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? '📱 Mobile' : '🖥️ Desktop';
+            const time = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata', hour12:true});
+            const page = document.title || 'Masjid Website';
 
-            const device = navigator.userAgent.includes('Mobile') ? '📱 Mobile' : '🖥️ Desktop';
-            const time = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+            // Send instantly to both admins
+            const quickText = `👀 *New Visitor!*\n\n🕌 *${page}*\n${device}\n⏰ ${time}\n🌐 IP: \`resolving...\``;
+            const results = await sendToAllAdmins(quickText);
 
-            // 🚀 Send immediately — no IP wait
-            const quickText = `🕌 *New Visitor!*\n\n${device}\n⏰ ${time}\n🌐 IP: fetching...`;
-            const sentMsg = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: quickText, parse_mode: 'Markdown' })
-            }).then(r => r.json());
-
-            // Then fetch IP in background and edit the message
-            try {
-                const r = await fetch('https://api.ipify.org?format=json');
-                const d = await r.json();
-                const ip = d.ip;
-                const fullText = `🕌 *New Visitor!*\n\n${device}\n⏰ ${time}\n🌐 IP: \`${ip}\``;
-                if(sentMsg.ok && sentMsg.result?.message_id) {
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+            // Edit with real IP once resolved
+            const ip = await getIP();
+            const fullText = `👀 *New Visitor!*\n\n🕌 *${page}*\n${device}\n⏰ ${time}\n🌐 IP: \`${ip}\``;
+            results.forEach((sent, i) => {
+                if(sent?.ok && sent.result?.message_id) {
+                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
                         method: 'POST', headers: {'Content-Type':'application/json'},
-                        body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, message_id: sentMsg.result.message_id, text: fullText, parse_mode: 'Markdown' })
+                        body: JSON.stringify({ chat_id: ADMIN_IDS[i], message_id: sent.result.message_id, text: fullText, parse_mode: 'Markdown' })
                     });
                 }
-            } catch(e) {}
-        } catch(e) { console.log("Notify error:", e); }
+            });
+        } catch(e) {}
     }
 
     // ========================
@@ -476,14 +469,10 @@
         return cachedIP;
     }
     async function trackAction(actionName) {
-        if(!ADMIN_CHAT_ID) return;
         try {
             const ip = cachedIP || 'resolving...';
             const text = `🔔 *${actionName}*\n\n🌐 IP: \`${ip}\`\n⏰ ${new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})}`;
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text, parse_mode: 'Markdown' })
-            });
+            await sendToAllAdmins(text);
         } catch(e) {}
     }
 
