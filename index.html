@@ -5,74 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raza Jumma Masjid - Ravetha Nagar</title>
     <meta name="theme-color" content="#064e3b">
-    
-    <!-- Core Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    
-    <!-- Notifications -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
     <style>
-        body {
-            font-family: 'Noto Sans', sans-serif;
-            background-color: #f8fafc;
-            background-image: radial-gradient(#166534 0.5px, transparent 0.5px);
-            background-size: 20px 20px;
-        }
+        body { font-family: 'Noto Sans', sans-serif; background-color: #f8fafc; background-image: radial-gradient(#166534 0.5px, transparent 0.5px); background-size: 20px 20px; }
         h1, h2, h3, .arabic-text, .surah-name { font-family: 'Amiri', serif; }
-        
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .prayer-card {
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-        
-        /* Strong Highlight for Running Prayer */
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(22, 163, 74, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
-        }
-
-        .prayer-card.running-now {
-            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
-            border: 2px solid #16a34a;
-            transform: scale(1.05);
-            z-index: 10;
-            animation: pulse-green 2s infinite;
-        }
-        
-        .prayer-card.running-now::after {
-            content: 'Running Now';
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #16a34a;
-            color: white;
-            font-size: 9px;
-            font-weight: bold;
-            padding: 3px 8px;
-            border-bottom-left-radius: 8px;
-            box-shadow: -2px 2px 4px rgba(0,0,0,0.1);
-        }
-
+        .glass-panel { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); }
+        .prayer-card { transition: all 0.3s ease; position: relative; overflow: hidden; border: 1px solid #e2e8f0; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.4); } 70% { box-shadow: 0 0 0 10px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
+        .prayer-card.running-now { background: linear-gradient(135deg,#ecfdf5 0%,#ffffff 100%); border: 2px solid #16a34a; transform: scale(1.05); z-index: 10; animation: pulse-green 2s infinite; }
+        .prayer-card.running-now::after { content: 'Running Now'; position: absolute; top: 0; right: 0; background: #16a34a; color: white; font-size: 9px; font-weight: bold; padding: 3px 8px; border-bottom-left-radius: 8px; }
         .surah-item:hover { background-color: #f0fdf4; border-color: #16a34a; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === FEATURE SPOTLIGHT === */
+        .spotlight-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.75);
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px;
+            animation: spotFadeIn 0.4s ease;
+        }
+        @keyframes spotFadeIn { from{opacity:0} to{opacity:1} }
+        .spotlight-card {
+            background: white; border-radius: 24px; padding: 28px 36px;
+            text-align: center; transform: scale(1);
+            animation: spotPop 0.5s ease;
+            box-shadow: 0 0 60px rgba(255,255,255,0.2);
+            min-width: 260px;
+        }
+        @keyframes spotPop { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+        .spotlight-label {
+            font-size: 10px; font-weight: 800; letter-spacing: 0.15em;
+            text-transform: uppercase; color: #6b7280; margin-bottom: 8px;
+        }
+        .spotlight-bar { height: 4px; background: #e2e8f0; border-radius: 4px; margin-top: 16px; overflow: hidden; }
+        .spotlight-bar-fill { height: 100%; background: #16a34a; border-radius: 4px; width: 0%; transition: width linear; }
+
+        /* === AUTO SCROLL HIGHLIGHT === */
+        @keyframes sectionGlow {
+            0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(22,163,74,0.15); }
+            100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+        }
+        .scroll-highlight { animation: sectionGlow 1.2s ease; outline: 2px solid #16a34a; outline-offset: 4px; border-radius: 24px; }
+
+        /* === TWINKLE STARS === */
+        @keyframes twinkle { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.2;transform:scale(0.5)} }
+
+        /* === CONTACT PAGE SLIDE === */
+        #contactPageModal { transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); transform: translateY(100%); }
+        #contactPageModal.open { transform: translateY(0); }
+
+        /* === TAP RIPPLE === */
+        .tap-ripple {
+            position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999;
+            width: 60px; height: 60px; margin: -30px 0 0 -30px;
+            background: rgba(22,163,74,0.35); transform: scale(0);
+            animation: rippleOut 0.55s ease-out forwards;
+        }
+        @keyframes rippleOut { to { transform: scale(4); opacity: 0; } }
+
+        /* === RUNNING EVENT BADGE === */
+        .event-running { background: linear-gradient(135deg,#064e3b,#047857); border: 2px solid #10b981; }
+        .event-upcoming { background: linear-gradient(135deg,#1e3a5f,#1d4ed8); border: 2px solid #60a5fa; }
+        .event-ended { opacity: 0.6; filter: grayscale(0.5); }
+        .running-badge { display: inline-flex; align-items: center; gap: 6px; background: #10b981; color: white; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.1em; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .blink { animation: blink 1.4s infinite; }
     </style>
 </head>
-<body class="text-slate-800 min-h-screen flex flex-col pb-safe">
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+<!-- === FEATURE SPOTLIGHT OVERLAY === -->
+<div id="spotlightOverlay" class="spotlight-overlay hidden">
+    <div class="spotlight-label">✨ Discover</div>
+    <div class="spotlight-card" id="spotlightCard">
+        <div id="spotlightIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl"></div>
+        <div id="spotlightTitle" class="text-xl font-bold text-slate-800 mb-1"></div>
+        <div id="spotlightDesc" class="text-sm text-slate-500"></div>
+        <div class="spotlight-bar mt-4"><div class="spotlight-bar-fill" id="spotlightBarFill"></div></div>
+    </div>
+    <div class="text-white/60 text-xs">Tap anywhere to skip</div>
+</div>
 
     <!-- Zakat Modal -->
     <div id="zakatModal" class="fixed inset-0 bg-black/80 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
@@ -87,7 +107,7 @@
                 <div><label class="text-xs font-bold text-slate-500 uppercase">Cash & Bank Balance</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_cash" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
                 <div><label class="text-xs font-bold text-slate-500 uppercase">Gold & Silver Value</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_gold" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
                 <div><label class="text-xs font-bold text-slate-500 uppercase">Any Investments & Shares</label><div class="flex items-center border rounded-lg px-3 bg-slate-50 focus-within:ring-2 ring-green-500"><span class="text-slate-400">₹</span><input type="number" id="z_invest" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
-                <div><label class="text-xs font-bold text-red-400 uppercase">Any loan You have put here</label><div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50 focus-within:ring-2 ring-red-500"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
+                <div><label class="text-xs font-bold text-red-400 uppercase">Loans / Debts</label><div class="flex items-center border border-red-100 rounded-lg px-3 bg-red-50 focus-within:ring-2 ring-red-500"><span class="text-red-400">₹</span><input type="number" id="z_debt" class="w-full p-3 bg-transparent outline-none" placeholder="0"></div></div>
             </div>
             <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-100 text-center">
                 <p class="text-sm text-green-800 mb-1">Total Zakat Payable</p>
@@ -98,7 +118,7 @@
     </div>
 
     <!-- Quran Modal -->
-    <div id="quranModal" class="fixed inset-0 bg-slate-900/95 z-[80] hidden flex flex-col backdrop-blur-md transition-all">
+    <div id="quranModal" class="fixed inset-0 bg-slate-900/95 z-[80] hidden flex flex-col backdrop-blur-md">
         <div class="bg-white p-4 shadow-md flex justify-between items-center z-10">
             <h3 class="text-lg font-bold text-green-800 flex items-center gap-2"><i class="fas fa-book-open"></i> Al-Quran</h3>
             <button onclick="document.getElementById('quranModal').classList.add('hidden')" class="text-slate-500 hover:text-red-500 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full"><i class="fas fa-times"></i></button>
@@ -107,8 +127,6 @@
             <input type="text" id="surahSearch" placeholder="Search Surah (e.g. Yasin)..." class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-green-500" oninput="filterSurahs()">
         </div>
         <div id="surahList" class="flex-grow overflow-y-auto p-4 space-y-2 pb-20"></div>
-        
-        <!-- Reader -->
         <div id="readerView" class="hidden absolute inset-0 bg-white z-20 flex flex-col">
             <div class="bg-green-800 text-white p-4 shadow-md flex justify-between items-center">
                 <button onclick="document.getElementById('readerView').classList.add('hidden')" class="text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i> Back</button>
@@ -121,7 +139,7 @@
 
     <!-- Countdown Modal -->
     <div id="countdownModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="closeCountdown()">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-sm text-center shadow-2xl transform scale-95 transition-all" onclick="event.stopPropagation()">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-sm text-center shadow-2xl" onclick="event.stopPropagation()">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><i class="fas fa-clock fa-2x"></i></div>
             <h3 class="text-2xl font-bold text-slate-800 mb-2" id="modalPrayerName">Fajr</h3>
             <p class="text-gray-500 mb-6 text-sm">Time Remaining until Start</p>
@@ -143,29 +161,21 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 -mt-16 relative z-20 space-y-8 pb-12">
 
         <!-- Ayat of the Day -->
-        <section class="max-w-4xl mx-auto transform hover:scale-[1.01] transition duration-500">
+        <section id="sec-ayat" class="max-w-4xl mx-auto transform hover:scale-[1.01] transition duration-500">
             <div class="glass-panel rounded-3xl p-8 text-center relative overflow-hidden group">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50"></div>
-                <div class="mb-4 inline-block">
-                    <span class="text-[10px] font-bold text-green-600 uppercase tracking-[0.2em] border border-green-200 px-3 py-1 rounded-full bg-green-50">Ayat of the Day</span>
-                </div>
-                <p class="arabic-text text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-loose dir-rtl drop-shadow-sm">
-                    إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا
-                </p>
-                <p class="text-slate-600 font-medium italic text-base md:text-lg">
-                    "Beshak Namaz momino par muqarrar waqt mein farz ki gayi hai."
-                </p>
+                <div class="mb-4 inline-block"><span class="text-[10px] font-bold text-green-600 uppercase tracking-[0.2em] border border-green-200 px-3 py-1 rounded-full bg-green-50">Ayat of the Day</span></div>
+                <p class="arabic-text text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-loose" style="direction:rtl">إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا</p>
+                <p class="text-slate-600 font-medium italic text-base md:text-lg">"Beshak Namaz momino par muqarrar waqt mein farz ki gayi hai."</p>
                 <div class="text-xs text-slate-400 mt-3 font-semibold tracking-wide">(Surah An-Nisa: 103)</div>
             </div>
         </section>
 
-        <!-- Tools Grid (Quran & Zakat) -->
-        <section class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Quran Card -->
+        <!-- Tools Grid -->
+        <section id="sec-tools" class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
             <div onclick="openQuran()" class="glass-panel rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-white transition group border-l-4 border-green-600">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700 group-hover:scale-110 transition"><i class="fas fa-book-open fa-lg"></i></div>
@@ -173,7 +183,6 @@
                 </div>
                 <i class="fas fa-chevron-right text-slate-300"></i>
             </div>
-            <!-- Zakat Card -->
             <div onclick="document.getElementById('zakatModal').classList.remove('hidden')" class="glass-panel rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-white transition group border-l-4 border-amber-500">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition"><i class="fas fa-calculator fa-lg"></i></div>
@@ -183,27 +192,22 @@
             </div>
         </section>
 
-        <!-- Prayer Times Grid -->
-        <section class="max-w-5xl mx-auto">
+        <!-- Prayer Times -->
+        <section id="sec-prayer" class="max-w-5xl mx-auto">
             <div class="glass-panel rounded-3xl p-6 md:p-8 bg-white/95">
                 <div class="flex justify-between items-end mb-6 border-b border-slate-100 pb-4">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-mosque text-green-700"></i> Prayer Times</h2>
-                        <p class="text-xs text-slate-400 mt-1 pl-7">Raza Jumma Masjid Timmings • Bangalore </p>
+                        <p class="text-xs text-slate-400 mt-1 pl-7">Raza Jumma Masjid • Bangalore</p>
                     </div>
-                    <!-- Next Prayer Indicator -->
                     <div class="text-right">
                         <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Next Prayer</div>
                         <div id="nextPrayerName" class="text-sm font-bold text-green-700">Loading...</div>
                     </div>
                 </div>
-
-                <!-- Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8" id="prayerGrid"></div>
-
-                <!-- Special Times Row -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex justify-between items-center relative overflow-hidden">
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex justify-between items-center">
                         <div class="text-center w-1/2 border-r border-slate-200 pr-4">
                             <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Sehri Ends</div>
                             <div class="text-xl font-bold text-slate-700" id="sehriTime">--:--</div>
@@ -213,12 +217,12 @@
                             <div class="text-xl font-bold text-slate-700" id="iftarTime">--:--</div>
                         </div>
                     </div>
-                    <div class="lg:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-100 flex items-center justify-between relative overflow-hidden">
-                        <div class="relative z-10">
+                    <div class="lg:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-100 flex items-center justify-between">
+                        <div>
                             <div class="text-amber-800 font-bold text-lg flex items-center gap-2 mb-1"><i class="fas fa-star-and-crescent"></i> Jumu'ah</div>
                             <div class="text-xs text-amber-700/70">Khutbah 30 mins prior</div>
                         </div>
-                        <div class="text-right relative z-10">
+                        <div class="text-right">
                             <div class="text-[10px] text-amber-600 uppercase font-bold tracking-wider">Jamaat</div>
                             <div class="text-3xl font-bold text-amber-600" id="jummaTimeDisplay">--:--</div>
                         </div>
@@ -228,27 +232,22 @@
         </section>
 
         <!-- Islamic Festivals -->
-        <section class="max-w-4xl mx-auto">
+        <section id="sec-events" class="max-w-4xl mx-auto">
             <h3 class="text-lg font-bold text-slate-700 mb-4 px-2 flex items-center gap-2">
                 <i class="fas fa-star text-amber-500"></i> Upcoming Islamic Events
             </h3>
-            
-            <div id="featuredFestival" class="bg-gradient-to-br from-[#064e3b] to-[#047857] rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6">
-                <div class="shimmer w-full h-40 rounded-xl opacity-20"></div>
+            <div id="featuredFestival" class="rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6 min-h-[160px]">
+                <div class="w-full h-40 rounded-xl opacity-20 bg-green-700"></div>
             </div>
-
             <button onclick="toggleFestivals()" id="toggleFestBtn" class="w-full py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-sm shadow-sm hover:bg-slate-50 transition flex items-center justify-center gap-2">
                 <span>See More Festivals</span>
                 <i class="fas fa-chevron-down transition-transform duration-300" id="toggleIcon"></i>
             </button>
-
-            <div id="allFestivals" class="hidden grid-cols-1 md:grid-cols-2 gap-4 mt-4 transition-all duration-300">
-                <!-- Injected via JS -->
-            </div>
+            <div id="allFestivals" class="hidden grid-cols-1 md:grid-cols-2 gap-4 mt-4"></div>
         </section>
 
-            
-            <!-- Address -->
+        <!-- Location -->
+        <section id="sec-location" class="max-w-4xl mx-auto">
             <div class="glass-panel rounded-3xl p-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-map-marked-alt text-red-500"></i> Location</h3>
@@ -258,444 +257,737 @@
             </div>
         </section>
 
-        <!-- DOWNLOAD APP SECTION (NEW) -->
-        <section class="max-w-4xl mx-auto mt-8 mb-4 px-4">
+        <!-- Download App -->
+        <section id="sec-app" class="max-w-4xl mx-auto mt-8 mb-4 px-4">
             <div class="glass-panel rounded-3xl p-6 text-center border-l-4 border-green-600 relative overflow-hidden">
                 <div class="relative z-10 flex flex-col items-center">
                     <img src="masjid logo.png" onerror="this.style.display='none'" alt="Masjid Logo" class="w-24 h-24 object-contain rounded-full mb-4 shadow-md bg-white p-1">
                     <h3 class="font-bold text-slate-800 text-lg mb-1">Download Our App</h3>
-                    <p class="text-xs text-slate-500 mb-4 max-w-xs mx-auto">
-                        Download Our App to see Raza Jumma Masjid Namaz timings from anywhere
-                    </p>
-                    <a href="Raza Jumma App.apk" download="Raza Jumma App.apk"
-                       class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition transform active:scale-95 text-sm"
-                       onclick="trackAction('Downloaded App')">
+                    <p class="text-xs text-slate-500 mb-4 max-w-xs mx-auto">Download Our App to see Raza Jumma Masjid Namaz timings from anywhere</p>
+                    <a href="Raza Jumma App.apk" download="Raza Jumma App.apk" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition transform active:scale-95 text-sm" onclick="trackAction('Downloaded App')">
                         <i class="fas fa-download mr-2"></i> Download App
                     </a>
                 </div>
-                 <!-- Decorative bg icon -->
-                <div class="absolute -right-4 -bottom-4 text-green-50 opacity-50">
-                    <i class="fab fa-android fa-6x"></i>
-                </div>
+                <div class="absolute -right-4 -bottom-4 text-green-50 opacity-50"><i class="fab fa-android fa-6x"></i></div>
             </div>
         </section>
 
     </main>
 
-    <footer class="bg-[#0f172a] text-slate-400 py-8 text-center mt-auto text-xs border-t-4 border-amber-600 px-4">
-        &copy; 2026 Raza Jumma Masjid. All Rights Reserved website is handling and created by tajushshariya youth
+    <!-- ===== TAJUSHSHARIYA YOUTH BANNER (compact) ===== -->
+    <div onclick="openContactPage()" class="relative cursor-pointer overflow-hidden mx-4 mb-6 rounded-2xl shadow-xl" style="background:linear-gradient(110deg,#0f0c29 0%,#302b63 60%,#1a1035 100%);">
+        <!-- subtle star dots -->
+        <div class="absolute inset-0 overflow-hidden" style="opacity:0.25;">
+            <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:#fbbf24;top:20%;left:18%;animation:twinkle 2s infinite;"></div>
+            <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:white;top:55%;left:70%;animation:twinkle 1.8s infinite 0.6s;"></div>
+            <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:#fbbf24;top:75%;left:88%;animation:twinkle 2.3s infinite 0.3s;"></div>
+            <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:white;top:30%;left:55%;animation:twinkle 1.6s infinite 1s;"></div>
+        </div>
+        <div class="relative z-10 flex items-center justify-between px-5 py-3">
+            <div>
+                <div class="text-[9px] font-bold uppercase tracking-[0.18em] mb-0.5" style="color:rgba(251,191,36,0.7);">Built by</div>
+                <div class="text-white font-black text-base leading-tight" style="font-family:'Amiri',serif;text-shadow:0 0 16px rgba(251,191,36,0.4);">Tajushshariya Youth</div>
+                <div class="text-[10px] mt-1" style="color:rgba(255,255,255,0.45);">Want a website or app like this?</div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="text-[10px] font-bold px-3 py-1.5 rounded-full" style="background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#0f0c29;">Contact Us →</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-[#0f172a] text-slate-400 py-6 text-center mt-auto text-xs border-t-4 border-amber-600 px-4">
+        &copy; 2026 Raza Jumma Masjid. All Rights Reserved
     </footer>
 
-    <script>
-        const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
-        let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
-        let ADMIN_CHAT_ID = localStorage.getItem('chat_id');
-        let botState = {}; 
+    <!-- ===== CONTACT PAGE MODAL ===== -->
+    <div id="contactPageModal" class="fixed inset-0 z-[150] hidden flex flex-col" style="background:linear-gradient(160deg,#0f0c29 0%,#1e1b4b 50%,#0f0c29 100%);">
 
-        // Default Data Structure
-        let activeTimings = {
-            J: "02:00 PM", S: "--:--", K: "--:--",
-            F: { a: "--:--", j: "--:--" },
-            Z: { a: "--:--", j: "--:--" },
-            A: { a: "--:--", j: "--:--" },
-            M: { a: "--:--", j: "--:--" },
-            I: { a: "--:--", j: "--:--" }
-        };
-        
-        // RAMADAN STATIC DATA (Feb 19 - Mar 20)
-        // Format: "M-D": { s: "sehri", i: "iftar" }
-        const ramadanSchedule = {
-            "2-19": {s:"5:26 AM", i:"6:30 PM"}, "2-20": {s:"5:25 AM", i:"6:30 PM"}, "2-21": {s:"5:25 AM", i:"6:30 PM"},
-            "2-22": {s:"5:25 AM", i:"6:30 PM"}, "2-23": {s:"5:24 AM", i:"6:31 PM"}, "2-24": {s:"5:24 AM", i:"6:31 PM"},
-            "2-25": {s:"5:23 AM", i:"6:31 PM"}, "2-26": {s:"5:23 AM", i:"6:31 PM"}, "2-27": {s:"5:22 AM", i:"6:32 PM"},
-            "2-28": {s:"5:22 AM", i:"6:32 PM"}, "3-1": {s:"5:22 AM", i:"6:32 PM"}, "3-2": {s:"5:21 AM", i:"6:32 PM"},
-            "3-3": {s:"5:21 AM", i:"6:32 PM"}, "3-4": {s:"5:20 AM", i:"6:32 PM"}, "3-5": {s:"5:20 AM", i:"6:32 PM"},
-            "3-6": {s:"5:19 AM", i:"6:32 PM"}, "3-7": {s:"5:18 AM", i:"6:33 PM"}, "3-8": {s:"5:18 AM", i:"6:33 PM"},
-            "3-9": {s:"5:18 AM", i:"6:33 PM"}, "3-10": {s:"5:17 AM", i:"6:33 PM"}, "3-11": {s:"5:16 AM", i:"6:33 PM"},
-            "3-12": {s:"5:15 AM", i:"6:33 PM"}, "3-13": {s:"5:15 AM", i:"6:33 PM"}, "3-14": {s:"5:14 AM", i:"6:33 PM"},
-            "3-15": {s:"5:14 AM", i:"6:33 PM"}, "3-16": {s:"5:13 AM", i:"6:34 PM"}, "3-17": {s:"5:12 AM", i:"6:34 PM"},
-            "3-18": {s:"5:11 AM", i:"6:34 PM"}, "3-19": {s:"5:11 AM", i:"6:34 PM"}, "3-20": {s:"5:10 AM", i:"6:34 PM"}
-        };
+        <!-- Floating stars background -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:#fbbf24;top:8%;left:15%;animation:twinkle 2.2s infinite;"></div>
+            <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:white;top:12%;left:80%;animation:twinkle 1.8s infinite 0.5s;"></div>
+            <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:#fbbf24;top:45%;left:92%;animation:twinkle 2.5s infinite 1s;"></div>
+            <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:white;top:65%;left:5%;animation:twinkle 1.9s infinite 0.3s;"></div>
+            <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:#fbbf24;top:80%;left:50%;animation:twinkle 2.1s infinite 0.8s;"></div>
+            <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:white;top:90%;left:78%;animation:twinkle 1.7s infinite 1.3s;"></div>
+        </div>
 
-        // --- INIT ---
-        window.onload = function() {
-            // SAFETY RENDER (Fixes "Time not loading" bug)
-            try {
-                // Try to load cached data
-                const saved = localStorage.getItem('timings_v10');
-                if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) };
-            } catch(e) {}
-            
-            // Force render immediately with what we have
-            const safeDefaultAPI = {Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"};
-            renderGrid(safeDefaultAPI, {day:"--", month:{en:"--"}, year:"--"});
+        <!-- Back button -->
+        <div class="relative z-10 px-5 pt-12 pb-4">
+            <button onclick="closeContactPage()" class="w-10 h-10 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.12);">
+                <i class="fas fa-arrow-left text-sm"></i>
+            </button>
+        </div>
 
-            // Then refresh with live data
-            refreshData();
-            fetchCloudData();
+        <!-- Hero section -->
+        <div class="relative z-10 px-6 pb-6 text-center">
+            <div class="text-4xl mb-3">🚀</div>
+            <h2 class="text-white font-black text-3xl leading-tight mb-2" style="font-family:'Amiri',serif;">
+                Want a Website<br>or App Like This?
+            </h2>
+            <p class="text-sm leading-relaxed max-w-xs mx-auto" style="color:rgba(255,255,255,0.55);">
+                Contact us — we'll build something beautiful for you.
+            </p>
+        </div>
 
-            setTimeout(() => {
-                loadFestivals();
-                populateSurahList();
-                if(!ADMIN_CHAT_ID) findAdminChatId();
-                else trackAction("Website Opened");
-                
-                setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
-            }, 100);
-        };
+        <!-- Divider line -->
+        <div class="relative z-10 mx-6 mb-6" style="height:1px;background:linear-gradient(90deg,transparent,rgba(251,191,36,0.4),transparent);"></div>
 
-        function saveLocally() { localStorage.setItem('timings_v10', JSON.stringify(activeTimings)); }
-        
-        // --- UNIVERSAL CLOUD SYNC (Using Bot Description) ---
-        async function fetchCloudData() {
-            try {
-                // Get global data from Bot's Description
-                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
-                const data = await res.json();
-                
-                if(data.ok && data.result.description) {
-                    const cloudStr = data.result.description;
-                    if(cloudStr.startsWith("{")) {
-                        const cloudData = JSON.parse(cloudStr);
-                        // Update if different
-                        if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
-                            activeTimings = { ...activeTimings, ...cloudData };
-                            saveLocally();
-                            refreshData();
-                        }
-                    }
-                }
-            } catch(e) {}
+        <!-- Contact cards -->
+        <div class="relative z-10 px-5 space-y-4 flex-grow overflow-y-auto pb-10">
+
+            <!-- Afzal -->
+            <div class="rounded-3xl overflow-hidden" style="border:1px solid rgba(74,222,128,0.2);background:rgba(255,255,255,0.05);">
+                <div class="flex items-center gap-4 px-5 py-4">
+                    <!-- Profile avatar with initials -->
+                    <div class="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center font-black text-xl" style="background:linear-gradient(135deg,#064e3b,#16a34a);color:white;letter-spacing:-1px;">AZ</div>
+                    <div class="flex-grow min-w-0">
+                        <div class="text-white font-black text-lg leading-none mb-0.5">Afzal</div>
+                        <div class="text-xs font-mono" style="color:rgba(255,255,255,0.4);">+91 90365 26421</div>
+                    </div>
+                </div>
+                <div class="flex border-t" style="border-color:rgba(255,255,255,0.07);">
+                    <a href="tel:+919036526421" onclick="trackAction('Tapped Call Afzal')"
+                       class="flex-1 flex items-center justify-center gap-2 py-3.5 font-bold text-sm transition active:opacity-70"
+                       style="color:#4ade80;border-right:1px solid rgba(255,255,255,0.07);">
+                        <i class="fas fa-phone text-xs"></i> Call
+                    </a>
+                    <a href="https://wa.me/919036526421?text=Assalamu%20Alaikum%21%20I%20want%20a%20website%20or%20app%20like%20Raza%20Jumma%20Masjid." target="_blank" onclick="trackAction('Tapped WhatsApp Afzal')"
+                       class="flex-1 flex items-center justify-center gap-2 py-3.5 font-bold text-sm transition active:opacity-70"
+                       style="color:#25D366;">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <!-- Riyaz -->
+            <div class="rounded-3xl overflow-hidden" style="border:1px solid rgba(147,197,253,0.2);background:rgba(255,255,255,0.05);">
+                <div class="flex items-center gap-4 px-5 py-4">
+                    <!-- Profile avatar with initials -->
+                    <div class="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center font-black text-xl" style="background:linear-gradient(135deg,#1e3a5f,#3b82f6);color:white;letter-spacing:-1px;">RZ</div>
+                    <div class="flex-grow min-w-0">
+                        <div class="text-white font-black text-lg leading-none mb-0.5">Riyaz</div>
+                        <div class="text-xs font-mono" style="color:rgba(255,255,255,0.4);">+91 91139 11268</div>
+                    </div>
+                </div>
+                <div class="flex border-t" style="border-color:rgba(255,255,255,0.07);">
+                    <a href="tel:+919113911268" onclick="trackAction('Tapped Call Riyaz')"
+                       class="flex-1 flex items-center justify-center gap-2 py-3.5 font-bold text-sm transition active:opacity-70"
+                       style="color:#93c5fd;border-right:1px solid rgba(255,255,255,0.07);">
+                        <i class="fas fa-phone text-xs"></i> Call
+                    </a>
+                    <a href="https://wa.me/919113911268?text=Assalamu%20Alaikum%21%20I%20want%20a%20website%20or%20app%20like%20Raza%20Jumma%20Masjid." target="_blank" onclick="trackAction('Tapped WhatsApp Riyaz')"
+                       class="flex-1 flex items-center justify-center gap-2 py-3.5 font-bold text-sm transition active:opacity-70"
+                       style="color:#25D366;">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <div class="text-center pt-1 pb-2">
+                <div class="text-[11px]" style="color:rgba(255,255,255,0.25);">— Tajushshariya Youth —</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
+    let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
+    let ADMIN_CHAT_ID = localStorage.getItem('chat_id') || null;
+    let botState = {};
+
+    // ========================
+    // DEFAULT TIMINGS STRUCTURE
+    // ========================
+    let activeTimings = {
+        J: "02:00 PM", S: "--:--", K: "--:--",
+        F: { a: "--:--", j: "--:--" },
+        Z: { a: "--:--", j: "--:--" },
+        A: { a: "--:--", j: "--:--" },
+        M: { a: "--:--", j: "--:--" },
+        I: { a: "--:--", j: "--:--" }
+    };
+
+    // ========================
+    // UPDATED RAMADAN SCHEDULE (Your new list)
+    // ========================
+    const ramadanSchedule = {
+        "2-19": {s:"5:25 AM", i:"6:27 PM"}, "2-20": {s:"5:25 AM", i:"6:27 PM"},
+        "2-21": {s:"5:25 AM", i:"6:28 PM"}, "2-22": {s:"5:24 AM", i:"6:28 PM"},
+        "2-23": {s:"5:24 AM", i:"6:28 PM"}, "2-24": {s:"5:24 AM", i:"6:28 PM"},
+        "2-25": {s:"5:22 AM", i:"6:29 PM"}, "2-26": {s:"5:22 AM", i:"6:29 PM"},
+        "2-27": {s:"5:22 AM", i:"6:29 PM"}, "2-28": {s:"5:22 AM", i:"6:29 PM"},
+        "3-1":  {s:"5:20 AM", i:"6:29 PM"}, "3-2":  {s:"5:20 AM", i:"6:29 PM"},
+        "3-3":  {s:"5:19 AM", i:"6:30 PM"}, "3-4":  {s:"5:19 AM", i:"6:30 PM"},
+        "3-5":  {s:"5:17 AM", i:"6:30 PM"}, "3-6":  {s:"5:17 AM", i:"6:31 PM"},
+        "3-7":  {s:"5:16 AM", i:"6:31 PM"}, "3-8":  {s:"5:16 AM", i:"6:31 PM"},
+        "3-9":  {s:"5:16 AM", i:"6:32 PM"}, "3-10": {s:"5:15 AM", i:"6:32 PM"},
+        "3-11": {s:"5:15 AM", i:"6:32 PM"}, "3-12": {s:"5:15 AM", i:"6:32 PM"},
+        "3-13": {s:"5:13 AM", i:"6:32 PM"}, "3-14": {s:"5:13 AM", i:"6:32 PM"},
+        "3-15": {s:"5:12 AM", i:"6:32 PM"}, "3-16": {s:"5:12 AM", i:"6:32 PM"},
+        "3-17": {s:"5:11 AM", i:"6:32 PM"}, "3-18": {s:"5:11 AM", i:"6:32 PM"},
+        "3-19": {s:"5:11 AM", i:"6:32 PM"}, "3-20": {s:"5:11 AM", i:"6:32 PM"}
+    };
+
+    // ========================
+    // INIT
+    // ========================
+    window.onload = async function() {
+        try {
+            const saved = localStorage.getItem('timings_v10');
+            if(saved) activeTimings = { ...activeTimings, ...JSON.parse(saved) };
+        } catch(e) {}
+
+        const safeAPI = {Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:15"};
+        renderGrid(safeAPI, {day:"--", month:{en:"--"}, year:"--"});
+
+        loadFestivals();
+        populateSurahList();
+
+        // Fetch cloud timings first (Universal update)
+        await fetchCloudData();
+        refreshData();
+
+        // Telegram notification on visit
+        await notifyAdminOnVisit();
+
+        // Start bot command polling
+        setTimeout(() => {
+            setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
+        }, 200);
+
+        // Feature spotlight for new users
+        const isNewUser = !localStorage.getItem('visited_before');
+        if(isNewUser) {
+            localStorage.setItem('visited_before', '1');
+            setTimeout(() => runSpotlight(), 800);
         }
 
-        async function saveToCloud() {
-            try {
-                const jsonStr = JSON.stringify(activeTimings);
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ description: jsonStr })
-                });
-            } catch(e) { console.error("Save Error", e); }
+        // Auto scroll for new users only
+        const isFirstScroll = !localStorage.getItem('auto_scrolled');
+        if(isFirstScroll) {
+            localStorage.setItem('auto_scrolled', '1');
+            setTimeout(() => startAutoScroll(), 3500);
         }
+    };
 
-        // --- BOT ENGINE ---
-        async function checkBotCommands() {
-            try {
-                const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if (data.ok && data.result.length > 0) {
-                    let updated = false;
-                    for(const update of data.result) {
-                        LAST_UPDATE_ID = update.update_id;
-                        localStorage.setItem('last_update_id', LAST_UPDATE_ID);
-
-                        if(!update.message || !update.message.text) continue;
-                        const text = update.message.text.trim();
-                        const chatId = update.message.chat.id;
-                        
-                        if(!ADMIN_CHAT_ID && chatId) { ADMIN_CHAT_ID = chatId; localStorage.setItem('chat_id', chatId); }
-                        await processUserMessage(chatId, text);
-                        updated = true;
-                    }
-                    if(updated) {
-                        saveToCloud(); // Save to global cloud
-                        saveLocally();
-                        refreshData();
-                    }
-                }
-            } catch(e) { }
-        }
-
-        async function findAdminChatId() {
-            try {
+    // ========================
+    // NOTIFICATION ON VISIT (FIXED)
+    // ========================
+    async function notifyAdminOnVisit() {
+        try {
+            // If no ADMIN_CHAT_ID, try to fetch it from getUpdates first
+            if(!ADMIN_CHAT_ID) {
                 const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`);
                 const data = await res.json();
                 if(data.ok && data.result.length > 0) {
-                     for(let i=data.result.length-1; i>=0; i--) {
-                         const chat = data.result[i].message?.chat;
-                         if(chat && chat.id) { ADMIN_CHAT_ID = chat.id; localStorage.setItem('chat_id', ADMIN_CHAT_ID); break; }
-                     }
-                }
-            } catch(e) {}
-        }
-
-        async function processUserMessage(chatId, text) {
-            const lower = text.toLowerCase();
-            if (lower === '/start' || lower === '/help') {
-                botState[chatId] = { step: 'IDLE' }; 
-                await sendReply(chatId, `🕌 *Connected*\n\nCommands:\n/fajr, /zohar, /asr, /maghrib, /isha, /jumma`);
-                return;
-            }
-
-            let state = botState[chatId] || { step: 'IDLE' };
-            const prayers = { 'fajr':'F', 'zohar':'Z', 'asr':'A', 'maghrib':'M', 'isha':'I' };
-            const special = { 'jumma':'J', 'sehri':'S', 'iftar':'K' };
-
-            if (state.step === 'IDLE') {
-                if (lower.startsWith('/')) {
-                    const cmd = lower.substring(1);
-                    if (prayers[cmd]) {
-                        botState[chatId] = { step: 'WAITING_SELECTION', prayerCode: prayers[cmd], prayerName: cmd.toUpperCase() };
-                        await sendReply(chatId, `⚙️ *${cmd.toUpperCase()}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`);
-                    } else if (special[cmd]) {
-                        botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayerCode: special[cmd], prayerName: cmd.toUpperCase() };
-                        await sendReply(chatId, `🕒 Enter time:`);
+                    for(let i = data.result.length - 1; i >= 0; i--) {
+                        const chat = data.result[i].message?.chat;
+                        if(chat && chat.id) {
+                            ADMIN_CHAT_ID = chat.id;
+                            localStorage.setItem('chat_id', ADMIN_CHAT_ID);
+                            break;
+                        }
                     }
                 }
-                return;
             }
-
-            if (state.step === 'WAITING_SELECTION') {
-                if (['1', 'azan', 'a'].includes(lower)) {
-                    botState[chatId].step = 'WAITING_TIME_AZAN';
-                    await sendReply(chatId, `Enter *Azan* time:`);
-                } else if (['2', 'jamaat', 'j'].includes(lower)) {
-                    botState[chatId].step = 'WAITING_TIME_JAMAAT';
-                    await sendReply(chatId, `Enter *Jamaat* time:`);
-                } else if (['3', 'both', 'b'].includes(lower)) {
-                    botState[chatId].step = 'WAITING_TIME_AZAN_BOTH';
-                    await sendReply(chatId, `1️⃣ Enter *Azan* time:`);
-                }
-                return;
-            }
-
-            const cleanTime = (t, pCode) => {
-                let upper = t.toUpperCase().replace('.', ':');
-                if(!upper.includes('M')) {
-                    const morningCodes = ['F','S']; 
-                    if(morningCodes.includes(pCode)) upper += ' AM';
-                    else if(pCode === 'Z' && parseInt(t) >= 11 && parseInt(t) < 12) upper += ' AM';
-                    else upper += ' PM';
-                }
-                return upper;
-            };
-
-            const pCode = state.prayerCode;
-            const t = cleanTime(text, pCode);
-
-            if (state.step === 'WAITING_TIME_SINGLE') { activeTimings[pCode] = t; await sendReply(chatId, `✅ Updated`); botState[chatId] = { step: 'IDLE' }; }
-            else if (state.step === 'WAITING_TIME_AZAN') { activeTimings[pCode].a = t; await sendReply(chatId, `✅ Updated Azan`); botState[chatId] = { step: 'IDLE' }; }
-            else if (state.step === 'WAITING_TIME_JAMAAT') { activeTimings[pCode].j = t; await sendReply(chatId, `✅ Updated Jamaat`); botState[chatId] = { step: 'IDLE' }; }
-            else if (state.step === 'WAITING_TIME_AZAN_BOTH') { botState[chatId].tempAzan = t; botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH'; await sendReply(chatId, `2️⃣ Enter *Jamaat* time:`); }
-            else if (state.step === 'WAITING_TIME_JAMAAT_BOTH') { activeTimings[pCode].a = botState[chatId].tempAzan; activeTimings[pCode].j = t; await sendReply(chatId, `✅ Updated Both`); botState[chatId] = { step: 'IDLE' }; }
-        }
-
-        async function sendReply(chatId, text) {
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' }) });
-        }
-
-        async function trackAction(actionName) {
             if(!ADMIN_CHAT_ID) return;
+
+            let ip = "Unknown IP";
             try {
-                let ip = "Unknown IP"; try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); ip = d.ip; } catch(e) {}
-                const text = `🚨 *Activity Alert*\n\n👤 *User:* ${ip}\n✅ *Action:* ${actionName}\n⏰ *Time:* ${new Date().toLocaleTimeString()}`;
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: text, parse_mode: 'Markdown' }) });
+                const r = await fetch('https://api.ipify.org?format=json');
+                const d = await r.json();
+                ip = d.ip;
             } catch(e) {}
-        }
 
-        // --- ZAKAT CALCULATOR ---
-        function calculateZakat() {
-            const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
-            const netWealth = (getVal('z_cash') + getVal('z_gold') + getVal('z_invest')) - getVal('z_debt');
-            const zakat = netWealth > 55000 ? (netWealth * 0.025).toFixed(2) : 0;
-            document.getElementById('zakatResult').innerHTML = netWealth > 55000 ? `₹ ${zakat}` : "Not Eligible";
-            document.getElementById('zakatResult').className = netWealth > 55000 ? "text-3xl font-bold text-green-700" : "text-xl font-bold text-slate-500";
-            trackAction("Used Zakat Calculator");
-        }
+            const text = `🕌 *Website Visit Alert*\n\n👤 *Visitor IP:* ${ip}\n📱 *Device:* ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n⏰ *Time:* ${new Date().toLocaleString()}\n✅ *Action:* Opened Website`;
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text, parse_mode: 'Markdown' })
+            });
+        } catch(e) { console.log("Notify error:", e); }
+    }
 
-        // --- QURAN LOGIC (FULL LIST) ---
-        const surahsList = [
-            {i:1,n:"Al-Fatihah",a:"الفاتحة"},{i:2,n:"Al-Baqarah",a:"البقرة"},{i:3,n:"Ali 'Imran",a:"آل عمران"},{i:4,n:"An-Nisa",a:"النساء"},{i:5,n:"Al-Ma'idah",a:"المائدة"},
-            {i:6,n:"Al-An'am",a:"الأنعام"},{i:7,n:"Al-A'raf",a:"الأعراف"},{i:8,n:"Al-Anfal",a:"الأنفال"},{i:9,n:"At-Tawbah",a:"التوبة"},{i:10,n:"Yunus",a:"يونس"},
-            {i:11,n:"Hud",a:"هود"},{i:12,n:"Yusuf",a:"يوسف"},{i:13,n:"Ar-Ra'd",a:"الرعد"},{i:14,n:"Ibrahim",a:"ابراهيم"},{i:15,n:"Al-Hijr",a:"الحجر"},
-            {i:16,n:"An-Nahl",a:"النحل"},{i:17,n:"Al-Isra",a:"الإسراء"},{i:18,n:"Al-Kahf",a:"الكهف"},{i:19,n:"Maryam",a:"مريم"},{i:20,n:"Taha",a:"طه"},
-            {i:21,n:"Al-Anbya",a:"الأنبياء"},{i:22,n:"Al-Hajj",a:"الحج"},{i:23,n:"Al-Mu'minun",a:"المؤمنون"},{i:24,n:"An-Nur",a:"النور"},{i:25,n:"Al-Furqan",a:"الفرقان"},
-            {i:26,n:"Ash-Shu'ara",a:"الشعراء"},{i:27,n:"An-Naml",a:"النمل"},{i:28,n:"Al-Qasas",a:"القصص"},{i:29,n:"Al-'Ankabut",a:"العنكبوت"},{i:30,n:"Ar-Rum",a:"الروم"},
-            {i:31,n:"Luqman",a:"لقمان"},{i:32,n:"As-Sajdah",a:"السجدة"},{i:33,n:"Al-Ahzab",a:"الأحزاب"},{i:34,n:"Saba",a:"سبإ"},{i:35,n:"Fatir",a:"فاطر"},
-            {i:36,n:"Ya-Sin",a:"يس"},{i:37,n:"As-Saffat",a:"الصافات"},{i:38,n:"Sad",a:"ص"},{i:39,n:"Az-Zumar",a:"الزمر"},{i:40,n:"Ghafir",a:"غافر"},
-            {i:41,n:"Fussilat",a:"فصلت"},{i:42,n:"Ash-Shura",a:"الشورى"},{i:43,n:"Az-Zukhruf",a:"الزخرف"},{i:44,n:"Ad-Dukhan",a:"الدخان"},{i:45,n:"Al-Jathiyah",a:"الجاثية"},
-            {i:46,n:"Al-Ahqaf",a:"الأحقاف"},{i:47,n:"Muhammad",a:"محمد"},{i:48,n:"Al-Fath",a:"الفتح"},{i:49,n:"Al-Hujurat",a:"الحجرات"},{i:50,n:"Qaf",a:"ق"},
-            {i:51,n:"Adh-Dhariyat",a:"الذاريات"},{i:52,n:"At-Tur",a:"الطور"},{i:53,n:"An-Najm",a:"النجم"},{i:54,n:"Al-Qamar",a:"القمر"},{i:55,n:"Ar-Rahman",a:"الرحمن"},
-            {i:56,n:"Al-Waqi'ah",a:"الواقعة"},{i:57,n:"Al-Hadid",a:"الحديد"},{i:58,n:"Al-Mujadila",a:"المجادلة"},{i:59,n:"Al-Hashr",a:"الحشر"},{i:60,n:"Al-Mumtahanah",a:"الممتحنة"},
-            {i:61,n:"As-Saf",a:"الصف"},{i:62,n:"Al-Jumu'ah",a:"الجمعة"},{i:63,n:"Al-Munafiqun",a:"المنافقون"},{i:64,n:"At-Taghabun",a:"التغابن"},{i:65,n:"At-Talaq",a:"الطلاق"},
-            {i:66,n:"At-Tahrim",a:"التحريم"},{i:67,n:"Al-Mulk",a:"الملك"},{i:68,n:"Al-Qalam",a:"القلم"},{i:69,n:"Al-Haqqah",a:"الحاقة"},{i:70,n:"Al-Ma'arij",a:"المعارج"},
-            {i:71,n:"Nuh",a:"نوح"},{i:72,n:"Al-Jinn",a:"الجن"},{i:73,n:"Al-Muzzammil",a:"المزمل"},{i:74,n:"Al-Muddaththir",a:"المدثر"},{i:75,n:"Al-Qiyamah",a:"القيامة"},
-            {i:76,n:"Al-Insan",a:"الانسان"},{i:77,n:"Al-Mursalat",a:"المرسلات"},{i:78,n:"An-Naba",a:"النبإ"},{i:79,n:"An-Nazi'at",a:"النازعات"},{i:80,n:"'Abasa",a:"عبس"},
-            {i:81,n:"At-Takwir",a:"التكوير"},{i:82,n:"Al-Infitar",a:"الإنفطار"},{i:83,n:"Al-Mutaffifin",a:"المطففين"},{i:84,n:"Al-Inshiqaq",a:"الإنشقاق"},{i:85,n:"Al-Buruj",a:"البروج"},
-            {i:86,n:"At-Tariq",a:"الطارق"},{i:87,n:"Al-A'la",a:"الأعلى"},{i:88,n:"Al-Ghashiyah",a:"الغاشية"},{i:89,n:"Al-Fajr",a:"الفجر"},{i:90,n:"Al-Balad",a:"البلد"},
-            {i:91,n:"Ash-Shams",a:"الشمس"},{i:92,n:"Al-Layl",a:"الليل"},{i:93,n:"Ad-Duhaa",a:"الضحى"},{i:94,n:"Ash-Sharh",a:"الشرح"},{i:95,n:"At-Tin",a:"التين"},
-            {i:96,n:"Al-'Alaq",a:"العلق"},{i:97,n:"Al-Qadr",a:"القدر"},{i:98,n:"Al-Bayyinah",a:"البينة"},{i:99,n:"Az-Zalzalah",a:"الزلزلة"},{i:100,n:"Al-'Adiyat",a:"العاديات"},
-            {i:101,n:"Al-Qari'ah",a:"القارعة"},{i:102,n:"At-Takathur",a:"التكاثر"},{i:103,n:"Al-'Asr",a:"العصر"},{i:104,n:"Al-Humazah",a:"الهمزة"},{i:105,n:"Al-Fil",a:"الفيل"},
-            {i:106,n:"Quraysh",a:"قريش"},{i:107,n:"Al-Ma'un",a:"الماعون"},{i:108,n:"Al-Kawthar",a:"الكوثر"},{i:109,n:"Al-Kafirun",a:"الكافرون"},{i:110,n:"An-Nasr",a:"النصر"},
-            {i:111,n:"Al-Masad",a:"المسد"},{i:112,n:"Al-Ikhlas",a:"الإخلاص"},{i:113,n:"Al-Falaq",a:"الفلق"},{i:114,n:"An-Nas",a:"الناس"}
+    // ========================
+    // TRACK ACTION
+    // ========================
+    async function trackAction(actionName) {
+        if(!ADMIN_CHAT_ID) return;
+        try {
+            let ip = "Unknown IP";
+            try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); ip = d.ip; } catch(e){}
+            const text = `🚨 *Activity Alert*\n\n👤 *User:* ${ip}\n✅ *Action:* ${actionName}\n⏰ *Time:* ${new Date().toLocaleTimeString()}`;
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text, parse_mode: 'Markdown' })
+            });
+        } catch(e) {}
+    }
+
+    // ========================
+    // FEATURE SPOTLIGHT
+    // ========================
+    const spotlightItems = [
+        { icon: '📖', iconBg: 'bg-green-100', title: 'Al-Quran', desc: 'Read all 114 Surahs with English translation', duration: 2000 },
+        { icon: '🧮', iconBg: 'bg-amber-100', title: 'Zakat Calculator', desc: 'Calculate your annual Zakat obligation easily', duration: 2000 }
+    ];
+
+    function runSpotlight() {
+        const overlay = document.getElementById('spotlightOverlay');
+        overlay.classList.remove('hidden');
+        overlay.addEventListener('click', () => overlay.classList.add('hidden'), { once: true });
+        showSpotlightItem(0, overlay);
+    }
+
+    function showSpotlightItem(index, overlay) {
+        if(index >= spotlightItems.length) { overlay.classList.add('hidden'); return; }
+        const item = spotlightItems[index];
+        document.getElementById('spotlightIcon').className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl ${item.iconBg}`;
+        document.getElementById('spotlightIcon').innerText = item.icon;
+        document.getElementById('spotlightTitle').innerText = item.title;
+        document.getElementById('spotlightDesc').innerText = item.desc;
+
+        const bar = document.getElementById('spotlightBarFill');
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.transition = `width ${item.duration}ms linear`;
+            bar.style.width = '100%';
+        }, 50);
+
+        setTimeout(() => showSpotlightItem(index + 1, overlay), item.duration + 200);
+    }
+
+    // ========================
+    // AUTO SCROLL (New users only)
+    // ========================
+    const scrollSections = ['sec-ayat','sec-tools','sec-prayer','sec-events','sec-location','sec-app'];
+    let scrollIdx = 0;
+    let autoScrollTimer = null;
+    let userTouched = false;
+
+    function startAutoScroll() {
+        document.addEventListener('touchstart', stopAutoScroll, { once: true });
+        document.addEventListener('mousedown', stopAutoScroll, { once: true });
+        scrollToSection();
+    }
+
+    function stopAutoScroll() {
+        userTouched = true;
+        clearTimeout(autoScrollTimer);
+    }
+
+    function scrollToSection() {
+        if(userTouched || scrollIdx >= scrollSections.length) return;
+        const el = document.getElementById(scrollSections[scrollIdx]);
+        if(el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('scroll-highlight');
+            setTimeout(() => el.classList.remove('scroll-highlight'), 1500);
+        }
+        scrollIdx++;
+        autoScrollTimer = setTimeout(scrollToSection, 2200);
+    }
+
+    // ========================
+    // CONTACT PAGE
+    // ========================
+    function openContactPage() {
+        const modal = document.getElementById('contactPageModal');
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => modal.classList.add('open'));
+        trackAction('Tapped Tajushshariya Youth Banner → Opened Contact Page');
+    }
+    function closeContactPage() {
+        const modal = document.getElementById('contactPageModal');
+        modal.classList.remove('open');
+        setTimeout(() => modal.classList.add('hidden'), 420);
+    }
+
+    // ========================
+    // GLOBAL TAP TRACKER
+    // ========================
+    let tapThrottle = null;
+    let tapBuffer = [];
+    let tapFlushTimer = null;
+
+    document.addEventListener('click', function(e) {
+        // Visual ripple
+        const ripple = document.createElement('div');
+        ripple.className = 'tap-ripple';
+        ripple.style.left = e.clientX + 'px';
+        ripple.style.top = e.clientY + 'px';
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+
+        // Get tapped element description
+        const el = e.target;
+        let desc = el.innerText?.trim().slice(0,40) || el.getAttribute('aria-label') || el.className?.slice(0,30) || 'Element';
+        desc = desc.replace(/\s+/g,' ').trim();
+        if(!desc || desc.length < 2) desc = el.tagName;
+
+        // Buffer taps and send in batch (max 1 notification per 4 seconds)
+        tapBuffer.push(desc);
+        clearTimeout(tapFlushTimer);
+        tapFlushTimer = setTimeout(() => {
+            if(tapBuffer.length === 0) return;
+            const actions = tapBuffer.join('\n  • ');
+            tapBuffer = [];
+            trackAction(`👆 User Tapped:\n  • ${actions}`);
+        }, 4000);
+    });
+
+    // ========================
+    // ZAKAT CALCULATOR
+    // ========================
+    function calculateZakat() {
+        const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+        const netWealth = (getVal('z_cash') + getVal('z_gold') + getVal('z_invest')) - getVal('z_debt');
+        const zakat = netWealth > 55000 ? (netWealth * 0.025).toFixed(2) : 0;
+        document.getElementById('zakatResult').innerHTML = netWealth > 55000 ? `₹ ${zakat}` : "Not Eligible";
+        document.getElementById('zakatResult').className = netWealth > 55000 ? "text-3xl font-bold text-green-700" : "text-xl font-bold text-slate-500";
+        trackAction("Used Zakat Calculator");
+    }
+
+    // ========================
+    // FESTIVALS (Date-aware)
+    // ========================
+    function loadFestivals() {
+        const now = new Date();
+        const events = [
+            { name: "Ramadan", gregorianStart: "Feb 18, 2026", gregorianEnd: "Mar 19, 2026", hijri: "1 Ramadan 1447", desc: "The holy month of fasting revealed in the Quran. Fast from dawn to sunset to purify our souls, practice self-discipline, and empathize with those who are hungry.", highlight: true },
+            { name: "Eid al-Fitr", gregorianStart: "Mar 20, 2026", gregorianEnd: "Mar 22, 2026", hijri: "1 Shawwal 1447", desc: "It marks the successful completion of Ramadan. A day of joy, thanksgiving to Allah for the strength to fast, and giving Zakat al-Fitr to the poor." },
+            { name: "Eid al-Adha", gregorianStart: "May 27, 2026", gregorianEnd: "May 31, 2026", hijri: "10 Dhul Hijjah 1447", desc: "Honors the willingness of Prophet Ibrahim (AS) to sacrifice his son Ismail (AS) as an act of obedience to God." },
+            { name: "Eid Milad-un-Nabi", gregorianStart: "Aug 26, 2026", gregorianEnd: "Aug 26, 2026", hijri: "12 Rabi' al-Awwal 1448", desc: "Celebrating the birth of Prophet Muhammad (PBUH), the mercy to all worlds." }
         ];
 
-        function populateSurahList() {
-            const list = document.getElementById('surahList');
-            list.innerHTML = surahsList.map(s => `<div onclick="readSurah(${s.i}, '${s.n}')" class="surah-item p-3 bg-white rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center">${s.i}</div><div><div class="font-bold text-slate-800">${s.n}</div></div></div><div class="font-serif text-lg text-green-700">${s.a}</div></div>`).join('');
-        }
-        function filterSurahs() {
-            const query = document.getElementById('surahSearch').value.toLowerCase();
-            document.querySelectorAll('.surah-item').forEach(item => { item.style.display = item.innerText.toLowerCase().includes(query) ? 'flex' : 'none'; });
-        }
-        function openQuran() { document.getElementById('quranModal').classList.remove('hidden'); trackAction("Opened Quran"); }
-        async function readSurah(id, name) {
-            document.getElementById('readerView').classList.remove('hidden');
-            document.getElementById('readerTitle').innerText = name;
-            document.getElementById('readerContent').innerHTML = '<div class="text-center mt-10"><i class="fas fa-circle-notch fa-spin text-green-600 fa-2x"></i></div>';
-            try {
-                const res = await fetch(`https://api.alquran.cloud/v1/surah/${id}/editions/quran-simple,en.sahih`);
-                const data = await res.json();
-                let html = ''; if(id !== 1 && id !== 9) html += `<div class="text-center font-serif text-2xl mb-8 text-green-800">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
-                for(let i=0; i<data.data[0].ayahs.length; i++) {
-                    let arText = data.data[0].ayahs[i].text; if(id !== 1 && i === 0) arText = arText.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', '').trim();
-                    html += `<div class="border-b border-slate-100 pb-4 mb-4"><div class="flex justify-between items-start mb-2"><span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">${data.data[0].ayahs[i].numberInSurah}</span><p class="text-right font-serif text-2xl text-slate-800 leading-loose dir-rtl w-full">${arText}</p></div><p class="text-sm text-slate-600 leading-relaxed mt-2">${data.data[1].ayahs[i].text}</p></div>`;
-                }
-                document.getElementById('readerContent').innerHTML = html; trackAction(`Reading Surah ${id}`);
-            } catch(e) { document.getElementById('readerContent').innerHTML = '<p class="text-center text-red-500 mt-10">Error loading. Check internet.</p>'; }
+        function getStatus(ev) {
+            const start = new Date(ev.gregorianStart);
+            const end = new Date(ev.gregorianEnd);
+            end.setHours(23,59,59);
+            if(now >= start && now <= end) return 'running';
+            if(now < start) return 'upcoming';
+            return 'ended';
         }
 
-        // --- UI REFRESH ---
-        async function refreshData() {
-            document.getElementById('jummaTimeDisplay').innerText = activeTimings.J;
-            document.getElementById('sehriTime').innerText = activeTimings.S;
-            document.getElementById('iftarTime').innerText = activeTimings.K;
+        // Find the featured event: running first, then next upcoming
+        let featured = events.find(e => getStatus(e) === 'running') 
+                     || events.find(e => getStatus(e) === 'upcoming') 
+                     || events[0];
 
-            const lat = 13.0537, long = 77.5367; 
-            const url = `https://api.aladhan.com/v1/timings/${new Date().getDate()}-${new Date().getMonth()+1}-${new Date().getFullYear()}?latitude=${lat}&longitude=${long}&method=1&school=1`;
-            
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                renderGrid(data.data.timings, data.data.date.hijri);
-            } catch(e) { 
-                // Fallback for safety - renders grid even if API fails
-                renderGrid({Fajr:"05:30", Dhuhr:"13:30", Asr:"17:00", Maghrib:"18:30", Isha:"20:15", Sunrise:"06:10"}, {day:"--", month:{en:"--"}, year:"--"});
+        const status = getStatus(featured);
+        const statusBadge = status === 'running' 
+            ? `<span class="running-badge"><span class="blink">●</span> Happening Now</span>` 
+            : status === 'upcoming' ? `<span style="background:#f59e0b" class="running-badge">⏳ Upcoming</span>` : '';
+
+        const featEl = document.getElementById('featuredFestival');
+        featEl.className = `rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6 ${status === 'running' ? 'event-running' : status === 'upcoming' ? 'event-upcoming' : 'event-ended bg-slate-700'}`;
+
+        featEl.innerHTML = `<div class="absolute right-0 top-0 opacity-10 transform translate-x-10 -translate-y-10"><i class="fas fa-mosque fa-10x"></i></div>
+        <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-3">${statusBadge}<div class="inline-block bg-white/20 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest border border-white/20">Islamic Event</div></div>
+            <h4 class="text-3xl md:text-4xl font-bold mb-2">${featured.name}</h4>
+            <div class="flex flex-wrap gap-4 text-sm font-medium opacity-90 mb-4">
+                <span class="flex items-center gap-1"><i class="far fa-calendar-alt"></i> ${featured.gregorianStart}${featured.gregorianStart !== featured.gregorianEnd ? ' – ' + featured.gregorianEnd : ''}</span>
+                <span class="flex items-center gap-1"><i class="fas fa-moon"></i> ${featured.hijri}</span>
+            </div>
+            <p class="text-white/90 text-sm leading-relaxed max-w-2xl border-l-4 border-amber-400 pl-4 bg-black/10 p-2 rounded">${featured.desc}</p>
+        </div>`;
+
+        const list = document.getElementById('allFestivals');
+        const others = events.filter(e => e !== featured);
+        list.innerHTML = others.map(ev => {
+            const s = getStatus(ev);
+            const badge = s === 'running' ? `<span class="running-badge text-xs"><span class="blink">●</span> Now</span>` : s === 'upcoming' ? `<span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold">${ev.gregorianStart}</span>` : `<span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded">Past</span>`;
+            return `<div class="bg-white p-5 rounded-xl border ${s==='running'?'border-green-400':'border-slate-100'} shadow-sm hover:shadow-md transition group">
+                <div class="flex justify-between items-start mb-2"><h5 class="font-bold text-slate-800 text-lg group-hover:text-green-700 transition">${ev.name}</h5>${badge}</div>
+                <div class="text-xs text-green-600 font-medium mb-3"><i class="fas fa-moon"></i> ${ev.hijri}</div>
+                <p class="text-xs text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-2">${ev.desc}</p>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleFestivals() {
+        const list = document.getElementById('allFestivals');
+        const icon = document.getElementById('toggleIcon');
+        const btnText = document.querySelector('#toggleFestBtn span');
+        if(list.classList.contains('hidden')) {
+            list.classList.remove('hidden'); list.classList.add('grid');
+            icon.style.transform = 'rotate(180deg)'; btnText.innerText = "Hide Festivals";
+        } else {
+            list.classList.add('hidden'); list.classList.remove('grid');
+            icon.style.transform = 'rotate(0deg)'; btnText.innerText = "See More Festivals";
+        }
+    }
+
+    // ========================
+    // REFRESH DATA
+    // ========================
+    async function refreshData() {
+        document.getElementById('jummaTimeDisplay').innerText = activeTimings.J;
+
+        // Sehri & Iftar: use admin-set values if not "--:--", else use Ramadan schedule
+        const todayKey = `${new Date().getMonth()+1}-${new Date().getDate()}`;
+        const ramadan = ramadanSchedule[todayKey];
+
+        const sehriEl = document.getElementById('sehriTime');
+        const iftarEl = document.getElementById('iftarTime');
+
+        if(activeTimings.S !== "--:--") { sehriEl.innerText = activeTimings.S; }
+        else if(ramadan) { sehriEl.innerText = ramadan.s; }
+
+        if(activeTimings.K !== "--:--") { iftarEl.innerText = activeTimings.K; }
+        else if(ramadan) { iftarEl.innerText = ramadan.i; }
+
+        const lat = 13.0537, long = 77.5367;
+        const url = `https://api.aladhan.com/v1/timings/${new Date().getDate()}-${new Date().getMonth()+1}-${new Date().getFullYear()}?latitude=${lat}&longitude=${long}&method=1&school=1`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            renderGrid(data.data.timings, data.data.date.hijri);
+        } catch(e) {
+            renderGrid({Fajr:"05:30",Dhuhr:"13:30",Asr:"17:00",Maghrib:"18:30",Isha:"20:15",Sunrise:"06:10"},{day:"--",month:{en:"--"},year:"--"});
+        }
+    }
+
+    function renderGrid(apiTimings, hijri) {
+        document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
+
+        const grid = document.getElementById('prayerGrid');
+        grid.innerHTML = '';
+        const prayers = [
+            { apiKey: 'Fajr', code: 'F', name: 'Fajr' },
+            { apiKey: 'Dhuhr', code: 'Z', name: 'Zohar' },
+            { apiKey: 'Asr', code: 'A', name: 'Asr' },
+            { apiKey: 'Maghrib', code: 'M', name: 'Maghrib' },
+            { apiKey: 'Isha', code: 'I', name: 'Isha' }
+        ];
+        const now = new Date();
+        const tD = (t) => { if(!t) return new Date(); const [h,m]=t.split(':').map(Number); const d=new Date(); d.setHours(h,m,0); return d; };
+        const f=tD(apiTimings.Fajr), z=tD(apiTimings.Dhuhr), a=tD(apiTimings.Asr), m=tD(apiTimings.Maghrib), i=tD(apiTimings.Isha), s=tD(apiTimings.Sunrise);
+        let current = "";
+        if(now>=f&&now<s) current="Fajr";
+        else if(now>=z&&now<a) current="Zohar";
+        else if(now>=a&&now<m) current="Asr";
+        else if(now>=m&&now<i) current="Maghrib";
+        else if(now>=i||now<f) current="Isha";
+        const nextMap = {'Fajr':'Zohar','Zohar':'Asr','Asr':'Maghrib','Maghrib':'Isha','Isha':'Fajr','':"Fajr"};
+        document.getElementById('nextPrayerName').innerText = `${nextMap[current]||"Fajr"} Next`;
+
+        prayers.forEach(p => {
+            let azan = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : formatTime12(apiTimings[p.apiKey]);
+            let jamaat = activeTimings[p.code].j;
+            if(jamaat === "--:--") {
+                let [h,mm] = (apiTimings[p.apiKey]||"00:00").split(':').map(Number);
+                let offset = p.apiKey==='Maghrib'?5:15;
+                let d = new Date(); d.setHours(h, mm+offset);
+                jamaat = d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit',hour12:true});
             }
-        }
+            const isRunning = (p.name === current);
+            const card = document.createElement('div');
+            card.className = `prayer-card p-3 rounded-2xl bg-white text-center ${isRunning ? 'running-now' : ''}`;
+            card.onclick = () => openCountdown(p.name, apiTimings[p.apiKey]);
+            card.innerHTML = `<div class="text-xs uppercase font-bold text-slate-400 mb-2">${p.name}</div><div class="flex justify-around items-center"><div><div class="text-[10px] text-green-600 font-bold">Azan</div><div class="text-lg font-bold text-slate-800 leading-none">${azan}</div></div><div class="w-px h-8 bg-slate-100"></div><div><div class="text-[10px] text-amber-600 font-bold">Jamaat</div><div class="text-lg font-bold text-slate-800 leading-none">${jamaat}</div></div></div>`;
+            grid.appendChild(card);
+        });
+    }
 
-        function renderGrid(apiTimings, hijri) {
-            document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
-            
-            // Check for Ramadan Dates (Static Schedule Override)
-            const todayKey = `${new Date().getMonth()+1}-${new Date().getDate()}`;
-            if(ramadanSchedule[todayKey]) {
-                if(activeTimings.S === "--:--") document.getElementById('sehriTime').innerText = ramadanSchedule[todayKey].s;
-                if(activeTimings.K === "--:--") document.getElementById('iftarTime').innerText = ramadanSchedule[todayKey].i;
-            } else {
-                if(activeTimings.S === "--:--") document.getElementById('sehriTime').innerText = formatTime12(apiTimings.Fajr);
-                if(activeTimings.K === "--:--") document.getElementById('iftarTime').innerText = formatTime12(apiTimings.Maghrib);
-            }
+    function formatTime12(time) {
+        if(!time) return "--:--";
+        let [h,m] = time.split(':'); h=parseInt(h); const ampm=h>=12?'PM':'AM'; h=h%12||12; return `${h}:${m} ${ampm}`;
+    }
 
-            const grid = document.getElementById('prayerGrid');
-            grid.innerHTML = '';
-
-            const prayers = [
-                { apiKey: 'Fajr', code: 'F', name: 'Fajr' },
-                { apiKey: 'Dhuhr', code: 'Z', name: 'Zohar' },
-                { apiKey: 'Asr', code: 'A', name: 'Asr' },
-                { apiKey: 'Maghrib', code: 'M', name: 'Maghrib' },
-                { apiKey: 'Isha', code: 'I', name: 'Isha' }
-            ];
-
-            const now = new Date();
-            const timeToDate = (t) => { 
-                if(!t) return new Date(); // Safety
-                const [h,m] = t.split(':').map(Number); const d = new Date(); d.setHours(h,m,0); return d; 
-            };
-            const f = timeToDate(apiTimings.Fajr); const z = timeToDate(apiTimings.Dhuhr); 
-            const a = timeToDate(apiTimings.Asr); const m = timeToDate(apiTimings.Maghrib); 
-            const i = timeToDate(apiTimings.Isha); const s = timeToDate(apiTimings.Sunrise);
-            
-            let current = "";
-            if (now>=f && now<s) current="Fajr";
-            else if (now>=z && now<a) current="Zohar";
-            else if (now>=a && now<m) current="Asr";
-            else if (now>=m && now<i) current="Maghrib";
-            else if (now>=i || now < f) current="Isha";
-
-            const nextMap = { 'Fajr':'Zohar', 'Zohar':'Asr', 'Asr':'Maghrib', 'Maghrib':'Isha', '':'Fajr' };
-            const nextP = nextMap[current] || "Fajr";
-            document.getElementById('nextPrayerName').innerText = `${nextP} Next`;
-
-            prayers.forEach(p => {
-                let azan = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : formatTime12(apiTimings[p.apiKey]);
-                let jamaat = activeTimings[p.code].j;
-                if(jamaat === "--:--") {
-                    let [h, m] = (apiTimings[p.apiKey] || "00:00").split(':').map(Number); // Safety fallback
-                    let offset = p.apiKey==='Maghrib'?5:15;
-                    let d = new Date(); d.setHours(h,m+offset);
-                    jamaat = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
+    // ========================
+    // CLOUD SYNC (Universal - from Bot Description)
+    // ========================
+    async function fetchCloudData() {
+        try {
+            const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
+            const data = await res.json();
+            if(data.ok && data.result.description && data.result.description.startsWith("{")) {
+                const cloudData = JSON.parse(data.result.description);
+                if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
+                    activeTimings = { ...activeTimings, ...cloudData };
+                    saveLocally();
                 }
+            }
+        } catch(e) {}
+    }
 
-                const isRunning = (p.name === current);
-
-                const card = document.createElement('div');
-                card.className = `prayer-card p-3 rounded-2xl bg-white text-center ${isRunning ? 'running-now' : ''}`;
-                card.onclick = () => openCountdown(p.name, apiTimings[p.apiKey]);
-                card.innerHTML = `<div class="text-xs uppercase font-bold text-slate-400 mb-2">${p.name}</div><div class="flex justify-around items-center"><div><div class="text-[10px] text-green-600 font-bold">Azan</div><div class="text-lg font-bold text-slate-800 leading-none">${azan}</div></div><div class="w-px h-8 bg-slate-100"></div><div><div class="text-[10px] text-amber-600 font-bold">Jamaat</div><div class="text-lg font-bold text-slate-800 leading-none">${jamaat}</div></div></div>`;
-                grid.appendChild(card);
+    async function saveToCloud() {
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ description: JSON.stringify(activeTimings) })
             });
-        }
+        } catch(e) {}
+    }
 
-        // FESTIVALS & UTILS
-        function loadFestivals() {
-            const events = [
-                { name: "Ramadan Start", hijri: "1 Ramadan 1447", gregorian: "Feb 18, 2026", desc: "Why we celebrate: Ramadan is the holy month of fasting revealed in the Quran. We fast from dawn to sunset to purify our souls, practice self-discipline, and empathize with those who are hungry.", highlight: true },
-                { name: "Eid al-Fitr", hijri: "1 Shawwal 1447", gregorian: "Mar 20, 2026", desc: "Why we celebrate: It marks the successful completion of Ramadan. It is a day of joy, thanksgiving to Allah for the strength to fast, and giving Zakat al-Fitr to the poor." },
-                { name: "Eid al-Adha", hijri: "10 Dhul Hijjah 1447", gregorian: "May 27, 2026", desc: "Why we celebrate: It honors the willingness of Prophet Ibrahim (AS) to sacrifice his son Ismail (AS) as an act of obedience to God." },
-                { name: "Eid Milad-un-Nabi", hijri: "12 Rabi' al-Awwal 1448", gregorian: "Aug 26, 2026", desc: "Why we celebrate: Birth of Prophet Muhammad (PBUH)." }
-            ];
-            const featured = events[0];
-            document.getElementById('featuredFestival').innerHTML = `<div class="absolute right-0 top-0 opacity-10 transform translate-x-10 -translate-y-10"><i class="fas fa-mosque fa-10x"></i></div><div class="relative z-10"><div class="inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest mb-3 border border-white/20">Upcoming Event</div><h4 class="text-3xl md:text-4xl font-bold mb-2">${featured.name}</h4><div class="flex flex-wrap gap-4 text-sm font-medium opacity-90 mb-4"><span class="flex items-center gap-1"><i class="far fa-calendar-alt"></i> ${featured.gregorian}</span><span class="flex items-center gap-1"><i class="fas fa-moon"></i> ${featured.hijri}</span></div><p class="text-green-100 text-sm md:text-base leading-relaxed max-w-2xl border-l-4 border-amber-400 pl-4 bg-black/10 p-2 rounded">${featured.desc}</p></div>`;
-            const list = document.getElementById('allFestivals');
-            list.innerHTML = events.slice(1).map(ev => `<div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition group"><div class="flex justify-between items-start mb-2"><h5 class="font-bold text-slate-800 text-lg group-hover:text-green-700 transition">${ev.name}</h5><span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded font-bold">${ev.gregorian}</span></div><div class="text-xs text-green-600 font-medium mb-3"><i class="fas fa-moon"></i> ${ev.hijri}</div><p class="text-xs text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-2">${ev.desc}</p></div>`).join('');
-        }
+    function saveLocally() { localStorage.setItem('timings_v10', JSON.stringify(activeTimings)); }
 
-        function toggleFestivals() {
-            const list = document.getElementById('allFestivals');
-            const icon = document.getElementById('toggleIcon');
-            const btnText = document.querySelector('#toggleFestBtn span');
-            if(list.classList.contains('hidden')) { list.classList.remove('hidden'); list.classList.add('grid'); icon.style.transform = 'rotate(180deg)'; btnText.innerText = "Hide Festivals"; }
-            else { list.classList.add('hidden'); list.classList.remove('grid'); icon.style.transform = 'rotate(0deg)'; btnText.innerText = "See More Festivals"; }
-        }
+    // ========================
+    // BOT COMMANDS ENGINE
+    // ========================
+    async function checkBotCommands() {
+        try {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if(data.ok && data.result.length > 0) {
+                let updated = false;
+                for(const update of data.result) {
+                    LAST_UPDATE_ID = update.update_id;
+                    localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+                    if(!update.message || !update.message.text) continue;
+                    const text = update.message.text.trim();
+                    const chatId = update.message.chat.id;
+                    if(!ADMIN_CHAT_ID && chatId) { ADMIN_CHAT_ID = chatId; localStorage.setItem('chat_id', chatId); }
+                    await processUserMessage(chatId, text);
+                    updated = true;
+                }
+                if(updated) { await saveToCloud(); saveLocally(); refreshData(); }
+            }
+        } catch(e) {}
+    }
 
-        function formatTime12(time) { 
-             if(!time) return "--:--";
-             let [h, m] = time.split(':'); h = parseInt(h); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${m} ${ampm}`; 
+    async function processUserMessage(chatId, text) {
+        const lower = text.toLowerCase();
+        if(lower === '/start' || lower === '/help') {
+            botState[chatId] = { step: 'IDLE' };
+            await sendReply(chatId, `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`);
+            return;
         }
-        function switchTab(t) {
-            const m = document.getElementById('content-money'); const mt = document.getElementById('content-material');
-            const btM = document.getElementById('tab-money'); const btMt = document.getElementById('tab-material');
-            if(t==='money') { m.classList.remove('hidden'); mt.classList.add('hidden'); btM.classList.add('text-green-700','border-green-600','bg-white'); btM.classList.remove('text-slate-400'); btMt.classList.remove('text-green-700','border-green-600','bg-white'); btMt.classList.add('text-slate-400'); trackAction("Viewed Chanda Tab"); }
-            else { m.classList.add('hidden'); mt.classList.remove('hidden'); btMt.classList.add('text-green-700','border-green-600','bg-white'); btMt.classList.remove('text-slate-400'); btM.classList.remove('text-green-700','border-green-600','bg-white'); btM.classList.add('text-slate-400'); trackAction("Viewed Material Tab"); }
+        let state = botState[chatId] || { step: 'IDLE' };
+        const prayers = { 'fajr':'F','zohar':'Z','asr':'A','maghrib':'M','isha':'I' };
+        const special = { 'jumma':'J','sehri':'S','iftar':'K' };
+        if(state.step === 'IDLE') {
+            if(lower.startsWith('/')) {
+                const cmd = lower.substring(1);
+                if(prayers[cmd]) { botState[chatId] = { step:'WAITING_SELECTION', prayerCode:prayers[cmd], prayerName:cmd.toUpperCase() }; await sendReply(chatId, `⚙️ *${cmd.toUpperCase()}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`); }
+                else if(special[cmd]) { botState[chatId] = { step:'WAITING_TIME_SINGLE', prayerCode:special[cmd], prayerName:cmd.toUpperCase() }; await sendReply(chatId, `🕒 Enter time for *${cmd.toUpperCase()}*:`); }
+            }
+            return;
         }
-        let cdInt;
-        function openCountdown(name, time24) {
-            trackAction(`Checked Countdown for ${name}`);
-            const modal = document.getElementById('countdownModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-            document.getElementById('modalPrayerName').innerText = `${name} Starts In`;
-            clearInterval(cdInt);
-            const [h,m] = (time24 || "00:00").split(':').map(Number);
-            const target = new Date(); target.setHours(h,m,0);
-            const now = new Date(); if(target < now) target.setDate(target.getDate() + 1);
-            cdInt = setInterval(() => {
-                const diff = target - new Date();
-                if(diff <= 0) { document.getElementById('modalTimer').innerText = "Now!"; return; }
-                const hrs = Math.floor((diff % 86400000) / 3600000);
-                const mins = Math.floor((diff % 3600000) / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                document.getElementById('modalTimer').innerText = `${hrs}:${mins}:${secs}`;
-            }, 1000);
+        if(state.step === 'WAITING_SELECTION') {
+            if(['1','azan','a'].includes(lower)) { botState[chatId].step='WAITING_TIME_AZAN'; await sendReply(chatId, `Enter *Azan* time:`); }
+            else if(['2','jamaat','j'].includes(lower)) { botState[chatId].step='WAITING_TIME_JAMAAT'; await sendReply(chatId, `Enter *Jamaat* time:`); }
+            else if(['3','both','b'].includes(lower)) { botState[chatId].step='WAITING_TIME_AZAN_BOTH'; await sendReply(chatId, `1️⃣ Enter *Azan* time:`); }
+            return;
         }
-        function closeCountdown() { const modal = document.getElementById('countdownModal'); modal.classList.add('opacity-0'); setTimeout(() => modal.classList.add('hidden'), 300); clearInterval(cdInt); }
-    </script>
+        const cleanTime = (t, pCode) => {
+            let upper = t.toUpperCase().replace('.', ':');
+            if(!upper.includes('M')) {
+                if(['F','S'].includes(pCode)) upper += ' AM';
+                else upper += ' PM';
+            }
+            return upper;
+        };
+        const pCode = state.prayerCode;
+        const t = cleanTime(text, pCode);
+        if(state.step === 'WAITING_TIME_SINGLE') { activeTimings[pCode] = t; await sendReply(chatId, `✅ ${pCode} updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
+        else if(state.step === 'WAITING_TIME_AZAN') { activeTimings[pCode].a = t; await sendReply(chatId, `✅ Azan updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
+        else if(state.step === 'WAITING_TIME_JAMAAT') { activeTimings[pCode].j = t; await sendReply(chatId, `✅ Jamaat updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
+        else if(state.step === 'WAITING_TIME_AZAN_BOTH') { botState[chatId].tempAzan = t; botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH'; await sendReply(chatId, `2️⃣ Enter *Jamaat* time:`); }
+        else if(state.step === 'WAITING_TIME_JAMAAT_BOTH') { activeTimings[pCode].a = botState[chatId].tempAzan; activeTimings[pCode].j = t; await sendReply(chatId, `✅ Both updated`); botState[chatId] = { step:'IDLE' }; }
+    }
+
+    async function sendReply(chatId, text) {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ chat_id: chatId, text, parse_mode:'Markdown' })
+        });
+    }
+
+    // ========================
+    // QURAN
+    // ========================
+    const surahsList = [
+        {i:1,n:"Al-Fatihah",a:"الفاتحة"},{i:2,n:"Al-Baqarah",a:"البقرة"},{i:3,n:"Ali 'Imran",a:"آل عمران"},{i:4,n:"An-Nisa",a:"النساء"},{i:5,n:"Al-Ma'idah",a:"المائدة"},
+        {i:6,n:"Al-An'am",a:"الأنعام"},{i:7,n:"Al-A'raf",a:"الأعراف"},{i:8,n:"Al-Anfal",a:"الأنفال"},{i:9,n:"At-Tawbah",a:"التوبة"},{i:10,n:"Yunus",a:"يونس"},
+        {i:11,n:"Hud",a:"هود"},{i:12,n:"Yusuf",a:"يوسف"},{i:13,n:"Ar-Ra'd",a:"الرعد"},{i:14,n:"Ibrahim",a:"ابراهيم"},{i:15,n:"Al-Hijr",a:"الحجر"},
+        {i:16,n:"An-Nahl",a:"النحل"},{i:17,n:"Al-Isra",a:"الإسراء"},{i:18,n:"Al-Kahf",a:"الكهف"},{i:19,n:"Maryam",a:"مريم"},{i:20,n:"Taha",a:"طه"},
+        {i:21,n:"Al-Anbya",a:"الأنبياء"},{i:22,n:"Al-Hajj",a:"الحج"},{i:23,n:"Al-Mu'minun",a:"المؤمنون"},{i:24,n:"An-Nur",a:"النور"},{i:25,n:"Al-Furqan",a:"الفرقان"},
+        {i:26,n:"Ash-Shu'ara",a:"الشعراء"},{i:27,n:"An-Naml",a:"النمل"},{i:28,n:"Al-Qasas",a:"القصص"},{i:29,n:"Al-'Ankabut",a:"العنكبوت"},{i:30,n:"Ar-Rum",a:"الروم"},
+        {i:31,n:"Luqman",a:"لقمان"},{i:32,n:"As-Sajdah",a:"السجدة"},{i:33,n:"Al-Ahzab",a:"الأحزاب"},{i:34,n:"Saba",a:"سبإ"},{i:35,n:"Fatir",a:"فاطر"},
+        {i:36,n:"Ya-Sin",a:"يس"},{i:37,n:"As-Saffat",a:"الصافات"},{i:38,n:"Sad",a:"ص"},{i:39,n:"Az-Zumar",a:"الزمر"},{i:40,n:"Ghafir",a:"غافر"},
+        {i:41,n:"Fussilat",a:"فصلت"},{i:42,n:"Ash-Shura",a:"الشورى"},{i:43,n:"Az-Zukhruf",a:"الزخرف"},{i:44,n:"Ad-Dukhan",a:"الدخان"},{i:45,n:"Al-Jathiyah",a:"الجاثية"},
+        {i:46,n:"Al-Ahqaf",a:"الأحقاف"},{i:47,n:"Muhammad",a:"محمد"},{i:48,n:"Al-Fath",a:"الفتح"},{i:49,n:"Al-Hujurat",a:"الحجرات"},{i:50,n:"Qaf",a:"ق"},
+        {i:51,n:"Adh-Dhariyat",a:"الذاريات"},{i:52,n:"At-Tur",a:"الطور"},{i:53,n:"An-Najm",a:"النجم"},{i:54,n:"Al-Qamar",a:"القمر"},{i:55,n:"Ar-Rahman",a:"الرحمن"},
+        {i:56,n:"Al-Waqi'ah",a:"الواقعة"},{i:57,n:"Al-Hadid",a:"الحديد"},{i:58,n:"Al-Mujadila",a:"المجادلة"},{i:59,n:"Al-Hashr",a:"الحشر"},{i:60,n:"Al-Mumtahanah",a:"الممتحنة"},
+        {i:61,n:"As-Saf",a:"الصف"},{i:62,n:"Al-Jumu'ah",a:"الجمعة"},{i:63,n:"Al-Munafiqun",a:"المنافقون"},{i:64,n:"At-Taghabun",a:"التغابن"},{i:65,n:"At-Talaq",a:"الطلاق"},
+        {i:66,n:"At-Tahrim",a:"التحريم"},{i:67,n:"Al-Mulk",a:"الملك"},{i:68,n:"Al-Qalam",a:"القلم"},{i:69,n:"Al-Haqqah",a:"الحاقة"},{i:70,n:"Al-Ma'arij",a:"المعارج"},
+        {i:71,n:"Nuh",a:"نوح"},{i:72,n:"Al-Jinn",a:"الجن"},{i:73,n:"Al-Muzzammil",a:"المزمل"},{i:74,n:"Al-Muddaththir",a:"المدثر"},{i:75,n:"Al-Qiyamah",a:"القيامة"},
+        {i:76,n:"Al-Insan",a:"الانسان"},{i:77,n:"Al-Mursalat",a:"المرسلات"},{i:78,n:"An-Naba",a:"النبإ"},{i:79,n:"An-Nazi'at",a:"النازعات"},{i:80,n:"'Abasa",a:"عبس"},
+        {i:81,n:"At-Takwir",a:"التكوير"},{i:82,n:"Al-Infitar",a:"الإنفطار"},{i:83,n:"Al-Mutaffifin",a:"المطففين"},{i:84,n:"Al-Inshiqaq",a:"الإنشقاق"},{i:85,n:"Al-Buruj",a:"البروج"},
+        {i:86,n:"At-Tariq",a:"الطارق"},{i:87,n:"Al-A'la",a:"الأعلى"},{i:88,n:"Al-Ghashiyah",a:"الغاشية"},{i:89,n:"Al-Fajr",a:"الفجر"},{i:90,n:"Al-Balad",a:"البلد"},
+        {i:91,n:"Ash-Shams",a:"الشمس"},{i:92,n:"Al-Layl",a:"الليل"},{i:93,n:"Ad-Duhaa",a:"الضحى"},{i:94,n:"Ash-Sharh",a:"الشرح"},{i:95,n:"At-Tin",a:"التين"},
+        {i:96,n:"Al-'Alaq",a:"العلق"},{i:97,n:"Al-Qadr",a:"القدر"},{i:98,n:"Al-Bayyinah",a:"البينة"},{i:99,n:"Az-Zalzalah",a:"الزلزلة"},{i:100,n:"Al-'Adiyat",a:"العاديات"},
+        {i:101,n:"Al-Qari'ah",a:"القارعة"},{i:102,n:"At-Takathur",a:"التكاثر"},{i:103,n:"Al-'Asr",a:"العصر"},{i:104,n:"Al-Humazah",a:"الهمزة"},{i:105,n:"Al-Fil",a:"الفيل"},
+        {i:106,n:"Quraysh",a:"قريش"},{i:107,n:"Al-Ma'un",a:"الماعون"},{i:108,n:"Al-Kawthar",a:"الكوثر"},{i:109,n:"Al-Kafirun",a:"الكافرون"},{i:110,n:"An-Nasr",a:"النصر"},
+        {i:111,n:"Al-Masad",a:"المسد"},{i:112,n:"Al-Ikhlas",a:"الإخلاص"},{i:113,n:"Al-Falaq",a:"الفلق"},{i:114,n:"An-Nas",a:"الناس"}
+    ];
+
+    function populateSurahList() {
+        const list = document.getElementById('surahList');
+        list.innerHTML = surahsList.map(s => `<div onclick="readSurah(${s.i},'${s.n}')" class="surah-item p-3 bg-white rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center">${s.i}</div><div class="font-bold text-slate-800">${s.n}</div></div><div class="font-serif text-lg text-green-700">${s.a}</div></div>`).join('');
+    }
+
+    function filterSurahs() {
+        const query = document.getElementById('surahSearch').value.toLowerCase();
+        document.querySelectorAll('.surah-item').forEach(item => { item.style.display = item.innerText.toLowerCase().includes(query) ? 'flex' : 'none'; });
+    }
+
+    function openQuran() { document.getElementById('quranModal').classList.remove('hidden'); trackAction("Opened Quran"); }
+
+    async function readSurah(id, name) {
+        document.getElementById('readerView').classList.remove('hidden');
+        document.getElementById('readerTitle').innerText = name;
+        document.getElementById('readerContent').innerHTML = '<div class="text-center mt-10"><i class="fas fa-circle-notch fa-spin text-green-600 fa-2x"></i></div>';
+        try {
+            const res = await fetch(`https://api.alquran.cloud/v1/surah/${id}/editions/quran-simple,en.sahih`);
+            const data = await res.json();
+            let html = '';
+            if(id !== 1 && id !== 9) html += `<div class="text-center font-serif text-2xl mb-8 text-green-800">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
+            for(let i = 0; i < data.data[0].ayahs.length; i++) {
+                let arText = data.data[0].ayahs[i].text;
+                if(id !== 1 && i === 0) arText = arText.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ','').trim();
+                html += `<div class="border-b border-slate-100 pb-4 mb-4"><div class="flex justify-between items-start mb-2"><span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">${data.data[0].ayahs[i].numberInSurah}</span><p class="text-right font-serif text-2xl text-slate-800 leading-loose w-full" style="direction:rtl">${arText}</p></div><p class="text-sm text-slate-600 leading-relaxed mt-2">${data.data[1].ayahs[i].text}</p></div>`;
+            }
+            document.getElementById('readerContent').innerHTML = html;
+            trackAction(`Reading Surah ${name}`);
+        } catch(e) {
+            document.getElementById('readerContent').innerHTML = '<p class="text-center text-red-500 mt-10">Error loading. Check internet.</p>';
+        }
+    }
+
+    // ========================
+    // COUNTDOWN
+    // ========================
+    let cdInt;
+    function openCountdown(name, time24) {
+        trackAction(`Checked Countdown for ${name}`);
+        const modal = document.getElementById('countdownModal');
+        modal.classList.remove('hidden');
+        document.getElementById('modalPrayerName').innerText = `${name} Starts In`;
+        clearInterval(cdInt);
+        const [h,m] = (time24||"00:00").split(':').map(Number);
+        const target = new Date(); target.setHours(h,m,0,0);
+        if(target < new Date()) target.setDate(target.getDate()+1);
+        cdInt = setInterval(() => {
+            const diff = target - new Date();
+            if(diff <= 0) { document.getElementById('modalTimer').innerText = "Now!"; return; }
+            const hrs = Math.floor(diff/3600000);
+            const mins = Math.floor((diff%3600000)/60000);
+            const secs = Math.floor((diff%60000)/1000);
+            document.getElementById('modalTimer').innerText = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }, 1000);
+    }
+
+    function closeCountdown() {
+        document.getElementById('countdownModal').classList.add('hidden');
+        clearInterval(cdInt);
+    }
+</script>
 </body>
 </html>
-
-
