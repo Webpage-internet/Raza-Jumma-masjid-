@@ -1927,61 +1927,71 @@
     border:8px solid transparent; border-top-color:white;
 }
 
-/* ── Modal — HIDDEN by default ── */
+/* ── Modal — THE KEY: use dvh so keyboard shrinks the viewport correctly ── */
 #mqModal {
-    position: fixed; inset: 0;
+    position: fixed;
+    /* top/left/right anchored, height uses dynamic viewport = shrinks with keyboard */
+    top: 0; left: 0; right: 0;
+    height: 100dvh;           /* dvh = dynamic viewport height — shrinks when keyboard opens */
     z-index: 2147483647;
-    display: none;            /* ← KEY FIX: hidden until JS opens it */
+    display: none;
     flex-direction: column;
     background: linear-gradient(170deg,#060e10 0%,#0a1a0e 45%,#070d18 100%);
     overflow: hidden;
+    /* NO bottom:0 — that's what causes the empty gap + bounce */
 }
-/* slide-in wrapper */
+
+/* slide-in wrapper — must fill the modal exactly, no overflow */
 #mqInner {
     display: flex; flex-direction: column;
-    height: 100%;
+    width: 100%; height: 100%;
     transform: translateY(100%);
-    transition: transform .44s cubic-bezier(.16,1,.3,1);
+    transition: transform .38s cubic-bezier(.16,1,.3,1);
+    overflow: hidden;
 }
 #mqModal.open #mqInner { transform: translateY(0); }
 
 /* floating stars inside modal */
 .mqStar { position:absolute; border-radius:50%; pointer-events:none; }
 
-/* ── Modal header ── */
+/* ── Modal header — compact single bar, no wasted space ── */
 #mqHead {
     flex-shrink: 0; position: relative; z-index: 2;
     background: linear-gradient(140deg,#031a0a,#054530);
     border-bottom: 1px solid rgba(212,160,23,.22);
-    padding: 44px 16px 0;
+    /* Reduced top padding — just enough for status bar on phones */
+    padding: env(safe-area-inset-top, 10px) 14px 10px;
+    padding-top: max(env(safe-area-inset-top, 8px), 10px);
 }
-.mqBismillah {
-    text-align:center; padding:9px 0 13px;
-    font-family:'Amiri',serif;
-    color:rgba(212,160,23,.75); font-size:19px;
-    border-top:1px solid rgba(255,255,255,.06); margin-top:8px;
-}
+/* Hide the big Bismillah line — saves ~42px of header space */
+.mqBismillah { display: none; }
 
-/* ── Messages area ── */
+/* ── Messages area — flex:1 fills ALL remaining space between header & bar ── */
 #mqMsgs {
-    flex:1; overflow-y:auto;
-    padding:16px 14px; display:flex;
-    flex-direction:column; gap:13px;
-    scroll-behavior:smooth;
+    flex: 1;
+    min-height: 0;            /* critical — allows flex child to shrink below content size */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 14px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
 }
-#mqMsgs::-webkit-scrollbar { width:0; }
+#mqMsgs::-webkit-scrollbar { width: 0; }
 
 /* ── Bubbles ── */
 .mqRowAI, .mqRowUser {
     display:flex; gap:9px; align-items:flex-end;
-    max-width:88%; animation:mqIn .28s ease;
+    max-width:88%; animation:mqIn .25s ease;
 }
-@keyframes mqIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes mqIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 .mqRowAI  { align-self:flex-start; }
 .mqRowUser{ align-self:flex-end; flex-direction:row-reverse; }
 
 .mqAv {
-    width:32px; height:32px; border-radius:50%; flex-shrink:0;
+    width:28px; height:28px; border-radius:50%; flex-shrink:0;
     border:2px solid rgba(212,160,23,.55); overflow:hidden;
     background:linear-gradient(135deg,#064e3b,#c9a012);
     display:flex; align-items:center; justify-content:center;
@@ -1989,8 +1999,8 @@
 .mqAv img { width:100%;height:100%;object-fit:cover; }
 
 .mqBub {
-    padding:11px 15px; border-radius:18px;
-    font-size:13.5px; line-height:1.65; word-break:break-word;
+    padding:10px 14px; border-radius:18px;
+    font-size:13.5px; line-height:1.6; word-break:break-word;
 }
 .mqRowAI .mqBub {
     background:rgba(255,255,255,.075);
@@ -2022,27 +2032,30 @@
 }
 .mqChip:active { background:rgba(212,160,23,.2);color:#fbbf24; }
 
-/* ── Input bar ── */
+/* ── Input bar — sticks to bottom, no extra padding that causes gap ── */
 #mqBar {
-    flex-shrink:0; position:relative; z-index:2;
-    background:rgba(0,0,0,.35);
-    border-top:1px solid rgba(255,255,255,.07);
-    padding:11px 13px 22px;
-    display:flex; gap:10px; align-items:flex-end;
+    flex-shrink: 0; position: relative; z-index: 2;
+    background: rgba(0,0,0,.4);
+    border-top: 1px solid rgba(255,255,255,.07);
+    /* bottom safe area for iPhone home bar */
+    padding: 10px 13px;
+    padding-bottom: max(env(safe-area-inset-bottom, 10px), 10px);
+    display: flex; gap: 10px; align-items: flex-end;
 }
 #mqTxt {
     flex:1; background:rgba(255,255,255,.09);
     border:1px solid rgba(255,255,255,.14);
-    border-radius:22px; padding:11px 16px;
-    color:#e2e8f0; font-size:14px; outline:none;
-    resize:none; max-height:110px; line-height:1.4;
+    border-radius:22px; padding:10px 16px;
+    color:#e2e8f0; font-size:16px; /* 16px prevents iOS auto-zoom on focus */
+    outline:none;
+    resize:none; max-height:100px; line-height:1.4;
     font-family:'Noto Sans',sans-serif;
     transition:border-color .2s;
 }
 #mqTxt::placeholder { color:rgba(255,255,255,.28); }
 #mqTxt:focus        { border-color:rgba(212,160,23,.6); }
 #mqGo {
-    width:44px; height:44px; border-radius:50%;
+    width:42px; height:42px; border-radius:50%;
     border:none; cursor:pointer; flex-shrink:0;
     background:linear-gradient(135deg,#064e3b,#c9a012);
     color:white; font-size:15px;
@@ -2081,29 +2094,25 @@
             <div class="mqStar" style="width:3px;height:3px;background:#fbbf24;top:11%;left:33%;animation:twinkle 2.6s .9s infinite;"></div>
         </div>
 
-        <!-- header -->
+        <!-- header — compact bar -->
         <div id="mqHead">
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-                <!-- avatar + name -->
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div style="position:relative;">
-                        <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2.5px solid rgba(212,160,23,.65);background:linear-gradient(135deg,#064e3b,#d4a017);display:flex;align-items:center;justify-content:center;">
-                            <img src="mumtaz logo.png" alt="Mumtaz Hazrat AI"
-                                 style="width:100%;height:100%;object-fit:cover;display:block;"
-                                 onerror="this.src='mumtaz profile.png';this.onerror=function(){this.style.display='none';this.parentElement.querySelector('.hdAvFb').style.display='flex'}">
-                            <div class="hdAvFb" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:24px;">🤲</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <!-- small avatar + name inline -->
+                <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                    <div style="position:relative;flex-shrink:0;">
+                        <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;border:2px solid rgba(212,160,23,.6);background:linear-gradient(135deg,#064e3b,#d4a017);display:flex;align-items:center;justify-content:center;">
+                            <img src="mumtaz logo.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:18px>🤲</span>'">
                         </div>
-                        <div style="position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid #031a0a;"></div>
+                        <div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#22c55e;border:2px solid #031a0a;"></div>
                     </div>
-                    <div>
-                        <div style="color:#fbbf24;font-weight:800;font-size:16px;font-family:'Amiri',serif;letter-spacing:.02em;">Mumtaz Hazrat AI</div>
-                        <div style="color:rgba(255,255,255,.42);font-size:10.5px;margin-top:1px;">Ask about Islam, Duas, Quran &amp; Hadith</div>
+                    <div style="min-width:0;">
+                        <div style="color:#fbbf24;font-weight:800;font-size:14px;font-family:'Amiri',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Mumtaz Hazrat AI</div>
+                        <div style="color:rgba(255,255,255,.38);font-size:10px;margin-top:1px;">Islamic Assistant 🕌</div>
                     </div>
                 </div>
                 <!-- close -->
-                <button onclick="mqClose()" style="width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.09);color:rgba(255,255,255,.75);font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;">&#x2715;</button>
+                <button onclick="mqClose()" style="width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.09);color:rgba(255,255,255,.7);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;">&#x2715;</button>
             </div>
-            <div class="mqBismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
         </div>
 
         <!-- messages -->
@@ -2152,36 +2161,15 @@ let mqHistory = [];
 let mqBusy    = false;
 
 // ── Mobile keyboard scroll fix ──
-// When soft keyboard opens on Android/iOS, the viewport shrinks.
-// We detect this and scroll the messages area to bottom.
+// ── Mobile keyboard: just scroll to bottom, no layout manipulation ──
+// dvh CSS handles the sizing — we only need to scroll messages down
 (function() {
-    // visualViewport API — supported on Chrome/Safari mobile
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-            const modal = document.getElementById('mqModal');
-            if (!modal || modal.style.display === 'none') return;
-            // Small delay lets the layout settle after keyboard animation
-            setTimeout(() => {
-                const box = document.getElementById('mqMsgs');
-                if (box) box.scrollTop = box.scrollHeight + 9999;
-                // Also push the input bar up above keyboard
-                const inner = document.getElementById('mqInner');
-                if (inner) {
-                    const vvh = window.visualViewport.height;
-                    inner.style.height = vvh + 'px';
-                    inner.style.maxHeight = vvh + 'px';
-                }
-            }, 100);
-        });
-    }
-
-    // Fallback: listen for focus on textarea (keyboard opens)
     document.addEventListener('focusin', (e) => {
         if (e.target && e.target.id === 'mqTxt') {
             setTimeout(() => {
                 const box = document.getElementById('mqMsgs');
                 if (box) box.scrollTop = box.scrollHeight + 9999;
-            }, 350); // wait for keyboard animation
+            }, 300);
         }
     });
 })();
@@ -2194,19 +2182,16 @@ setTimeout(()=>{ document.getElementById('mqBubble').classList.remove('show'); }
 function mqOpen() {
     const m = document.getElementById('mqModal');
     if (!m) return;
-    // Force display before animation frame
     m.style.cssText = 'display:flex !important; flex-direction:column;';
-    // Double rAF ensures CSS transition fires after display change
     requestAnimationFrame(() => requestAnimationFrame(() => {
         m.classList.add('open');
     }));
-    // Scroll to bottom of messages when opening
     setTimeout(() => {
         const box = document.getElementById('mqMsgs');
         if (box) box.scrollTop = box.scrollHeight;
         const txt = document.getElementById('mqTxt');
         if (txt) txt.focus({ preventScroll: true });
-    }, 480);
+    }, 420);
     if (typeof trackAction === 'function') trackAction('Opened Mumtaz Hazrat AI');
 }
 
