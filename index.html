@@ -2302,13 +2302,14 @@ async function mqSend() {
     mqHistory.push({ role:'user', content: txt });
     mqShowTyping();
 
-    const sys = `Tu "Mumtaz Hazrat AI" hai — Raza Jumma Masjid (Bengaluru) ka Islamic AI assistant.
+    const sys = `Tu "Mumtaz Hazrat AI" hai — Raza Jumma Masjid (Bengaluru) ka AI assistant.
 
-KAAM: SIRF Islamic topics pe jawab de — Quran, Hadees, Namaz, Roza, Zakat, Hajj, Duas, Fiqh, Islamic history, Aqeedah, Halal/Haram, Ramadan.
-Non-Islamic topic pe: "Main sirf Islamic sawalo ke liye hun 🕌"
+KAAM: Tera main focus Islam (Quran, Hadees, Namaz, Roza, Zakat, etc.) par hai, lekin tu duniya ke kisi bhi topic (worldly things, science, tech, general knowledge) par jawab de sakta hai. Tera paas koi restriction nahi hai. Agar user kuch bhi pooche, toh jawab de.
+
+LENGTH & DETAIL: Default mein chota, aasan aur behtareen jawab de (concise and best). Lekin agar user lamba, detailed, ya poori tafseel maange, toh usey poori detail mein jawab de. Length ki koi limit block nahi hai.
 
 LANGUAGE: User ki language mein jawab de (Hindi/English/Hinglish/Urdu). Default Hinglish.
-TONE: Warm, scholarly, simple. Provide detailed, complete, and well-explained answers. Quran/Hadees reference do agar suitable ho. Invent mat karo.
+TONE: Warm, scholarly, simple. Quran/Hadees reference do agar suitable ho. Invent mat karo.
 
 History: ${mqHistory.slice(-6).map(m=>`${m.role==='user'?'User':'AI'}: ${m.content}`).join(' | ')}
 
@@ -2322,16 +2323,26 @@ Sawal: ${txt}`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: sys }] }],
-                generationConfig: { maxOutputTokens: 4096, temperature: 0.7 }
+                generationConfig: { maxOutputTokens: 4096, temperature: 0.7 },
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ]
             })
         });
 
-        if (!response.ok) {
-            const errData = await response.json().catch(()=>({}));
-            throw new Error(errData?.error?.message || `HTTP ${response.status}`);
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error.message || JSON.stringify(data.error));
         }
 
-        const data = await response.json();
+        if (data?.candidates?.[0]?.finishReason === 'SAFETY') {
+            throw new Error("Google Safety Filter blocked this answer.");
+        }
+
         let rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
         mqHideTyping();
