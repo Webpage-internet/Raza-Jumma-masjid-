@@ -792,14 +792,18 @@
         <!-- Prayer Times -->
         <section id="sec-prayer" class="max-w-5xl mx-auto">
             <div class="glass-panel rounded-3xl p-6 md:p-8">
-                <div class="flex justify-between items-end mb-6 border-b prayer-section-border pb-4" style="border-color:var(--card-border)">
+                <div class="flex justify-between items-start mb-4 border-b prayer-section-border pb-4" style="border-color:var(--card-border)">
                     <div>
-                        <h2 class="text-xl font-bold prayer-section-title flex items-center gap-2"><i class="fas fa-mosque" style="color:var(--accent-green)"></i> Prayer Times</h2>
+                        <h2 class="text-xl font-bold prayer-section-title flex items-center gap-2">
+                            <i class="fas fa-mosque" style="color:var(--accent-green)"></i> Prayer Times
+                        </h2>
                         <p class="text-xs prayer-section-loc mt-1 pl-7">Raza Jumma Masjid • Bangalore</p>
+                        <p class="text-xs font-mono font-bold mt-1 pl-7" id="islamicClock" style="color:var(--accent-gold);">--:--:-- -- IST</p>
                     </div>
                     <div class="text-right">
                         <div class="text-[10px] next-prayer-label uppercase font-bold tracking-wider">Next Prayer</div>
                         <div id="nextPrayerName" class="text-sm font-bold next-prayer-name">Loading...</div>
+                        <div id="nextPrayerCountdown" class="text-xs font-mono font-bold mt-0.5" style="color:var(--accent-gold);">--m --s</div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8" id="prayerGrid"></div>
@@ -1397,47 +1401,143 @@
         }
     }
 
+    // ── Helper: get IST Date object ──
+    function nowIST() {
+        return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    }
+
     function renderGrid(apiTimings, hijri) {
         document.getElementById('hijriDate').innerText = `${hijri.day} ${hijri.month.en} ${hijri.year} AH`;
+
+        // Save for re-render on interval
+        window._lastApiTimings = apiTimings;
+        window._lastHijri      = hijri;
 
         const grid = document.getElementById('prayerGrid');
         grid.innerHTML = '';
         const prayers = [
-            { apiKey: 'Fajr', code: 'F', name: 'Fajr' },
-            { apiKey: 'Dhuhr', code: 'Z', name: 'Zohar' },
-            { apiKey: 'Asr', code: 'A', name: 'Asr' },
+            { apiKey: 'Fajr',    code: 'F', name: 'Fajr'    },
+            { apiKey: 'Dhuhr',   code: 'Z', name: 'Zohar'   },
+            { apiKey: 'Asr',     code: 'A', name: 'Asr'     },
             { apiKey: 'Maghrib', code: 'M', name: 'Maghrib' },
-            { apiKey: 'Isha', code: 'I', name: 'Isha' }
+            { apiKey: 'Isha',    code: 'I', name: 'Isha'    }
         ];
-        const now = new Date();
-        const tD = (t) => { if(!t) return new Date(); const [h,m]=t.split(':').map(Number); const d=new Date(); d.setHours(h,m,0); return d; };
-        const f=tD(apiTimings.Fajr), z=tD(apiTimings.Dhuhr), a=tD(apiTimings.Asr), m=tD(apiTimings.Maghrib), i=tD(apiTimings.Isha), s=tD(apiTimings.Sunrise);
-        let current = "";
-        if(now>=f&&now<s) current="Fajr";
-        else if(now>=z&&now<a) current="Zohar";
-        else if(now>=a&&now<m) current="Asr";
-        else if(now>=m&&now<i) current="Maghrib";
-        else if(now>=i||now<f) current="Isha";
-        const nextMap = {'Fajr':'Zohar','Zohar':'Asr','Asr':'Maghrib','Maghrib':'Isha','Isha':'Fajr','':"Fajr"};
-        document.getElementById('nextPrayerName').innerText = `${nextMap[current]||"Fajr"} Next`;
+
+        // Use IST-aware current time
+        const now = nowIST();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+
+        // Convert "HH:MM" api string to total minutes
+        const toMin = t => {
+            if (!t) return 0;
+            const parts = t.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+        };
+
+        const fMin  = toMin(apiTimings.Fajr);
+        const srMin = toMin(apiTimings.Sunrise);
+        const zMin  = toMin(apiTimings.Dhuhr);
+        const aMin  = toMin(apiTimings.Asr);
+        const mMin  = toMin(apiTimings.Maghrib);
+        const iMin  = toMin(apiTimings.Isha);
+
+        // Determine current active prayer period
+        // Fajr    → Fajr azan to Sunrise
+        // Dhuhr   → Sunrise to Asr (covers the pre-Dhuhr gap correctly)
+        // Asr     → Asr to Maghrib
+        // Maghrib → Maghrib to Isha
+        // Isha    → Isha to next Fajr (night)
+        let current = '';
+        if      (nowMin >= fMin && nowMin < srMin) current = 'Fajr';
+        else if (nowMin >= srMin && nowMin < aMin) current = 'Zohar';  // covers sunrise→dhuhr gap
+        else if (nowMin >= aMin  && nowMin < mMin) current = 'Asr';
+        else if (nowMin >= mMin  && nowMin < iMin) current = 'Maghrib';
+        else                                        current = 'Isha';  // after Isha OR before Fajr
+
+        const nextMap = { 'Fajr':'Zohar','Zohar':'Asr','Asr':'Maghrib','Maghrib':'Isha','Isha':'Fajr' };
+        const nextPrayer = nextMap[current] || 'Fajr';
+
+        // Update next prayer display
+        const nextEl = document.getElementById('nextPrayerName');
+        if (nextEl) nextEl.innerText = `⏳ ${nextPrayer}`;
+
+        // Helper: build IST Date for a given "HH:MM" prayer time
+        const tD = t => {
+            if (!t) return new Date();
+            const [h, m] = t.split(':').map(Number);
+            const d = nowIST();
+            d.setHours(h, m, 0, 0);
+            return d;
+        };
+
+        // Start live countdown to next prayer
+        const nextTimes = { Fajr: tD(apiTimings.Fajr), Zohar: tD(apiTimings.Dhuhr), Asr: tD(apiTimings.Asr), Maghrib: tD(apiTimings.Maghrib), Isha: tD(apiTimings.Isha) };
+        const nextTarget = nextTimes[nextPrayer];
+        if (nextTarget && nextTarget <= nowIST()) nextTarget.setDate(nextTarget.getDate() + 1);
+        startLiveCountdown(nextTarget);
 
         prayers.forEach(p => {
-            let azan = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : formatTime12(apiTimings[p.apiKey]);
+            let azan   = activeTimings[p.code].a !== "--:--" ? activeTimings[p.code].a : formatTime12(apiTimings[p.apiKey]);
             let jamaat = activeTimings[p.code].j;
-            if(jamaat === "--:--") {
-                let [h,mm] = (apiTimings[p.apiKey]||"00:00").split(':').map(Number);
-                let offset = p.apiKey==='Maghrib'?5:15;
-                let d = new Date(); d.setHours(h, mm+offset);
-                jamaat = d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit',hour12:true});
+            if (jamaat === "--:--") {
+                const [h, mm] = (apiTimings[p.apiKey] || "00:00").split(':').map(Number);
+                const offset  = p.apiKey === 'Maghrib' ? 5 : 15;
+                const jd      = nowIST(); jd.setHours(h, mm + offset, 0, 0);
+                jamaat = jd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
             }
+
             const isRunning = (p.name === current);
-            const card = document.createElement('div');
-            card.className = `prayer-card p-3 rounded-2xl text-center ${isRunning ? 'running-now' : ''}`;
-            card.style.background = 'var(--prayer-card-bg)';
-            card.onclick = () => openCountdown(p.name, apiTimings[p.apiKey]);
-            card.innerHTML = `<div class="text-xs uppercase font-bold mb-2" style="color:var(--text-muted)">${p.name}</div><div class="flex justify-around items-center"><div><div class="text-[10px] font-bold" style="color:var(--accent-green)">Azan</div><div class="text-lg font-bold leading-none" style="color:var(--text-primary)">${azan}</div></div><div class="w-px h-8" style="background:var(--prayer-border)"></div><div><div class="text-[10px] font-bold" style="color:var(--accent-gold)">Jamaat</div><div class="text-lg font-bold leading-none" style="color:var(--text-primary)">${jamaat}</div></div></div>`;
+            const isNext    = (p.name === nextPrayer);
+            const card      = document.createElement('div');
+
+            card.className = `prayer-card p-3 rounded-2xl text-center cursor-pointer ${isRunning ? 'running-now' : ''}`;
+            card.style.cssText = `background:var(--prayer-card-bg);${isNext && !isRunning ? 'border:1px dashed var(--accent-gold);' : ''}`;
+            card.onclick  = () => openCountdown(p.name, apiTimings[p.apiKey]);
+
+            const nextBadge = isNext && !isRunning
+                ? `<div style="font-size:9px;font-weight:800;color:var(--accent-gold);margin-bottom:2px;letter-spacing:0.06em;">NEXT ▸</div>`
+                : '';
+
+            card.innerHTML = `
+                ${nextBadge}
+                <div class="text-xs uppercase font-bold mb-1" style="color:var(--text-muted)">${p.name}</div>
+                <div class="flex justify-around items-center mt-1">
+                    <div>
+                        <div class="text-[10px] font-bold" style="color:var(--accent-green)">Azan</div>
+                        <div class="text-base font-bold leading-tight" style="color:var(--text-primary)">${azan}</div>
+                    </div>
+                    <div class="w-px h-8" style="background:var(--prayer-border)"></div>
+                    <div>
+                        <div class="text-[10px] font-bold" style="color:var(--accent-gold)">Jamaat</div>
+                        <div class="text-base font-bold leading-tight" style="color:var(--text-primary)">${jamaat}</div>
+                    </div>
+                </div>`;
             grid.appendChild(card);
         });
+
+        // Also fix theme based on real timings
+        window._apiTimings = apiTimings;
+        const newTheme = getActiveThemeFn(apiTimings);
+        if (newTheme !== currentTheme) applyTheme(newTheme);
+    }
+
+    // Live countdown ticker in the next-prayer area
+    let _cdTicker = null;
+    function startLiveCountdown(targetDate) {
+        clearInterval(_cdTicker);
+        const el = document.getElementById('nextPrayerCountdown');
+        if (!el || !targetDate) return;
+        const tick = () => {
+            const now2   = nowIST();
+            const diffMs = targetDate - now2;
+            if (diffMs <= 0) { el.innerText = 'الآن 🕌'; clearInterval(_cdTicker); setTimeout(() => refreshData(), 2000); return; }
+            const h = Math.floor(diffMs / 3600000);
+            const m = Math.floor((diffMs % 3600000) / 60000);
+            const s = Math.floor((diffMs % 60000) / 1000);
+            el.innerText = (h > 0 ? h + 'h ' : '') + String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+        };
+        tick();
+        _cdTicker = setInterval(tick, 1000);
     }
 
     function formatTime12(time) {
@@ -1663,23 +1763,26 @@
     let currentTheme = '';
 
     function getActiveTheme(timings) {
-        const now = new Date();
-        const toMin = t => { if(!t) return 0; const [h,m]=t.split(':').map(Number); return h*60+m; };
-        const nowMin = now.getHours()*60 + now.getMinutes();
+        // Use IST-aware time to avoid wrong theme on non-IST devices
+        const istNow  = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+        const nowMin  = istNow.getHours() * 60 + istNow.getMinutes();
+        const toMin   = t => { if (!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
 
-        const fajr    = toMin(timings.Fajr    || '05:00');
-        const sunrise = toMin(timings.Sunrise || '06:15');
-        const dhuhr   = toMin(timings.Dhuhr   || '13:00');
-        const asr     = toMin(timings.Asr     || '16:00');
-        const maghrib = toMin(timings.Maghrib || '18:30');
-        const isha    = toMin(timings.Isha    || '20:00');
+        const fajr    = toMin(timings.Fajr    || '05:20');
+        const sunrise = toMin(timings.Sunrise || '06:18');
+        const dhuhr   = toMin(timings.Dhuhr   || '12:45');
+        const asr     = toMin(timings.Asr     || '16:10');
+        const maghrib = toMin(timings.Maghrib || '18:28');
+        const isha    = toMin(timings.Isha    || '19:45');
 
-        if(nowMin >= fajr && nowMin < sunrise) return 'fajr';
-        if(nowMin >= dhuhr && nowMin < asr)    return 'dhuhr';
-        if(nowMin >= asr && nowMin < maghrib)  return 'asr';
-        if(nowMin >= maghrib && nowMin < isha) return 'maghrib';
-        return 'isha'; // night (after Isha or before Fajr)
+        if (nowMin >= fajr    && nowMin < sunrise) return 'fajr';
+        if (nowMin >= sunrise && nowMin < asr)     return 'dhuhr';  // covers sunrise→dhuhr gap
+        if (nowMin >= asr     && nowMin < maghrib) return 'asr';
+        if (nowMin >= maghrib && nowMin < isha)    return 'maghrib';
+        return 'isha'; // after Isha OR before Fajr
     }
+    // Alias used by renderGrid (defined in a different script block)
+    const getActiveThemeFn = getActiveTheme;
 
     function applyTheme(theme) {
         if(theme === currentTheme) return;
@@ -1746,10 +1849,31 @@
         applyTheme(getActiveTheme(window._apiTimings));
     }
 
-    // Apply initial theme immediately on load
+    // Apply initial theme immediately on load — reset cache so it always applies
+    currentTheme = '__unset__';
     checkAndApplyTheme();
-    // Re-check every minute (catches prayer time transitions)
-    setInterval(checkAndApplyTheme, 60000);
+    // Re-check every 30 seconds — catches prayer time transitions accurately
+    setInterval(checkAndApplyTheme, 30000);
+
+    // ── Live IST Clock in prayer section ──
+    (function clockTick() {
+        const el = document.getElementById('islamicClock');
+        if (el) {
+            const n = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+            const h = n.getHours(), mm = n.getMinutes(), ss = n.getSeconds();
+            const ap = h >= 12 ? 'PM' : 'AM';
+            const hh = (h % 12 || 12);
+            el.innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')} ${ap} IST`;
+        }
+        setTimeout(clockTick, 1000);
+    })();
+
+    // ── Re-render prayer grid every minute to keep Running Now accurate ──
+    setInterval(() => {
+        if (window._lastApiTimings && window._lastHijri) {
+            renderGrid(window._lastApiTimings, window._lastHijri);
+        }
+    }, 60000);
 </script>
 
 <!-- ================================================
@@ -1760,7 +1884,7 @@
 #mqBtn {
     position: fixed;
     bottom: 24px; right: 20px;
-    z-index: 9999;
+    z-index: 2147483646;
     width: 64px; height: 64px;
     border-radius: 50%;
     border: 2.5px solid rgba(212,160,23,0.7);
@@ -1784,7 +1908,7 @@
 #mqBubble {
     position: fixed;
     bottom: 100px; right: 16px;
-    z-index: 9999;
+    z-index: 2147483645;
     background: white;
     border-radius: 16px 16px 4px 16px;
     padding: 10px 14px;
@@ -1806,7 +1930,7 @@
 /* ── Modal — HIDDEN by default ── */
 #mqModal {
     position: fixed; inset: 0;
-    z-index: 99999;
+    z-index: 2147483647;
     display: none;            /* ← KEY FIX: hidden until JS opens it */
     flex-direction: column;
     background: linear-gradient(170deg,#060e10 0%,#0a1a0e 45%,#070d18 100%);
@@ -2027,6 +2151,41 @@
 let mqHistory = [];
 let mqBusy    = false;
 
+// ── Mobile keyboard scroll fix ──
+// When soft keyboard opens on Android/iOS, the viewport shrinks.
+// We detect this and scroll the messages area to bottom.
+(function() {
+    // visualViewport API — supported on Chrome/Safari mobile
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            const modal = document.getElementById('mqModal');
+            if (!modal || modal.style.display === 'none') return;
+            // Small delay lets the layout settle after keyboard animation
+            setTimeout(() => {
+                const box = document.getElementById('mqMsgs');
+                if (box) box.scrollTop = box.scrollHeight + 9999;
+                // Also push the input bar up above keyboard
+                const inner = document.getElementById('mqInner');
+                if (inner) {
+                    const vvh = window.visualViewport.height;
+                    inner.style.height = vvh + 'px';
+                    inner.style.maxHeight = vvh + 'px';
+                }
+            }, 100);
+        });
+    }
+
+    // Fallback: listen for focus on textarea (keyboard opens)
+    document.addEventListener('focusin', (e) => {
+        if (e.target && e.target.id === 'mqTxt') {
+            setTimeout(() => {
+                const box = document.getElementById('mqMsgs');
+                if (box) box.scrollTop = box.scrollHeight + 9999;
+            }, 350); // wait for keyboard animation
+        }
+    });
+})();
+
 // ── Intro bubble: show at 2.5s, hide at 8s ──
 setTimeout(()=>{ document.getElementById('mqBubble').classList.add('show'); },    2500);
 setTimeout(()=>{ document.getElementById('mqBubble').classList.remove('show'); }, 8000);
@@ -2034,20 +2193,31 @@ setTimeout(()=>{ document.getElementById('mqBubble').classList.remove('show'); }
 // ── Open / Close ──
 function mqOpen() {
     const m = document.getElementById('mqModal');
-    m.style.display = 'flex';           // show the modal
-    requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-            m.classList.add('open');    // trigger slide-in after paint
-        });
-    });
-    setTimeout(()=>{ document.getElementById('mqTxt')?.focus(); }, 500);
-    if(typeof trackAction === 'function') trackAction('Opened Mumtaz Hazrat AI');
+    if (!m) return;
+    // Force display before animation frame
+    m.style.cssText = 'display:flex !important; flex-direction:column;';
+    // Double rAF ensures CSS transition fires after display change
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        m.classList.add('open');
+    }));
+    // Scroll to bottom of messages when opening
+    setTimeout(() => {
+        const box = document.getElementById('mqMsgs');
+        if (box) box.scrollTop = box.scrollHeight;
+        const txt = document.getElementById('mqTxt');
+        if (txt) txt.focus({ preventScroll: true });
+    }, 480);
+    if (typeof trackAction === 'function') trackAction('Opened Mumtaz Hazrat AI');
 }
 
 function mqClose() {
     const m = document.getElementById('mqModal');
-    m.classList.remove('open');         // slide out
-    setTimeout(()=>{ m.style.display = 'none'; }, 460); // then hide
+    if (!m) return;
+    m.classList.remove('open');
+    setTimeout(() => { m.style.cssText = 'display:none;'; }, 460);
+    // Blur textarea to dismiss keyboard on mobile
+    const txt = document.getElementById('mqTxt');
+    if (txt) txt.blur();
 }
 
 // ── Chip tap ──
@@ -2058,6 +2228,16 @@ function mqChip(el) {
 }
 
 // ── Append a message row ──
+// Reliable scroll to bottom — works even when keyboard is open on mobile
+function mqScrollBottom() {
+    const box = document.getElementById('mqMsgs');
+    if (!box) return;
+    // Use rAF to ensure DOM is painted before scrolling
+    requestAnimationFrame(() => {
+        box.scrollTop = box.scrollHeight + 9999;
+    });
+}
+
 function mqRow(role, html) {
     const box = document.getElementById('mqMsgs');
     const d   = document.createElement('div');
@@ -2066,13 +2246,13 @@ function mqRow(role, html) {
         <img src="mumtaz logo.png"
              onerror="this.src='mumtaz profile.png';this.onerror=function(){this.parentElement.innerHTML='<span style=font-size:16px>🤲</span>'}">
       </div>`;
-    if(role === 'user') {
+    if (role === 'user') {
         d.innerHTML = `<div class="mqBub">${mqEsc(html)}</div>`;
     } else {
         d.innerHTML = `${avHtml}<div class="mqBub">${html}</div>`;
     }
     box.appendChild(d);
-    box.scrollTop = box.scrollHeight;
+    mqScrollBottom();
     return d;
 }
 
@@ -2090,9 +2270,12 @@ function mqShowTyping() {
         <div class="mqDot"></div><div class="mqDot"></div><div class="mqDot"></div>
       </div>`;
     box.appendChild(d);
-    box.scrollTop = box.scrollHeight;
+    mqScrollBottom();
 }
-function mqHideTyping() { document.getElementById('mqTyping')?.remove(); }
+function mqHideTyping() {
+    document.getElementById('mqTyping')?.remove();
+    mqScrollBottom(); // re-scroll after hiding typing indicator
+}
 
 // ── Text helpers ──
 function mqEsc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -2132,8 +2315,7 @@ History: ${mqHistory.slice(-6).map(m=>`${m.role==='user'?'User':'AI'}: ${m.conte
 Sawal: ${txt}`;
 
     try {
-        const GEMINI_API_KEY = 'AIzaSyBCmeLVhAT4lyCLdJvr8Z2o4o70lNfyWuQ';
-        const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        const GEMINI_URL = 'https://raza-jumma-ai.afzal24052002.workers.dev';
 
         const response = await fetch(GEMINI_URL, {
             method: 'POST',
@@ -2144,12 +2326,14 @@ Sawal: ${txt}`;
             })
         });
 
-        if (!response.ok) {
-            const errData = await response.json().catch(()=>({}));
-            throw new Error(errData?.error?.message || `HTTP ${response.status}`);
+        // Parse the response
+        const data = await response.json();
+
+        // 🔥 NEW CHECK: If Google sends an error secretly, throw it so it shows on screen!
+        if (data.error) {
+            throw new Error(data.error.message || JSON.stringify(data.error));
         }
 
-        const data = await response.json();
         let rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
         mqHideTyping();
