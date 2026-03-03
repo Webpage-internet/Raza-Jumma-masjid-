@@ -696,23 +696,111 @@
         </div>
     </div>
 
-    <!-- Quran Modal -->
-    <div id="quranModal" class="fixed inset-0 bg-slate-900/95 z-[80] hidden flex flex-col backdrop-blur-md">
-        <div class="bg-white p-4 shadow-md flex justify-between items-center z-10">
-            <h3 class="text-lg font-bold text-green-800 flex items-center gap-2"><i class="fas fa-book-open"></i> Al-Quran</h3>
-            <button onclick="document.getElementById('quranModal').classList.add('hidden')" class="text-slate-500 hover:text-red-500 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="p-4 bg-slate-50 border-b">
-            <input type="text" id="surahSearch" placeholder="Search Surah (e.g. Yasin)..." class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-green-500" oninput="filterSurahs()">
-        </div>
-        <div id="surahList" class="flex-grow overflow-y-auto p-4 space-y-2 pb-20"></div>
-        <div id="readerView" class="hidden absolute inset-0 bg-white z-20 flex flex-col">
-            <div class="bg-green-800 text-white p-4 shadow-md flex justify-between items-center">
-                <button onclick="document.getElementById('readerView').classList.add('hidden')" class="text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i> Back</button>
-                <h3 id="readerTitle" class="font-bold font-serif text-lg">Surah</h3>
-                <div class="w-6"></div>
+    <!-- Quran Modal — Premium Multi-Lingual -->
+    <div id="quranModal" class="fixed inset-0 z-[80] hidden flex flex-col" style="background:linear-gradient(160deg,#0a1a0f 0%,#0d2318 100%);">
+
+        <!-- Quran List View -->
+        <div id="quranListView" class="flex flex-col h-full">
+            <!-- Header -->
+            <div class="qr-header relative flex items-center justify-between px-5 py-4 shadow-lg" style="background:linear-gradient(135deg,#064e3b,#065f46);border-bottom:1px solid rgba(212,160,23,0.3);">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(212,160,23,0.18);border:1px solid rgba(212,160,23,0.35);">
+                        <i class="fas fa-book-open text-amber-400 text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base leading-tight" style="font-family:'Amiri',serif;">Al-Quran Al-Kareem</h3>
+                        <p class="text-xs" style="color:rgba(167,243,208,0.7);">114 Surahs • Arabic + Pronunciation + Matlab (Hindi)</p>
+                    </div>
+                </div>
+                <button onclick="closeQuranModal()" class="w-9 h-9 rounded-full flex items-center justify-center transition hover:scale-110" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);">
+                    <i class="fas fa-times text-white text-sm"></i>
+                </button>
             </div>
-            <div id="readerContent" class="flex-grow overflow-y-auto p-6 space-y-6 pb-20 bg-[#fffdf5]"></div>
+            <!-- Search -->
+            <div class="px-4 py-3" style="background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:rgba(167,243,208,0.5);"></i>
+                    <input type="text" id="surahSearch" placeholder="Search Surah (e.g. Yasin, Al-Baqarah)..." 
+                        class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
+                        style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;font-family:'Noto Sans',sans-serif;"
+                        oninput="filterSurahs()">
+                </div>
+            </div>
+            <!-- Surah List -->
+            <div id="surahList" class="flex-grow overflow-y-auto p-4 space-y-1.5 pb-24"></div>
+        </div>
+
+        <!-- Reader View -->
+        <div id="readerView" class="hidden absolute inset-0 z-10 flex flex-col" style="background:linear-gradient(160deg,#0c1e13 0%,#0f2a1a 100%);">
+
+            <!-- Reader Header -->
+            <div class="flex items-center justify-between px-4 py-3 shadow-xl" style="background:linear-gradient(135deg,#064e3b,#065f46);border-bottom:1px solid rgba(212,160,23,0.3);">
+                <button onclick="closeReaderView()" class="flex items-center gap-2 text-sm font-medium transition hover:opacity-80" style="color:rgba(167,243,208,0.9);">
+                    <i class="fas fa-arrow-left text-xs"></i> Back
+                </button>
+                <div class="text-center">
+                    <div id="readerTitle" class="font-bold text-white text-base" style="font-family:'Amiri',serif;">Surah</div>
+                    <div id="readerSubtitle" class="text-xs" style="color:rgba(212,160,23,0.9);"></div>
+                </div>
+                <div class="w-16 flex justify-end">
+                    <div id="qrAyahCounter" class="text-xs px-2 py-1 rounded-full" style="background:rgba(212,160,23,0.15);color:rgba(212,160,23,0.9);border:1px solid rgba(212,160,23,0.3);"></div>
+                </div>
+            </div>
+
+            <!-- Mode Toggle Bar -->
+            <div class="flex items-center justify-between px-4 py-2" style="background:rgba(0,0,0,0.35);border-bottom:1px solid rgba(255,255,255,0.06);">
+                <!-- View Mode Toggle -->
+                <div class="flex items-center gap-1 p-1 rounded-xl" style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);">
+                    <button id="qrModeAyah" onclick="qrSetMode('ayah')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                        style="background:linear-gradient(135deg,#16a34a,#15803d);color:white;box-shadow:0 2px 8px rgba(22,163,74,0.35);">
+                        <i class="fas fa-layer-group text-xs"></i> Ayah
+                    </button>
+                    <button id="qrModeScroll" onclick="qrSetMode('scroll')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                        style="background:transparent;color:rgba(167,243,208,0.6);">
+                        <i class="fas fa-scroll text-xs"></i> Scroll
+                    </button>
+                </div>
+
+                <!-- Ayah mode controls (shown only in ayah mode) -->
+                <div id="qrAyahControls" class="flex items-center gap-2">
+                    <button onclick="qrNavigateAyah(-1)" class="w-7 h-7 rounded-full flex items-center justify-center transition hover:scale-110" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:white;">
+                        <i class="fas fa-chevron-left text-xs"></i>
+                    </button>
+                    <select id="qrAyahSelect" onchange="qrGoToAyah()" class="text-center text-xs py-1 px-2 rounded-lg outline-none cursor-pointer" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:white;font-family:'Noto Sans',sans-serif;max-width:90px;"></select>
+                    <button onclick="qrNavigateAyah(1)" class="w-7 h-7 rounded-full flex items-center justify-center transition hover:scale-110" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:white;">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </button>
+                    <button id="qrPlayBtn" onclick="qrToggleAudio()" class="w-7 h-7 rounded-full flex items-center justify-center transition hover:scale-110" style="background:linear-gradient(135deg,#16a34a,#15803d);border:none;color:white;box-shadow:0 2px 8px rgba(22,163,74,0.4);">
+                        <i id="qrPlayIcon" class="fas fa-play text-xs ml-0.5"></i>
+                    </button>
+                    <div id="qrAutoNextBadge" class="text-xs px-2 py-1 rounded-full cursor-pointer select-none transition" style="background:rgba(22,163,74,0.2);border:1px solid rgba(22,163,74,0.4);color:#86efac;" onclick="qrToggleAutoNext()" title="Auto-Next">
+                        <i class="fas fa-forward text-xs"></i>
+                    </div>
+                </div>
+
+                <!-- Scroll mode info (shown only in scroll mode) -->
+                <div id="qrScrollInfo" class="hidden items-center gap-2">
+                    <span class="text-xs" style="color:rgba(167,243,208,0.5);">Scroll to read all ayahs</span>
+                </div>
+            </div>
+
+            <!-- Ayah Content Area -->
+            <div id="readerContent" class="flex-grow overflow-y-auto px-4 py-5 pb-24 space-y-5"></div>
+
+            <!-- Scroll Page Content Area -->
+            <div id="scrollContent" class="hidden flex-grow overflow-y-auto pb-24" style="background:linear-gradient(160deg,#0c1e13,#0f2a1a);"></div>
+
+            <!-- Audio Progress Bar -->
+            <div id="qrAudioBar" class="hidden absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2" style="background:linear-gradient(0deg,rgba(6,46,33,0.98) 0%,transparent 100%);">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs" style="color:rgba(167,243,208,0.7);">Playing Ayah <span id="qrNowPlayingNum">1</span></span>
+                    <div class="flex-1 h-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.1);">
+                        <div id="qrAudioProgress" class="h-full rounded-full transition-all" style="background:linear-gradient(90deg,#16a34a,#d4a017);width:0%;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1660,65 +1748,605 @@
     }
 
     // ========================
-    // QURAN
+    // QURAN — Multi-lingual Engine v2
     // ========================
     const surahsList = [
-        {i:1,n:"Al-Fatihah",a:"الفاتحة"},{i:2,n:"Al-Baqarah",a:"البقرة"},{i:3,n:"Ali 'Imran",a:"آل عمران"},{i:4,n:"An-Nisa",a:"النساء"},{i:5,n:"Al-Ma'idah",a:"المائدة"},
-        {i:6,n:"Al-An'am",a:"الأنعام"},{i:7,n:"Al-A'raf",a:"الأعراف"},{i:8,n:"Al-Anfal",a:"الأنفال"},{i:9,n:"At-Tawbah",a:"التوبة"},{i:10,n:"Yunus",a:"يونس"},
-        {i:11,n:"Hud",a:"هود"},{i:12,n:"Yusuf",a:"يوسف"},{i:13,n:"Ar-Ra'd",a:"الرعد"},{i:14,n:"Ibrahim",a:"ابراهيم"},{i:15,n:"Al-Hijr",a:"الحجر"},
-        {i:16,n:"An-Nahl",a:"النحل"},{i:17,n:"Al-Isra",a:"الإسراء"},{i:18,n:"Al-Kahf",a:"الكهف"},{i:19,n:"Maryam",a:"مريم"},{i:20,n:"Taha",a:"طه"},
-        {i:21,n:"Al-Anbya",a:"الأنبياء"},{i:22,n:"Al-Hajj",a:"الحج"},{i:23,n:"Al-Mu'minun",a:"المؤمنون"},{i:24,n:"An-Nur",a:"النور"},{i:25,n:"Al-Furqan",a:"الفرقان"},
-        {i:26,n:"Ash-Shu'ara",a:"الشعراء"},{i:27,n:"An-Naml",a:"النمل"},{i:28,n:"Al-Qasas",a:"القصص"},{i:29,n:"Al-'Ankabut",a:"العنكبوت"},{i:30,n:"Ar-Rum",a:"الروم"},
-        {i:31,n:"Luqman",a:"لقمان"},{i:32,n:"As-Sajdah",a:"السجدة"},{i:33,n:"Al-Ahzab",a:"الأحزاب"},{i:34,n:"Saba",a:"سبإ"},{i:35,n:"Fatir",a:"فاطر"},
-        {i:36,n:"Ya-Sin",a:"يس"},{i:37,n:"As-Saffat",a:"الصافات"},{i:38,n:"Sad",a:"ص"},{i:39,n:"Az-Zumar",a:"الزمر"},{i:40,n:"Ghafir",a:"غافر"},
-        {i:41,n:"Fussilat",a:"فصلت"},{i:42,n:"Ash-Shura",a:"الشورى"},{i:43,n:"Az-Zukhruf",a:"الزخرف"},{i:44,n:"Ad-Dukhan",a:"الدخان"},{i:45,n:"Al-Jathiyah",a:"الجاثية"},
-        {i:46,n:"Al-Ahqaf",a:"الأحقاف"},{i:47,n:"Muhammad",a:"محمد"},{i:48,n:"Al-Fath",a:"الفتح"},{i:49,n:"Al-Hujurat",a:"الحجرات"},{i:50,n:"Qaf",a:"ق"},
-        {i:51,n:"Adh-Dhariyat",a:"الذاريات"},{i:52,n:"At-Tur",a:"الطور"},{i:53,n:"An-Najm",a:"النجم"},{i:54,n:"Al-Qamar",a:"القمر"},{i:55,n:"Ar-Rahman",a:"الرحمن"},
-        {i:56,n:"Al-Waqi'ah",a:"الواقعة"},{i:57,n:"Al-Hadid",a:"الحديد"},{i:58,n:"Al-Mujadila",a:"المجادلة"},{i:59,n:"Al-Hashr",a:"الحشر"},{i:60,n:"Al-Mumtahanah",a:"الممتحنة"},
-        {i:61,n:"As-Saf",a:"الصف"},{i:62,n:"Al-Jumu'ah",a:"الجمعة"},{i:63,n:"Al-Munafiqun",a:"المنافقون"},{i:64,n:"At-Taghabun",a:"التغابن"},{i:65,n:"At-Talaq",a:"الطلاق"},
-        {i:66,n:"At-Tahrim",a:"التحريم"},{i:67,n:"Al-Mulk",a:"الملك"},{i:68,n:"Al-Qalam",a:"القلم"},{i:69,n:"Al-Haqqah",a:"الحاقة"},{i:70,n:"Al-Ma'arij",a:"المعارج"},
-        {i:71,n:"Nuh",a:"نوح"},{i:72,n:"Al-Jinn",a:"الجن"},{i:73,n:"Al-Muzzammil",a:"المزمل"},{i:74,n:"Al-Muddaththir",a:"المدثر"},{i:75,n:"Al-Qiyamah",a:"القيامة"},
-        {i:76,n:"Al-Insan",a:"الانسان"},{i:77,n:"Al-Mursalat",a:"المرسلات"},{i:78,n:"An-Naba",a:"النبإ"},{i:79,n:"An-Nazi'at",a:"النازعات"},{i:80,n:"'Abasa",a:"عبس"},
-        {i:81,n:"At-Takwir",a:"التكوير"},{i:82,n:"Al-Infitar",a:"الإنفطار"},{i:83,n:"Al-Mutaffifin",a:"المطففين"},{i:84,n:"Al-Inshiqaq",a:"الإنشقاق"},{i:85,n:"Al-Buruj",a:"البروج"},
-        {i:86,n:"At-Tariq",a:"الطارق"},{i:87,n:"Al-A'la",a:"الأعلى"},{i:88,n:"Al-Ghashiyah",a:"الغاشية"},{i:89,n:"Al-Fajr",a:"الفجر"},{i:90,n:"Al-Balad",a:"البلد"},
-        {i:91,n:"Ash-Shams",a:"الشمس"},{i:92,n:"Al-Layl",a:"الليل"},{i:93,n:"Ad-Duhaa",a:"الضحى"},{i:94,n:"Ash-Sharh",a:"الشرح"},{i:95,n:"At-Tin",a:"التين"},
-        {i:96,n:"Al-'Alaq",a:"العلق"},{i:97,n:"Al-Qadr",a:"القدر"},{i:98,n:"Al-Bayyinah",a:"البينة"},{i:99,n:"Az-Zalzalah",a:"الزلزلة"},{i:100,n:"Al-'Adiyat",a:"العاديات"},
-        {i:101,n:"Al-Qari'ah",a:"القارعة"},{i:102,n:"At-Takathur",a:"التكاثر"},{i:103,n:"Al-'Asr",a:"العصر"},{i:104,n:"Al-Humazah",a:"الهمزة"},{i:105,n:"Al-Fil",a:"الفيل"},
-        {i:106,n:"Quraysh",a:"قريش"},{i:107,n:"Al-Ma'un",a:"الماعون"},{i:108,n:"Al-Kawthar",a:"الكوثر"},{i:109,n:"Al-Kafirun",a:"الكافرون"},{i:110,n:"An-Nasr",a:"النصر"},
-        {i:111,n:"Al-Masad",a:"المسد"},{i:112,n:"Al-Ikhlas",a:"الإخلاص"},{i:113,n:"Al-Falaq",a:"الفلق"},{i:114,n:"An-Nas",a:"الناس"}
+        {i:1,n:"Al-Fatihah",a:"الفاتحة",v:7},{i:2,n:"Al-Baqarah",a:"البقرة",v:286},{i:3,n:"Ali 'Imran",a:"آل عمران",v:200},{i:4,n:"An-Nisa",a:"النساء",v:176},{i:5,n:"Al-Ma'idah",a:"المائدة",v:120},
+        {i:6,n:"Al-An'am",a:"الأنعام",v:165},{i:7,n:"Al-A'raf",a:"الأعراف",v:206},{i:8,n:"Al-Anfal",a:"الأنفال",v:75},{i:9,n:"At-Tawbah",a:"التوبة",v:129},{i:10,n:"Yunus",a:"يونس",v:109},
+        {i:11,n:"Hud",a:"هود",v:123},{i:12,n:"Yusuf",a:"يوسف",v:111},{i:13,n:"Ar-Ra'd",a:"الرعد",v:43},{i:14,n:"Ibrahim",a:"ابراهيم",v:52},{i:15,n:"Al-Hijr",a:"الحجر",v:99},
+        {i:16,n:"An-Nahl",a:"النحل",v:128},{i:17,n:"Al-Isra",a:"الإسراء",v:111},{i:18,n:"Al-Kahf",a:"الكهف",v:110},{i:19,n:"Maryam",a:"مريم",v:98},{i:20,n:"Taha",a:"طه",v:135},
+        {i:21,n:"Al-Anbya",a:"الأنبياء",v:112},{i:22,n:"Al-Hajj",a:"الحج",v:78},{i:23,n:"Al-Mu'minun",a:"المؤمنون",v:118},{i:24,n:"An-Nur",a:"النور",v:64},{i:25,n:"Al-Furqan",a:"الفرقان",v:77},
+        {i:26,n:"Ash-Shu'ara",a:"الشعراء",v:227},{i:27,n:"An-Naml",a:"النمل",v:93},{i:28,n:"Al-Qasas",a:"القصص",v:88},{i:29,n:"Al-'Ankabut",a:"العنكبوت",v:69},{i:30,n:"Ar-Rum",a:"الروم",v:60},
+        {i:31,n:"Luqman",a:"لقمان",v:34},{i:32,n:"As-Sajdah",a:"السجدة",v:30},{i:33,n:"Al-Ahzab",a:"الأحزاب",v:73},{i:34,n:"Saba",a:"سبإ",v:54},{i:35,n:"Fatir",a:"فاطر",v:45},
+        {i:36,n:"Ya-Sin",a:"يس",v:83},{i:37,n:"As-Saffat",a:"الصافات",v:182},{i:38,n:"Sad",a:"ص",v:88},{i:39,n:"Az-Zumar",a:"الزمر",v:75},{i:40,n:"Ghafir",a:"غافر",v:85},
+        {i:41,n:"Fussilat",a:"فصلت",v:54},{i:42,n:"Ash-Shura",a:"الشورى",v:53},{i:43,n:"Az-Zukhruf",a:"الزخرف",v:89},{i:44,n:"Ad-Dukhan",a:"الدخان",v:59},{i:45,n:"Al-Jathiyah",a:"الجاثية",v:37},
+        {i:46,n:"Al-Ahqaf",a:"الأحقاف",v:35},{i:47,n:"Muhammad",a:"محمد",v:38},{i:48,n:"Al-Fath",a:"الفتح",v:29},{i:49,n:"Al-Hujurat",a:"الحجرات",v:18},{i:50,n:"Qaf",a:"ق",v:45},
+        {i:51,n:"Adh-Dhariyat",a:"الذاريات",v:60},{i:52,n:"At-Tur",a:"الطور",v:49},{i:53,n:"An-Najm",a:"النجم",v:62},{i:54,n:"Al-Qamar",a:"القمر",v:55},{i:55,n:"Ar-Rahman",a:"الرحمن",v:78},
+        {i:56,n:"Al-Waqi'ah",a:"الواقعة",v:96},{i:57,n:"Al-Hadid",a:"الحديد",v:29},{i:58,n:"Al-Mujadila",a:"المجادلة",v:22},{i:59,n:"Al-Hashr",a:"الحشر",v:24},{i:60,n:"Al-Mumtahanah",a:"الممتحنة",v:13},
+        {i:61,n:"As-Saf",a:"الصف",v:14},{i:62,n:"Al-Jumu'ah",a:"الجمعة",v:11},{i:63,n:"Al-Munafiqun",a:"المنافقون",v:11},{i:64,n:"At-Taghabun",a:"التغابن",v:18},{i:65,n:"At-Talaq",a:"الطلاق",v:12},
+        {i:66,n:"At-Tahrim",a:"التحريم",v:12},{i:67,n:"Al-Mulk",a:"الملك",v:30},{i:68,n:"Al-Qalam",a:"القلم",v:52},{i:69,n:"Al-Haqqah",a:"الحاقة",v:52},{i:70,n:"Al-Ma'arij",a:"المعارج",v:44},
+        {i:71,n:"Nuh",a:"نوح",v:28},{i:72,n:"Al-Jinn",a:"الجن",v:28},{i:73,n:"Al-Muzzammil",a:"المزمل",v:20},{i:74,n:"Al-Muddaththir",a:"المدثر",v:56},{i:75,n:"Al-Qiyamah",a:"القيامة",v:40},
+        {i:76,n:"Al-Insan",a:"الانسان",v:31},{i:77,n:"Al-Mursalat",a:"المرسلات",v:50},{i:78,n:"An-Naba",a:"النبإ",v:40},{i:79,n:"An-Nazi'at",a:"النازعات",v:46},{i:80,n:"'Abasa",a:"عبس",v:42},
+        {i:81,n:"At-Takwir",a:"التكوير",v:29},{i:82,n:"Al-Infitar",a:"الإنفطار",v:19},{i:83,n:"Al-Mutaffifin",a:"المطففين",v:36},{i:84,n:"Al-Inshiqaq",a:"الإنشقاق",v:25},{i:85,n:"Al-Buruj",a:"البروج",v:22},
+        {i:86,n:"At-Tariq",a:"الطارق",v:17},{i:87,n:"Al-A'la",a:"الأعلى",v:19},{i:88,n:"Al-Ghashiyah",a:"الغاشية",v:26},{i:89,n:"Al-Fajr",a:"الفجر",v:30},{i:90,n:"Al-Balad",a:"البلد",v:20},
+        {i:91,n:"Ash-Shams",a:"الشمس",v:15},{i:92,n:"Al-Layl",a:"الليل",v:21},{i:93,n:"Ad-Duhaa",a:"الضحى",v:11},{i:94,n:"Ash-Sharh",a:"الشرح",v:8},{i:95,n:"At-Tin",a:"التين",v:8},
+        {i:96,n:"Al-'Alaq",a:"العلق",v:19},{i:97,n:"Al-Qadr",a:"القدر",v:5},{i:98,n:"Al-Bayyinah",a:"البينة",v:8},{i:99,n:"Az-Zalzalah",a:"الزلزلة",v:8},{i:100,n:"Al-'Adiyat",a:"العاديات",v:11},
+        {i:101,n:"Al-Qari'ah",a:"القارعة",v:11},{i:102,n:"At-Takathur",a:"التكاثر",v:8},{i:103,n:"Al-'Asr",a:"العصر",v:3},{i:104,n:"Al-Humazah",a:"الهمزة",v:9},{i:105,n:"Al-Fil",a:"الفيل",v:5},
+        {i:106,n:"Quraysh",a:"قريش",v:4},{i:107,n:"Al-Ma'un",a:"الماعون",v:7},{i:108,n:"Al-Kawthar",a:"الكوثر",v:3},{i:109,n:"Al-Kafirun",a:"الكافرون",v:6},{i:110,n:"An-Nasr",a:"النصر",v:3},
+        {i:111,n:"Al-Masad",a:"المسد",v:5},{i:112,n:"Al-Ikhlas",a:"الإخلاص",v:4},{i:113,n:"Al-Falaq",a:"الفلق",v:5},{i:114,n:"An-Nas",a:"الناس",v:6}
     ];
 
+    // ── Quran State ──
+    let qrState = {
+        surahId: null, surahName: '', totalAyahs: 0,
+        currentAyah: 1,
+        data: { arabic: [], roman: [], urduRoman: [], autoTranslated: false },
+        audio: null, isPlaying: false, autoNext: true,
+        audioProgressTimer: null,
+        mode: 'ayah'   // 'ayah' | 'scroll'
+    };
+
+    // ── Mode Switch ──
+    function qrSetMode(mode) {
+        qrState.mode = mode;
+        const ayahBtn   = document.getElementById('qrModeAyah');
+        const scrollBtn = document.getElementById('qrModeScroll');
+        const ayahCtrl  = document.getElementById('qrAyahControls');
+        const scrollInfo= document.getElementById('qrScrollInfo');
+        const readerContent = document.getElementById('readerContent');
+        const scrollContent = document.getElementById('scrollContent');
+
+        if (mode === 'ayah') {
+            ayahBtn.style.cssText   = 'background:linear-gradient(135deg,#16a34a,#15803d);color:white;box-shadow:0 2px 8px rgba(22,163,74,0.35);';
+            scrollBtn.style.cssText = 'background:transparent;color:rgba(167,243,208,0.6);';
+            ayahCtrl.classList.remove('hidden');   ayahCtrl.style.display='flex';
+            scrollInfo.classList.add('hidden');    scrollInfo.style.display='none';
+            readerContent.classList.remove('hidden'); readerContent.style.display='';
+            scrollContent.classList.add('hidden');    scrollContent.style.display='none';
+            if (qrState.data.arabic.length) qrRenderAyah(qrState.currentAyah);
+        } else {
+            scrollBtn.style.cssText = 'background:linear-gradient(135deg,#1d4ed8,#1e40af);color:white;box-shadow:0 2px 8px rgba(29,78,216,0.35);';
+            ayahBtn.style.cssText   = 'background:transparent;color:rgba(167,243,208,0.6);';
+            ayahCtrl.classList.add('hidden');      ayahCtrl.style.display='none';
+            scrollInfo.classList.remove('hidden'); scrollInfo.style.display='flex';
+            readerContent.classList.add('hidden');    readerContent.style.display='none';
+            scrollContent.classList.remove('hidden'); scrollContent.style.display='';
+            qrStopAudio();
+            if (qrState.data.arabic.length) qrRenderScrollView();
+            else scrollContent.innerHTML = qrLoadingHTML('Loading...');
+        }
+    }
+
+    // ── Scroll / Page View Renderer ──
+    function qrRenderScrollView() {
+        const id = qrState.surahId;
+        const sc = document.getElementById('scrollContent');
+        const arabicArr   = qrState.data.arabic;
+        const romanArr    = qrState.data.roman;
+        const urduRomanArr = qrState.data.urduRoman;
+
+        let html = `<div style="max-width:680px;margin:0 auto;padding:0 16px 80px;">`;
+
+        // Surah Header Banner
+        html += `
+        <div class="text-center py-8 mb-2">
+            <div class="inline-block px-6 py-3 rounded-2xl mb-3" style="background:linear-gradient(135deg,rgba(212,160,23,0.12),rgba(212,160,23,0.06));border:1px solid rgba(212,160,23,0.25);">
+                <div class="text-3xl font-bold mb-1" style="font-family:'Amiri',serif;color:rgba(212,160,23,0.95);">${qrState.surahName}</div>
+                <div class="text-sm" style="color:rgba(167,243,208,0.6);">Surah ${id} • ${qrState.totalAyahs} Ayahs</div>
+            </div>
+        </div>`;
+
+        // Basmala
+        if (id !== 1 && id !== 9) {
+            html += `
+            <div class="text-center py-5 mb-4" style="border-bottom:1px solid rgba(212,160,23,0.15);">
+                <p style="font-family:'Amiri',serif;font-size:1.85rem;color:rgba(212,160,23,0.9);direction:rtl;unicode-bidi:embed;line-height:2;">
+                    بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+                </p>
+            </div>`;
+        }
+
+        // Each Ayah row
+        for (let i = 0; i < arabicArr.length; i++) {
+            const num     = i + 1;
+            const arabic  = arabicArr[i];
+            const roman   = romanArr[i];
+            const urduRoman = urduRomanArr[i];
+
+            let arText = arabic?.text || '';
+            if (id !== 1 && id !== 9 && i === 0) {
+                arText = arText.replace(/^بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ\s*/,'')
+                               .replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/,'').trim();
+            }
+
+            html += `
+            <div class="mb-1 rounded-2xl overflow-hidden" style="border:1px solid rgba(255,255,255,0.06);">
+                <!-- Ayah number strip -->
+                <div class="flex items-center justify-between px-4 py-2" style="background:rgba(0,0,0,0.25);">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                             style="background:rgba(212,160,23,0.15);border:1px solid rgba(212,160,23,0.3);color:rgba(212,160,23,0.9);">${num}</div>
+                        <span class="text-xs" style="color:rgba(167,243,208,0.4);">Ayah ${num}</span>
+                    </div>
+                    <button onclick="qrScrollPlayAyah(${arabic?.number || num})"
+                        class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition hover:scale-105"
+                        style="background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.3);color:#86efac;">
+                        <i class="fas fa-volume-up text-xs"></i> Play
+                    </button>
+                </div>
+                <!-- Arabic -->
+                <div class="px-5 pt-4 pb-3" style="background:rgba(6,46,33,0.3);">
+                    <p class="text-right leading-loose" dir="rtl"
+                       style="font-family:'Amiri',serif;font-size:clamp(1.35rem,4.5vw,1.75rem);color:#f0ede0;line-height:2.1;unicode-bidi:embed;">${arText}</p>
+                </div>
+                <!-- Pronunciation -->
+                <div class="px-5 py-3" style="background:rgba(52,211,153,0.04);border-top:1px solid rgba(52,211,153,0.08);">
+                    <span class="text-xs font-bold uppercase tracking-wider mr-2" style="color:rgba(52,211,153,0.5);">🔤 Pronunciation</span>
+                    <p class="mt-1" style="color:rgba(210,245,230,0.85);font-family:'Noto Sans',sans-serif;font-size:0.95rem;line-height:1.8;letter-spacing:0.01em;">${roman?.text || ''}</p>
+                </div>
+                <!-- Matlab -->
+                <div class="px-5 py-3" style="background:rgba(212,160,23,0.04);border-top:1px solid rgba(212,160,23,0.08);">
+                    <span class="text-xs font-bold uppercase tracking-wider mr-2" style="color:rgba(212,160,23,0.5);">🕌 Matlab —</span>
+                    <span class="text-sm italic" style="color:rgba(255,235,160,0.88);">"${urduRoman?.text || ''}"</span>
+                </div>
+            </div>`;
+        }
+
+        html += `</div>`;
+        sc.innerHTML = html;
+        sc.scrollTop = 0;
+    }
+
+    // Play a specific ayah from scroll view (by absolute number)
+    function qrScrollPlayAyah(absNum) {
+        qrStopAudio();
+        const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${absNum}.mp3`;
+        const audio = new Audio(url);
+        qrState.audio = audio;
+        qrState.isPlaying = true;
+        document.getElementById('qrAudioBar').classList.remove('hidden');
+        // find which ayah in surah
+        const idx = qrState.data.arabic.findIndex(a => a.number === absNum);
+        document.getElementById('qrNowPlayingNum').innerText = idx >= 0 ? idx + 1 : '?';
+        audio.addEventListener('timeupdate', () => {
+            const p = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
+            document.getElementById('qrAudioProgress').style.width = p + '%';
+        });
+        audio.addEventListener('ended', () => {
+            qrState.isPlaying = false;
+            document.getElementById('qrAudioProgress').style.width = '100%';
+            setTimeout(() => document.getElementById('qrAudioBar').classList.add('hidden'), 2000);
+        });
+        audio.play().catch(() => { qrState.isPlaying = false; });
+    }
+
     function populateSurahList() {
+        const juzLabels = {1:1,2:1,3:2,4:2,5:2,6:2,7:2,8:3,9:3,10:3};
         const list = document.getElementById('surahList');
-        list.innerHTML = surahsList.map(s => `<div onclick="readSurah(${s.i},'${s.n}')" class="surah-item p-3 bg-white rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-xs flex items-center justify-center">${s.i}</div><div class="font-bold text-slate-800">${s.n}</div></div><div class="font-serif text-lg text-green-700">${s.a}</div></div>`).join('');
+        const groups = [{label:'Al-Quran - 114 Surahs', items: surahsList}];
+        list.innerHTML = surahsList.map(s => {
+            const juz = juzLabels[s.i] || '';
+            return `<div onclick="readSurah(${s.i},'${s.n}',${s.v})"
+                class="surah-item flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all group"
+                style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);margin-bottom:2px;">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                         style="background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.25);color:rgba(212,160,23,0.9);">${s.i}</div>
+                    <div>
+                        <div class="font-semibold text-sm" style="color:#e2e8f0;font-family:'Noto Sans',sans-serif;">${s.n}</div>
+                        <div class="text-xs" style="color:rgba(167,243,208,0.5);">${s.v} Ayahs</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold text-lg" style="font-family:'Amiri',serif;color:rgba(167,243,208,0.85);">${s.a}</div>
+                </div>
+            </div>`;
+        }).join('');
     }
 
     function filterSurahs() {
-        const query = document.getElementById('surahSearch').value.toLowerCase();
-        document.querySelectorAll('.surah-item').forEach(item => { item.style.display = item.innerText.toLowerCase().includes(query) ? 'flex' : 'none'; });
+        const q = document.getElementById('surahSearch').value.toLowerCase().trim();
+        document.querySelectorAll('.surah-item').forEach(el => {
+            el.style.display = el.innerText.toLowerCase().includes(q) ? '' : 'none';
+        });
     }
 
-    function openQuran() { document.getElementById('quranModal').classList.remove('hidden'); trackAction("Opened Quran"); }
+    function openQuran() {
+        document.getElementById('quranModal').classList.remove('hidden');
+        document.getElementById('quranListView').style.display = 'flex';
+        document.getElementById('quranListView').style.flexDirection = 'column';
+        document.getElementById('quranListView').style.height = '100%';
+        if (typeof trackAction === 'function') trackAction("Opened Quran");
+    }
 
-    async function readSurah(id, name) {
+    function closeQuranModal() {
+        qrStopAudio();
+        document.getElementById('quranModal').classList.add('hidden');
+    }
+
+    function closeReaderView() {
+        qrStopAudio();
+        document.getElementById('readerView').classList.add('hidden');
+    }
+
+    // ── Fetch a single edition (with timeout protection) ──
+    async function qrFetchEdition(surahId, edition) {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 12000);
+        try {
+            const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahId}/${edition}`, { signal: controller.signal });
+            clearTimeout(tid);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            return json.data.ayahs;
+        } catch(e) {
+            clearTimeout(tid);
+            throw e;
+        }
+    }
+
+    // ── Translate English text → Roman Urdu (spoken style) ──
+    // Uses Google Translate: English → Urdu, extracts the romanization (Roman script)
+    async function qrTranslateToRomanUrdu(text) {
+        try {
+            // sl=en (source: English), tl=ur (target: Urdu)
+            // dt=rm requests romanization of the Urdu output
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ur&dt=t&dt=rm&q=${encodeURIComponent(text)}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('translate failed');
+            const data = await res.json();
+
+            // data structure: [ [[translated, original, ...], ...], romanization_array, ... ]
+            // data[1] contains romanization chunks: [ [romanized_chunk, start, end], ... ]
+            let romanized = '';
+
+            // First try: extract romanization from data[1]
+            if (data && data[1] && Array.isArray(data[1])) {
+                romanized = data[1].map(chunk => Array.isArray(chunk) ? chunk[0] : '').filter(Boolean).join(' ').trim();
+            }
+
+            // Second try: extract romanization embedded in data[0] chunks (index [3])
+            if (!romanized && data && data[0]) {
+                romanized = data[0].map(chunk => (chunk && chunk[3]) ? chunk[3] : '').filter(Boolean).join(' ').trim();
+            }
+
+            // If romanization not available, return the Urdu script translation
+            // (at least user gets Urdu meaning)
+            if (!romanized && data && data[0]) {
+                romanized = data[0].map(chunk => chunk[0] || '').filter(Boolean).join(' ').trim();
+            }
+
+            return romanized || text;
+        } catch(e) {
+            return text;
+        }
+    }
+
+    // ── Batch translate with progress callback ──
+    async function qrBatchTranslate(englishTexts, onProgress) {
+        const chunkSize = 8;
+        const results = [];
+        for (let i = 0; i < englishTexts.length; i += chunkSize) {
+            const chunk = englishTexts.slice(i, i + chunkSize);
+            const translated = await Promise.all(chunk.map(t => qrTranslateToRomanUrdu(t)));
+            results.push(...translated);
+            if (onProgress) onProgress(Math.min(i + chunkSize, englishTexts.length), englishTexts.length);
+            if (i + chunkSize < englishTexts.length) {
+                await new Promise(r => setTimeout(r, 120));
+            }
+        }
+        return results;
+    }
+
+    // ── Main Load Surah ──
+    async function readSurah(id, name, totalV) {
+        qrStopAudio();
+        qrState.surahId = id;
+        qrState.surahName = name;
+        qrState.totalAyahs = totalV || surahsList.find(s=>s.i===id)?.v || 1;
+        qrState.currentAyah = 1;
+        qrState.data = { arabic: [], roman: [], urduRoman: [], autoTranslated: false };
+
+        // Show reader
         document.getElementById('readerView').classList.remove('hidden');
         document.getElementById('readerTitle').innerText = name;
-        document.getElementById('readerContent').innerHTML = '<div class="text-center mt-10"><i class="fas fa-circle-notch fa-spin text-green-600 fa-2x"></i></div>';
+        document.getElementById('readerSubtitle').innerText = `Surah ${id}`;
+        document.getElementById('qrAyahCounter').innerText = `${qrState.totalAyahs} Ayahs`;
+
+        const loadTarget = qrState.mode === 'scroll'
+            ? document.getElementById('scrollContent')
+            : document.getElementById('readerContent');
+        loadTarget.innerHTML = qrLoadingHTML('Fetching Arabic text...');
+
+        // Build ayah select
+        const sel = document.getElementById('qrAyahSelect');
+        sel.innerHTML = Array.from({length: qrState.totalAyahs}, (_,i) =>
+            `<option value="${i+1}">Ayah ${i+1}</option>`).join('');
+
+        if (typeof trackAction === 'function') trackAction(`Reading Surah ${name}`);
+
+        // Fetch all editions individually to avoid timeout
         try {
-            const res = await fetch(`https://api.alquran.cloud/v1/surah/${id}/editions/quran-simple,en.sahih`);
-            const data = await res.json();
-            let html = '';
-            if(id !== 1 && id !== 9) html += `<div class="text-center font-serif text-2xl mb-8 text-green-800">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
-            for(let i = 0; i < data.data[0].ayahs.length; i++) {
-                let arText = data.data[0].ayahs[i].text;
-                if(id !== 1 && i === 0) arText = arText.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ','').trim();
-                html += `<div class="border-b border-slate-100 pb-4 mb-4"><div class="flex justify-between items-start mb-2"><span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full">${data.data[0].ayahs[i].numberInSurah}</span><p class="text-right font-serif text-2xl text-slate-800 leading-loose w-full" style="direction:rtl">${arText}</p></div><p class="text-sm text-slate-600 leading-relaxed mt-2">${data.data[1].ayahs[i].text}</p></div>`;
+            loadTarget.innerHTML = qrLoadingHTML('Loading Arabic text (1/3)...');
+            const arabic = await qrFetchEdition(id, 'quran-uthmani');
+            qrState.data.arabic = arabic;
+
+            loadTarget.innerHTML = qrLoadingHTML('Loading Pronunciation (2/3)...');
+            const roman = await qrFetchEdition(id, 'en.transliteration');
+            qrState.data.roman = roman;
+
+            // Step 3: Fetch English translation, then convert to Roman Urdu (spoken Hinglish style)
+            loadTarget.innerHTML = qrLoadingHTML('Loading English base (3/3)...');
+            const englishAyahs = await qrFetchEdition(id, 'en.sahih');
+
+            // Auto-translate each ayah to Roman Urdu with live progress
+            const total = englishAyahs.length;
+            loadTarget.innerHTML = qrLoadingHTML(`Translating to Roman Urdu... (0 / ${total})`);
+
+            const translatedTexts = await qrBatchTranslate(
+                englishAyahs.map(a => a.text),
+                (done, tot) => {
+                    loadTarget.innerHTML = qrLoadingHTML(`Translating to Roman Urdu... (${done} / ${tot})`);
+                }
+            );
+
+            qrState.data.urduRoman = englishAyahs.map((a, i) => ({
+                ...a,
+                text: translatedTexts[i] || a.text
+            }));
+            qrState.data.autoTranslated = true;
+
+            // Render based on current mode
+            if (qrState.mode === 'scroll') {
+                qrRenderScrollView();
+            } else {
+                qrRenderAyah(qrState.currentAyah);
             }
-            document.getElementById('readerContent').innerHTML = html;
-            trackAction(`Reading Surah ${name}`);
+
         } catch(e) {
-            document.getElementById('readerContent').innerHTML = '<p class="text-center text-red-500 mt-10">Error loading. Check internet.</p>';
+            loadTarget.innerHTML = qrErrorHTML(id, name, totalV, e.message);
         }
+    }
+
+    // ── Render a single Ayah card ──
+    function qrRenderAyah(ayahNum) {
+        qrState.currentAyah = ayahNum;
+        document.getElementById('qrAyahSelect').value = ayahNum;
+
+        const idx = ayahNum - 1;
+        const arabic = qrState.data.arabic[idx];
+        const roman = qrState.data.roman[idx];
+        const urduRoman = qrState.data.urduRoman[idx];
+        const id = qrState.surahId;
+
+        let arabicText = arabic?.text || '';
+        if (id !== 1 && id !== 9 && idx === 0) {
+            arabicText = arabicText.replace(/^بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ\s*/,'')
+                                   .replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/,'').trim();
+        }
+
+        const hasBasmala = (id !== 1 && id !== 9 && idx === 0);
+        const audioUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${arabic?.number || 1}.mp3`;
+
+        const content = document.getElementById('readerContent');
+        content.innerHTML = `
+            ${hasBasmala ? `<div class="text-center py-4 mb-2">
+                <span class="text-2xl" style="font-family:'Amiri',serif;color:rgba(212,160,23,0.9);direction:rtl;unicode-bidi:embed;">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span>
+            </div>` : ''}
+
+            <!-- Ayah Number Badge -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                         style="background:linear-gradient(135deg,rgba(212,160,23,0.2),rgba(212,160,23,0.1));border:1px solid rgba(212,160,23,0.4);color:rgba(212,160,23,0.95);font-family:'Noto Sans',sans-serif;">${ayahNum}</div>
+                    <span class="text-xs" style="color:rgba(167,243,208,0.5);">Surah ${id} • Ayah ${ayahNum} of ${qrState.totalAyahs}</span>
+                </div>
+                <div class="flex gap-2">
+                    ${ayahNum > 1 ? `<button onclick="qrNavigateAyah(-1)" class="px-3 py-1 rounded-lg text-xs transition hover:opacity-80" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(167,243,208,0.7);">◀ Prev</button>` : ''}
+                    ${ayahNum < qrState.totalAyahs ? `<button onclick="qrNavigateAyah(1)" class="px-3 py-1 rounded-lg text-xs transition hover:opacity-80" style="background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.3);color:#86efac;">Next ▶</button>` : ''}
+                </div>
+            </div>
+
+            <!-- Arabic Text Card -->
+            <div class="rounded-2xl p-5 mb-3" style="background:linear-gradient(135deg,rgba(6,78,59,0.4),rgba(4,50,38,0.5));border:1px solid rgba(212,160,23,0.2);box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+                <p class="text-right leading-loose" dir="rtl"
+                   style="font-family:'Amiri',serif;font-size:clamp(1.5rem,5vw,2rem);color:#f0ede0;line-height:2.2;unicode-bidi:embed;">${arabicText}</p>
+            </div>
+
+            <!-- Roman Pronunciation Card — Bigger & Readable -->
+            <div class="rounded-2xl mb-3 overflow-hidden" style="background:linear-gradient(135deg,rgba(52,211,153,0.07),rgba(16,185,129,0.04));border:1px solid rgba(52,211,153,0.18);">
+                <!-- Header row -->
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style="background:rgba(52,211,153,0.18);border:1px solid rgba(52,211,153,0.3);">
+                            <span style="font-size:11px;">🔤</span>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest" style="color:#34d399;">Roman Pronunciation</span>
+                    </div>
+                    <span class="text-xs" style="color:rgba(52,211,153,0.4);">Padh ke seekhein</span>
+                </div>
+                <!-- Text — bigger font, generous line height -->
+                <div class="px-4 pb-4">
+                    <p style="color:rgba(220,255,240,0.92);font-family:'Noto Sans',sans-serif;font-size:1.05rem;line-height:1.9;letter-spacing:0.015em;">${roman?.text || '—'}</p>
+                </div>
+            </div>
+
+            <!-- Urdu (Roman) Matlab Card -->
+            <div class="rounded-xl p-4 mb-3" style="background:linear-gradient(135deg,rgba(212,160,23,0.08),rgba(180,130,10,0.05));border:1px solid rgba(212,160,23,0.2);">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style="background:rgba(212,160,23,0.2);border:1px solid rgba(212,160,23,0.35);">
+                        <span style="font-size:11px;">🕌</span>
+                    </div>
+                    <span class="text-xs font-bold uppercase tracking-widest" style="color:rgba(212,160,23,0.85);">🕌 Matlab — Urdu (Roman)${qrState.data.autoTranslated ? ' <span style="font-size:9px;opacity:0.6;">auto</span>' : ''}</span>
+                </div>
+                <p class="leading-relaxed" style="color:rgba(255,235,160,0.95);font-family:'Noto Sans',sans-serif;font-size:0.95rem;font-style:italic;">"${urduRoman?.text || '—'}"</p>
+            </div>
+
+            <!-- Audio Button -->
+            <div class="flex items-center gap-3 mt-4 pb-2">
+                <button onclick="qrPlayAyah(${arabic?.number || 1},'${audioUrl}')"
+                    id="qrCardPlayBtn"
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition hover:scale-105"
+                    style="background:linear-gradient(135deg,#16a34a,#15803d);color:white;border:none;box-shadow:0 4px 14px rgba(22,163,74,0.35);">
+                    <i id="qrCardPlayIcon" class="fas fa-play text-xs"></i>
+                    Listen to this Ayah
+                </button>
+                ${qrState.autoNext ? `<span class="text-xs" style="color:rgba(134,239,172,0.6);"><i class="fas fa-forward mr-1"></i>Auto-next On</span>` : `<span class="text-xs" style="color:rgba(100,116,139,0.6);">Auto-next Off</span>`}
+            </div>
+
+            <!-- Navigation bottom -->
+            <div class="flex gap-3 mt-3 pb-6">
+                <button onclick="qrNavigateAyah(-1)" ${ayahNum===1?'disabled':''} class="flex-1 py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-30"
+                    style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(167,243,208,0.8);">
+                    ← Previous Ayah
+                </button>
+                <button onclick="qrNavigateAyah(1)" ${ayahNum===qrState.totalAyahs?'disabled':''} class="flex-1 py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-30"
+                    style="background:rgba(22,163,74,0.2);border:1px solid rgba(22,163,74,0.3);color:#86efac;">
+                    Next Ayah →
+                </button>
+            </div>
+        `;
+
+        // Scroll to top
+        document.getElementById('readerContent').scrollTop = 0;
+        // Update nav bar select
+        document.getElementById('qrAyahSelect').value = ayahNum;
+    }
+
+    // ── Navigate Ayah ──
+    function qrNavigateAyah(delta) {
+        const next = qrState.currentAyah + delta;
+        if (next < 1 || next > qrState.totalAyahs) return;
+        qrStopAudio();
+        qrRenderAyah(next);
+    }
+
+    function qrGoToAyah() {
+        const val = parseInt(document.getElementById('qrAyahSelect').value);
+        if (val && val !== qrState.currentAyah) {
+            qrStopAudio();
+            qrRenderAyah(val);
+        }
+    }
+
+    // ── Audio ──
+    function qrPlayAyah(ayahAbsNumber, url) {
+        qrStopAudio();
+        qrState.audio = new Audio(url);
+        qrState.isPlaying = true;
+        qrUpdatePlayUI(true);
+        document.getElementById('qrAudioBar').classList.remove('hidden');
+        document.getElementById('qrNowPlayingNum').innerText = qrState.currentAyah;
+
+        qrState.audio.addEventListener('timeupdate', () => {
+            const p = qrState.audio.duration ? (qrState.audio.currentTime / qrState.audio.duration * 100) : 0;
+            document.getElementById('qrAudioProgress').style.width = p + '%';
+        });
+
+        qrState.audio.addEventListener('ended', () => {
+            qrState.isPlaying = false;
+            qrUpdatePlayUI(false);
+            document.getElementById('qrAudioProgress').style.width = '100%';
+            if (qrState.autoNext && qrState.currentAyah < qrState.totalAyahs) {
+                setTimeout(() => {
+                    qrNavigateAyah(1);
+                    // Auto-play next
+                    setTimeout(() => {
+                        const nextNum = qrState.data.arabic[qrState.currentAyah - 1]?.number;
+                        if (nextNum) {
+                            const nextUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${nextNum}.mp3`;
+                            qrPlayAyah(nextNum, nextUrl);
+                        }
+                    }, 400);
+                }, 300);
+            } else {
+                setTimeout(() => document.getElementById('qrAudioBar').classList.add('hidden'), 2000);
+            }
+        });
+
+        qrState.audio.addEventListener('error', () => {
+            qrState.isPlaying = false;
+            qrUpdatePlayUI(false);
+        });
+
+        qrState.audio.play().catch(() => { qrState.isPlaying = false; qrUpdatePlayUI(false); });
+    }
+
+    function qrToggleAudio() {
+        if (!qrState.audio || qrState.audio.ended) {
+            const arabic = qrState.data.arabic[qrState.currentAyah - 1];
+            if (!arabic) return;
+            const url = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${arabic.number}.mp3`;
+            qrPlayAyah(arabic.number, url);
+        } else if (qrState.isPlaying) {
+            qrState.audio.pause();
+            qrState.isPlaying = false;
+            qrUpdatePlayUI(false);
+        } else {
+            qrState.audio.play();
+            qrState.isPlaying = true;
+            qrUpdatePlayUI(true);
+        }
+    }
+
+    function qrStopAudio() {
+        if (qrState.audio) {
+            qrState.audio.pause();
+            qrState.audio.src = '';
+            qrState.audio = null;
+        }
+        qrState.isPlaying = false;
+        qrUpdatePlayUI(false);
+        const bar = document.getElementById('qrAudioBar');
+        if (bar) bar.classList.add('hidden');
+        const prog = document.getElementById('qrAudioProgress');
+        if (prog) prog.style.width = '0%';
+    }
+
+    function qrUpdatePlayUI(playing) {
+        const icon = document.getElementById('qrPlayIcon');
+        if (icon) { icon.className = playing ? 'fas fa-pause text-xs' : 'fas fa-play text-xs ml-0.5'; }
+        const cardIcon = document.getElementById('qrCardPlayIcon');
+        if (cardIcon) { cardIcon.className = playing ? 'fas fa-pause text-xs' : 'fas fa-play text-xs'; }
+    }
+
+    function qrToggleAutoNext() {
+        qrState.autoNext = !qrState.autoNext;
+        const badge = document.getElementById('qrAutoNextBadge');
+        if (qrState.autoNext) {
+            badge.style.background = 'rgba(22,163,74,0.2)';
+            badge.style.borderColor = 'rgba(22,163,74,0.4)';
+            badge.style.color = '#86efac';
+        } else {
+            badge.style.background = 'rgba(100,116,139,0.1)';
+            badge.style.borderColor = 'rgba(100,116,139,0.3)';
+            badge.style.color = 'rgba(100,116,139,0.7)';
+        }
+        // Re-render to update auto-next label in card
+        if (qrState.data.arabic.length) qrRenderAyah(qrState.currentAyah);
+    }
+
+    // ── Loading & Error HTML ──
+    function qrLoadingHTML(msg) {
+        return `<div class="flex flex-col items-center justify-center py-20 gap-4">
+            <div class="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin" style="border-color:rgba(22,163,74,0.5);border-top-color:transparent;"></div>
+            <p class="text-sm" style="color:rgba(167,243,208,0.6);">${msg}</p>
+        </div>`;
+    }
+
+    function qrErrorHTML(id, name, v, errMsg) {
+        return `<div class="flex flex-col items-center justify-center py-16 gap-4 text-center px-6">
+            <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);">
+                <i class="fas fa-exclamation-triangle" style="color:rgba(239,68,68,0.8);"></i>
+            </div>
+            <p class="font-semibold" style="color:rgba(239,68,68,0.85);">Failed to load Surah data</p>
+            <p class="text-xs" style="color:rgba(100,116,139,0.8);">${errMsg || 'Network error'}</p>
+            <button onclick="readSurah(${id},'${name}',${v})"
+                class="mt-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition hover:scale-105"
+                style="background:linear-gradient(135deg,#16a34a,#15803d);color:white;">
+                <i class="fas fa-redo mr-2 text-xs"></i>Retry
+            </button>
+        </div>`;
     }
 
     // ========================
