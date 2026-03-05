@@ -2952,22 +2952,27 @@ History: ${mqHistory.slice(-6).map(m=>`${m.role==='user'?'User':'AI'}: ${m.conte
 Sawal: ${txt}`;
 
     try {
-        const GEMINI_URL = 'https://raza-jumma-ai.afzal24052002.workers.dev';
+        const WORKER_URL = 'https://raza-jumma-ai.afzal24052002.workers.dev';
 
-        const response = await fetch(GEMINI_URL, {
+        const response = await fetch(WORKER_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: sys }] }],
-                generationConfig: { maxOutputTokens: 4096, temperature: 0.7 },
-                safetySettings: [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                ]
+                generationConfig: { maxOutputTokens: 4096, temperature: 0.7 }
             })
         });
+
+        // ✅ FIX: Check Content-Type BEFORE calling .json()
+        // Cloudflare 524 timeout returns a plain HTML page, not JSON.
+        const contentType = response.headers.get('content-type') || '';
+        if (!response.ok || !contentType.includes('application/json')) {
+            const errText = await response.text();
+            if (errText.includes('524') || errText.toLowerCase().includes('timeout')) {
+                throw new Error('TIMEOUT');
+            }
+            throw new Error(`HTTP_${response.status}`);
+        }
 
         const data = await response.json();
 
@@ -2975,18 +2980,16 @@ Sawal: ${txt}`;
             throw new Error(data.error.message || JSON.stringify(data.error));
         }
 
-        if (data?.candidates?.[0]?.finishReason === 'SAFETY') {
-            throw new Error("Google Safety Filter blocked this answer.");
-        }
-
-        let rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        let rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text
+                   || data?.choices?.[0]?.message?.content
+                   || '';
 
         mqHideTyping();
 
         if (!rawText) rawText = 'Jawab nahi mila. Dobara try karein. 🤲';
         rawText = rawText.replace(/^(AI|Mumtaz Hazrat|Assistant):\s*/i,'').trim();
 
-        const aiRow = mqRow('ai', mqFmt(rawText));
+        mqRow('ai', mqFmt(rawText));
         const box = document.getElementById('mqMsgs');
         box.scrollTop = box.scrollHeight;
 
@@ -2997,11 +3000,28 @@ Sawal: ${txt}`;
         mqHideTyping();
         console.error('Mumtaz AI error:', e);
 
-        mqRow('ai', mqFmt(
-            `Maafi chahta hoon, jawab aane mein masla hua.\n` +
-            `_${e?.message ?? String(e)}_\n\n` +
-            `Thodi der baad dobara try karein. 🤲`
-        ));
+        // ✅ FIX: User-friendly messages based on error type
+        let friendlyMsg;
+        if (e?.message === 'TIMEOUT' || e?.message?.includes('524')) {
+            friendlyMsg =
+                `⏳ *Jawab tayyar hone mein thoda waqt lag raha hai.*\n\n` +
+                `NVIDIA ka AI model abhi busy hai. Thodi der baad dobara poochein. 🤲`;
+        } else if (e?.message?.startsWith('HTTP_')) {
+            friendlyMsg =
+                `⚠️ *Server se jawab nahi mila (${e.message}).*\n\n` +
+                `Apna internet check karein aur dobara try karein. 🤲`;
+        } else if (e?.name === 'TypeError' && e?.message?.includes('fetch')) {
+            friendlyMsg =
+                `📶 *Internet connection mein masla lag raha hai.*\n\n` +
+                `Apna network check karein aur dobara try karein. 🤲`;
+        } else {
+            friendlyMsg =
+                `Maafi chahta hoon, jawab aane mein masla hua.\n` +
+                `_${e?.message ?? String(e)}_\n\n` +
+                `Thodi der baad dobara try karein. 🤲`;
+        }
+
+        mqRow('ai', mqFmt(friendlyMsg));
     }
 
     mqBusy = false;
