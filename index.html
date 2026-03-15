@@ -866,7 +866,7 @@
                 </div>
                 <i class="fas fa-chevron-right" style="color:var(--text-muted)"></i>
             </div>
-            <div onclick="document.getElementById('zakatModal').classList.remove('hidden')" class="tool-card glass-panel rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:opacity-90 transition group border-l-4" style="border-left-color:var(--accent-gold)">
+            <div onclick="document.getElementById('zakatModal').classList.remove('hidden');pushModalState('zakat')" class="tool-card glass-panel rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:opacity-90 transition group border-l-4" style="border-left-color:var(--accent-gold)">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full tool-card-icon-amber flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-calculator fa-lg"></i></div>
                     <div><h3 class="font-bold tool-card-text-primary text-lg">Zakat Calculator</h3><p class="text-xs tool-card-text-muted">Calculate 2.5%</p></div>
@@ -1473,6 +1473,8 @@
             applyTheme(getActiveTheme(data.data.timings));
             // Re-apply with accurate Maghrib time from API
             applyRamadanTimes(data.data.timings.Maghrib);
+            // Schedule azan/beep alarms using live prayer times
+            scheduleAlarms(data.data.timings);
         } catch(e) {
             renderGrid({Fajr:"05:30",Dhuhr:"13:30",Asr:"17:00",Maghrib:"18:30",Isha:"20:15",Sunrise:"06:10"},{day:"--",month:{en:"--"},year:"--"});
         }
@@ -2042,11 +2044,36 @@
         });
     }
 
+    // ── Back button: push a state when any modal opens, intercept popstate ──
+    function pushModalState(name) {
+        history.pushState({ modal: name }, '');
+    }
+    window.addEventListener('popstate', function() {
+        // Priority: AI > readerView > quranModal > zakatModal > contactModal
+        if (document.getElementById('mqModal')?.classList.contains('open')) {
+            mqClose(); return;
+        }
+        const rv = document.getElementById('readerView');
+        if (rv && !rv.classList.contains('hidden')) {
+            closeReaderView(); return;
+        }
+        if (!document.getElementById('quranModal')?.classList.contains('hidden')) {
+            closeQuranModal(); return;
+        }
+        if (!document.getElementById('zakatModal')?.classList.contains('hidden')) {
+            document.getElementById('zakatModal').classList.add('hidden'); return;
+        }
+        if (!document.getElementById('contactPageModal')?.classList.contains('hidden')) {
+            closeContactPage(); return;
+        }
+    });
+
     function openQuran() {
         document.getElementById('quranModal').classList.remove('hidden');
         document.getElementById('quranListView').style.display = 'flex';
         document.getElementById('quranListView').style.flexDirection = 'column';
         document.getElementById('quranListView').style.height = '100%';
+        pushModalState('quran');
         if (typeof trackAction === 'function') trackAction("Opened Quran");
     }
 
@@ -2506,6 +2533,115 @@
     // Re-check every 30 seconds — catches prayer time transitions accurately
     setInterval(checkAndApplyTheme, 30000);
 
+    // ============================================================
+    // AZAN & NAMAZ ALARMS
+    // ============================================================
+    const azanAudio = new Audio('azan.mp3');
+    const beepAudio = new Audio('beep.mp3');
+    azanAudio.preload = 'none';
+    beepAudio.preload = 'none';
+
+    let _alarmsScheduled = false;
+    let _alarmTimers = [];
+
+    function scheduleAlarms(apiTimings) {
+        // Clear any previously scheduled alarms
+        _alarmTimers.forEach(t => clearTimeout(t));
+        _alarmTimers = [];
+
+        const now = nowIST();
+        const toMin = t => {
+            if (!t) return -1;
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        };
+
+        const prayerList = [
+            { name: 'Fajr',    azan: apiTimings.Fajr,    jamaat: activeTimings.F.j },
+            { name: 'Zohar',   azan: apiTimings.Dhuhr,   jamaat: activeTimings.Z.j },
+            { name: 'Asr',     azan: apiTimings.Asr,     jamaat: activeTimings.A.j },
+            { name: 'Maghrib', azan: apiTimings.Maghrib, jamaat: activeTimings.M.j },
+            { name: 'Isha',    azan: apiTimings.Isha,    jamaat: activeTimings.I.j },
+        ];
+
+        prayerList.forEach(p => {
+            if (!p.azan || p.azan === '--:--') return;
+
+            // Build azan time Date object
+            const [ah, am] = p.azan.split(':').map(Number);
+            const azanTime = nowIST();
+            azanTime.setHours(ah, am, 0, 0);
+            if (azanTime <= now) azanTime.setDate(azanTime.getDate() + 1); // next day
+
+            const azanDelay = azanTime - now;
+            const azanTimer = setTimeout(() => {
+                azanAudio.currentTime = 0;
+                azanAudio.play().catch(() => {});
+                showAlarmToast(`🕌 ${p.name} Azan`, 'Azan waqt ho gaya — Allahu Akbar!');
+            }, azanDelay);
+            _alarmTimers.push(azanTimer);
+
+            // Beep alarm at Jamaat time (if set)
+            let jamaatTimeStr = p.jamaat;
+            if (!jamaatTimeStr || jamaatTimeStr === '--:--') {
+                // fallback: azan + 15 mins (Maghrib +5)
+                const offset = p.name === 'Maghrib' ? 5 : 15;
+                const jd = new Date(azanTime);
+                jd.setMinutes(jd.getMinutes() + offset);
+                jamaatTimeStr = `${String(jd.getHours()).padStart(2,'0')}:${String(jd.getMinutes()).padStart(2,'0')}`;
+            }
+            // Parse jamaat (may be 12h like "6:45 PM")
+            let jamaatDate;
+            try {
+                // Try 24h parse first
+                if (/AM|PM/i.test(jamaatTimeStr)) {
+                    const d = new Date(`1970-01-01 ${jamaatTimeStr}`);
+                    jamaatDate = nowIST();
+                    jamaatDate.setHours(d.getHours(), d.getMinutes(), 0, 0);
+                } else {
+                    const [jh, jm] = jamaatTimeStr.split(':').map(Number);
+                    jamaatDate = nowIST();
+                    jamaatDate.setHours(jh, jm, 0, 0);
+                }
+                if (jamaatDate <= now) jamaatDate.setDate(jamaatDate.getDate() + 1);
+                const beepDelay = jamaatDate - now;
+                if (beepDelay > 0) {
+                    const beepTimer = setTimeout(() => {
+                        beepAudio.currentTime = 0;
+                        beepAudio.play().catch(() => {});
+                        showAlarmToast(`⏰ ${p.name} Namaz`, 'Jamaat shuru ho rahi hai — Takbir!');
+                    }, beepDelay);
+                    _alarmTimers.push(beepTimer);
+                }
+            } catch(e) {}
+        });
+
+        _alarmsScheduled = true;
+    }
+
+    function showAlarmToast(title, msg) {
+        if (typeof Toastify !== 'undefined') {
+            Toastify({
+                text: `${title}\n${msg}`,
+                duration: 10000,
+                gravity: 'top',
+                position: 'center',
+                style: {
+                    background: 'linear-gradient(135deg,#064e3b,#d4a017)',
+                    borderRadius: '14px',
+                    fontWeight: '700',
+                    fontSize: '14px',
+                    padding: '14px 20px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                    whiteSpace: 'pre-line'
+                }
+            }).showToast();
+        }
+    }
+
+    // Hook into refreshData to schedule alarms after API timings are loaded
+
+
     // ── Live IST Clock in prayer section ──
     (function clockTick() {
         const el = document.getElementById('islamicClock');
@@ -2531,7 +2667,7 @@
      MUMTAZ HAZRAT AI — COMPLETE FIXED IMPLEMENTATION
      ================================================ -->
 <style>
-/* ── Floating button ── */
+/* ── Floating button — hidden until user scrolls to bottom ── */
 #mqBtn {
     position: fixed;
     bottom: 24px; right: 20px;
@@ -2544,7 +2680,15 @@
     background: linear-gradient(135deg,#052e16,#064e3b);
     box-shadow: 0 6px 24px rgba(0,0,0,0.45);
     animation: mqPulse 2.8s ease-in-out infinite;
-    transition: transform 0.18s;
+    transition: transform 0.18s, opacity 0.6s, visibility 0.6s;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+#mqBtn.mqBtnVisible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 #mqBtn:hover  { transform: scale(1.1); }
 #mqBtn:active { transform: scale(0.92); }
@@ -2578,19 +2722,18 @@
     border:8px solid transparent; border-top-color:white;
 }
 
-/* ── Modal — THE KEY: use dvh so keyboard shrinks the viewport correctly ── */
+/* ── Modal — visualViewport keeps input above keyboard on all devices ── */
 #mqModal {
     position: fixed;
-    /* top/left/right anchored, height uses dynamic viewport = shrinks with keyboard */
     top: 0; left: 0; right: 0;
-    height: 100dvh;           /* dvh = dynamic viewport height — shrinks when keyboard opens */
+    height: 100dvh;
     z-index: 2147483647;
     display: none;
     flex-direction: column;
     background: linear-gradient(170deg,#060e10 0%,#0a1a0e 45%,#070d18 100%);
     overflow: hidden;
-    /* NO bottom:0 — that's what causes the empty gap + bounce */
 }
+/* 5-second countdown bar */
 
 /* slide-in wrapper — must fill the modal exactly, no overflow */
 #mqInner {
@@ -2761,8 +2904,8 @@
                         <div style="color:rgba(255,255,255,.38);font-size:10px;margin-top:1px;">Islamic Assistant 🕌</div>
                     </div>
                 </div>
-                <!-- close -->
-                <button onclick="mqClose()" style="width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.09);color:rgba(255,255,255,.7);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;">&#x2715;</button>
+                <!-- close — highlighted red so user can clearly see it -->
+                <button onclick="mqClose()" style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(239,68,68,0.65);cursor:pointer;background:rgba(239,68,68,0.18);color:#fca5a5;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;transition:background 0.2s;" ontouchstart="this.style.background='rgba(239,68,68,0.4)'" ontouchend="this.style.background='rgba(239,68,68,0.18)'">&#x2715;</button>
             </div>
         </div>
 
@@ -2796,7 +2939,7 @@
         <!-- input bar -->
         <div id="mqBar">
             <textarea id="mqTxt" rows="1" placeholder="Islamic sawal yahan likhein..."
-                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();mqSend();}"
+                autocomplete="off" autocorrect="on" spellcheck="true"
                 oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
             <button id="mqGo" onclick="mqSend()"><i class="fas fa-paper-plane"></i></button>
         </div>
@@ -2806,43 +2949,61 @@
 
 <script>
 // ============================================================
-//  MUMTAZ HAZRAT AI — ENGINE  (fixed)
+//  MUMTAZ HAZRAT AI — ENGINE
 // ============================================================
 let mqHistory = [];
 let mqBusy    = false;
 
-// ── Mobile keyboard scroll fix ──
-// ── Mobile keyboard: just scroll to bottom, no layout manipulation ──
-// dvh CSS handles the sizing — we only need to scroll messages down
+// ── visualViewport: keeps input bar above keyboard on iOS/Android ──
 (function() {
-    document.addEventListener('focusin', (e) => {
-        if (e.target && e.target.id === 'mqTxt') {
-            setTimeout(() => {
-                const box = document.getElementById('mqMsgs');
-                if (box) box.scrollTop = box.scrollHeight + 9999;
-            }, 300);
-        }
-    });
+    function onVVResize() {
+        const modal = document.getElementById('mqModal');
+        if (!modal || modal.style.display === 'none') return;
+        const vv = window.visualViewport;
+        if (!vv) return;
+        modal.style.height = vv.height + 'px';
+        modal.style.top    = vv.offsetTop + 'px';
+        mqScrollBottom();
+    }
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', onVVResize, { passive: true });
+        window.visualViewport.addEventListener('scroll', onVVResize, { passive: true });
+    }
 })();
 
-// ── Intro bubble: show at 2.5s, hide at 8s ──
-setTimeout(()=>{ document.getElementById('mqBubble').classList.add('show'); },    2500);
-setTimeout(()=>{ document.getElementById('mqBubble').classList.remove('show'); }, 8000);
+// ── Float button + bubble: appear only after user scrolls to bottom ──
+(function() {
+    const btn    = document.getElementById('mqBtn');
+    const bubble = document.getElementById('mqBubble');
+    let   shown  = false;
+
+    function check() {
+        if (shown) return;
+        if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight * 0.9) {
+            shown = true;
+            btn.classList.add('mqBtnVisible');
+            setTimeout(() => {
+                bubble.classList.add('show');
+                setTimeout(() => bubble.classList.remove('show'), 6000);
+            }, 700);
+            window.removeEventListener('scroll', check);
+        }
+    }
+    window.addEventListener('scroll', check, { passive: true });
+    setTimeout(check, 1500);
+})();
 
 // ── Open / Close ──
 function mqOpen() {
     const m = document.getElementById('mqModal');
     if (!m) return;
+    document.getElementById('mqBtn')?.classList.add('mqBtnVisible');
     m.style.cssText = 'display:flex !important; flex-direction:column;';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-        m.classList.add('open');
-    }));
-    setTimeout(() => {
-        const box = document.getElementById('mqMsgs');
-        if (box) box.scrollTop = box.scrollHeight;
-        const txt = document.getElementById('mqTxt');
-        if (txt) txt.focus({ preventScroll: true });
-    }, 420);
+    // Reset height to dvh in case visualViewport changed it
+    m.style.height = (window.visualViewport?.height || window.innerHeight) + 'px';
+    requestAnimationFrame(() => requestAnimationFrame(() => m.classList.add('open')));
+    pushModalState('ai');
+    setTimeout(() => mqScrollBottom(), 450);
     if (typeof trackAction === 'function') trackAction('Opened Mumtaz Hazrat AI');
 }
 
@@ -2851,37 +3012,34 @@ function mqClose() {
     if (!m) return;
     m.classList.remove('open');
     setTimeout(() => { m.style.cssText = 'display:none;'; }, 460);
-    // Blur textarea to dismiss keyboard on mobile
     const txt = document.getElementById('mqTxt');
-    if (txt) txt.blur();
+    if (txt) { txt.blur(); txt.disabled = false; }
+    document.getElementById('mqGo').disabled = false;
 }
 
 // ── Chip tap ──
 function mqChip(el) {
-    document.getElementById('mqTxt').value = el.innerText;
+    const inp = document.getElementById('mqTxt');
+    inp.value = el.innerText.replace(/^[^\s]+\s/, ''); // strip leading emoji
     document.getElementById('mqChips').style.display = 'none';
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 110) + 'px';
     mqSend();
 }
 
-// ── Append a message row ──
-// Reliable scroll to bottom — works even when keyboard is open on mobile
+// ── Scroll to bottom ──
 function mqScrollBottom() {
     const box = document.getElementById('mqMsgs');
     if (!box) return;
-    // Use rAF to ensure DOM is painted before scrolling
-    requestAnimationFrame(() => {
-        box.scrollTop = box.scrollHeight + 9999;
-    });
+    requestAnimationFrame(() => { box.scrollTop = box.scrollHeight + 9999; });
 }
 
+// ── Append a message row ──
 function mqRow(role, html) {
     const box = document.getElementById('mqMsgs');
     const d   = document.createElement('div');
     d.className = role === 'user' ? 'mqRowUser' : 'mqRowAI';
-    const avHtml = `<div class="mqAv">
-        <img src="mumtaz logo.png"
-             onerror="this.src='mumtaz profile.png';this.onerror=function(){this.parentElement.innerHTML='<span style=font-size:16px>🤲</span>'}">
-      </div>`;
+    const avHtml = `<div class="mqAv"><img src="mumtaz logo.png" onerror="this.src='mumtaz profile.png';this.onerror=function(){this.parentElement.innerHTML='<span style=font-size:16px>🤲</span>'}"></div>`;
     if (role === 'user') {
         d.innerHTML = `<div class="mqBub">${mqEsc(html)}</div>`;
     } else {
@@ -2897,20 +3055,13 @@ function mqShowTyping() {
     const box = document.getElementById('mqMsgs');
     const d   = document.createElement('div');
     d.id = 'mqTyping'; d.className = 'mqRowAI';
-    d.innerHTML = `
-      <div class="mqAv">
-        <img src="mumtaz logo.png"
-             onerror="this.src='mumtaz profile.png';this.onerror=function(){this.parentElement.innerHTML='<span style=font-size:16px>🤲</span>'}">
-      </div>
-      <div class="mqBub mqDots">
-        <div class="mqDot"></div><div class="mqDot"></div><div class="mqDot"></div>
-      </div>`;
+    d.innerHTML = `<div class="mqAv"><img src="mumtaz logo.png" onerror="this.src='mumtaz profile.png';this.onerror=function(){this.parentElement.innerHTML='<span style=font-size:16px>🤲</span>'}"></div><div class="mqBub mqDots"><div class="mqDot"></div><div class="mqDot"></div><div class="mqDot"></div></div>`;
     box.appendChild(d);
     mqScrollBottom();
 }
 function mqHideTyping() {
     document.getElementById('mqTyping')?.remove();
-    mqScrollBottom(); // re-scroll after hiding typing indicator
+    mqScrollBottom();
 }
 
 // ── Text helpers ──
@@ -2922,17 +3073,28 @@ function mqFmt(t) {
         .replace(/\n/g,'<br>');
 }
 
+// ── Textarea: Enter sends, keyboard dismissed after send ──
+document.getElementById('mqTxt').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mqSend(); }
+});
+
 // ── Send message ──
 async function mqSend() {
-    if(mqBusy) return;
+    if (mqBusy) return;
     const inp = document.getElementById('mqTxt');
     const txt = inp.value.trim();
-    if(!txt) return;
+    if (!txt) return;
 
-    document.getElementById('mqChips').style.display = 'none';
+    // Hide chips permanently after first send
+    const chips = document.getElementById('mqChips');
+    if (chips) chips.style.display = 'none';
+
     inp.value = ''; inp.style.height = 'auto';
     document.getElementById('mqGo').disabled = true;
     mqBusy = true;
+
+    // Dismiss keyboard after sending — user can tap again to type
+    inp.blur();
 
     mqRow('user', txt);
     mqHistory.push({ role:'user', content: txt });
@@ -3042,7 +3204,7 @@ Sawal: ${txt}`;
 
     mqBusy = false;
     document.getElementById('mqGo').disabled = false;
-    document.getElementById('mqTxt').focus();
+    // Keyboard stays dismissed — user taps textarea to type again
 }
 
 // ── 📊 Log every Q&A to Telegram for future enhancement ──
