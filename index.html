@@ -3123,6 +3123,8 @@ EXAMPLES OF CORRECT STYLE:
 
 KAAM: Islam (Quran, Hadees, Namaz, Roza, Zakat, Hajj) par focus. Duniya ke kisi bhi topic par bhi jawab de sako. Quran/Hadees reference do agar suitable ho — invent mat karo.
 
+IMLAA (SPELLING): Har lafz sahi tarah likho. Roman Urdu mein common correct spellings: "namaz", "roza", "zakat", "hajj", "quran", "hadees", "shukriya", "zaroor", "bilkul", "haan", "nahi", "aap", "koi", "bhi", "yeh", "woh", "hai", "hain", "kar", "karo", "poochha", "jawab", "masla", "durust". Koi bhi lafz adhoora ya galat mat likho.
+
 LENGTH: Mukhtasar aur waazeh jawab do by default. Tafseel maange toh poora batao.
 
 History: ${mqHistory.slice(-6).map(m=>`${m.role==='user'?'User':'AI'}: ${m.content}`).join(' | ')}
@@ -3137,7 +3139,7 @@ Sawal: ${txt}`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: sys }] }],
-                generationConfig: { maxOutputTokens: 4096, temperature: 0.7 }
+                generationConfig: { maxOutputTokens: 4096, temperature: 0.2 }
             })
         });
 
