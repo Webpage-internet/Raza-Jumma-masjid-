@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#064e3b">
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&family=Cinzel+Decorative:wght@700&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -660,9 +660,546 @@
             animation: ambientShift 18s ease infinite;
             transition: background 2s ease;
         }
+
+/* ╔══════════════════════════════════════════════════════════╗
+   ║         EID UL-FITR — FULL PREMIUM THEME LAYER           ║
+   ╚══════════════════════════════════════════════════════════╝ */
+
+/* ── Canvas & ambient night sky ── */
+#eidCanvas {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0;
+    opacity: 0; transition: opacity 2s ease;
+}
+#eidCanvas.visible { opacity: 1; }
+
+/* ── Eid Greeting Popup ── */
+#eidGreeting {
+    position: fixed; inset: 0;
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0);
+    backdrop-filter: blur(0px);
+    transition: all 0.6s ease;
+    pointer-events: none;
+}
+#eidGreeting.show {
+    background: rgba(0,10,20,0.88);
+    backdrop-filter: blur(12px);
+    pointer-events: all;
+}
+#eidGreeting.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+#eidGreetingCard {
+    background: linear-gradient(145deg, #071a10 0%, #0d2e1c 40%, #0a1f2e 100%);
+    border: 1px solid rgba(212,160,23,0.35);
+    border-radius: 28px;
+    padding: 40px 32px 32px;
+    max-width: 380px; width: 90%;
+    text-align: center;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 60px rgba(212,160,23,0.18), 0 40px 80px rgba(0,0,0,0.6);
+    transform: translateY(30px) scale(0.94);
+    opacity: 0;
+    transition: all 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+#eidGreeting.show #eidGreetingCard {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+#eidGreetingCard .popup-geo {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath fill='none' stroke='%23d4a017' stroke-width='0.8' d='M30 5 L55 20 L55 45 L30 55 L5 45 L5 20 Z M30 15 L47 24 L47 40 L30 48 L13 40 L13 24 Z'/%3E%3C/svg%3E");
+    background-size: 60px 60px;
+}
+.popup-moon-svg {
+    display: block; margin: 0 auto 16px;
+    animation: popupMoonFloat 4s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(251,191,36,0.6));
+}
+@keyframes popupMoonFloat {
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-8px) rotate(5deg); }
+}
+.popup-eid-text {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(22px,6vw,30px);
+    font-weight: 700;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b, #fcd34d, #f59e0b);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: goldShimmer 3s ease infinite;
+    line-height: 1.2; margin-bottom: 6px;
+}
+@keyframes goldShimmer {
+    0%,100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.popup-arabic {
+    font-family: 'Amiri', serif;
+    font-size: 22px; color: rgba(212,160,23,0.8);
+    margin-bottom: 14px; direction: rtl;
+}
+.popup-msg {
+    font-size: 13px; color: rgba(167,243,208,0.75);
+    line-height: 1.6; margin-bottom: 24px;
+}
+.popup-stars-row {
+    display: flex; justify-content: center; gap: 10px;
+    margin-bottom: 20px;
+}
+.popup-star { font-size: 18px; animation: popStar 2s ease-in-out infinite; }
+.popup-star:nth-child(2) { animation-delay: 0.3s; }
+.popup-star:nth-child(3) { animation-delay: 0.6s; }
+@keyframes popStar { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.3);opacity:0.6} }
+.popup-dismiss {
+    background: linear-gradient(135deg, #d4a017, #f59e0b, #d4a017);
+    background-size: 200% 100%;
+    color: #0a1a0f; font-weight: 800; font-size: 14px;
+    border: none; border-radius: 14px;
+    padding: 13px 32px; cursor: pointer; width: 100%;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+    position: relative; overflow: hidden;
+}
+.popup-dismiss:hover {
+    background-position: 100% 0;
+    box-shadow: 0 6px 24px rgba(212,160,23,0.45);
+    transform: translateY(-1px);
+}
+.popup-dismiss::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+    transform: translateX(-100%);
+    animation: shimmerBtn 2.5s ease infinite 1.5s;
+}
+@keyframes shimmerBtn {
+    to { transform: translateX(100%); }
+}
+
+/* ── Top Eid Banner bar ── */
+#eidTopBar {
+    position: relative; z-index: 30;
+    background: linear-gradient(90deg, #03110a 0%, #071a0f 25%, #0a2016 50%, #071a0f 75%, #03110a 100%);
+    border-bottom: 1px solid rgba(212,160,23,0.3);
+    overflow: hidden;
+}
+#eidTopBar::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg,
+        transparent 0px, transparent 80px,
+        rgba(212,160,23,0.04) 80px, rgba(212,160,23,0.04) 81px);
+    pointer-events: none;
+}
+.eid-bar-inner {
+    position: relative; z-index: 2;
+    padding: 10px 20px 6px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.eid-bar-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(16px, 4.5vw, 22px);
+    font-weight: 700;
+    background: linear-gradient(135deg, #fbbf24 0%, #fde68a 40%, #f59e0b 70%, #fbbf24 100%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: goldShimmer 4s ease infinite, eidGlowPulse 3s ease-in-out infinite;
+    letter-spacing: 0.06em;
+    filter: drop-shadow(0 0 8px rgba(251,191,36,0.3));
+}
+@keyframes eidGlowPulse {
+    0%,100% { filter: drop-shadow(0 0 6px rgba(251,191,36,0.25)); }
+    50% { filter: drop-shadow(0 0 14px rgba(251,191,36,0.55)); }
+}
+.eid-bar-icons {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px;
+}
+.eid-bar-crescent {
+    color: #fbbf24;
+    animation: barCrescentSpin 8s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px rgba(251,191,36,0.5));
+    display: inline-block;
+}
+@keyframes barCrescentSpin {
+    0%,100% { transform: rotate(-10deg) scale(1); }
+    50% { transform: rotate(10deg) scale(1.15); }
+}
+.eid-bar-subtitle {
+    font-size: 10px; letter-spacing: 0.22em;
+    color: rgba(167,243,208,0.6); text-transform: uppercase;
+}
+/* Jamat timing strip */
+#eidJamatStrip {
+    border-top: 1px solid rgba(212,160,23,0.18);
+    background: linear-gradient(90deg, transparent, rgba(212,160,23,0.08), transparent);
+    padding: 7px 20px;
+    text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    flex-wrap: wrap;
+}
+.jamat-badge {
+    background: linear-gradient(135deg, #d4a017, #f59e0b);
+    color: #071a0f; font-weight: 900; font-size: 11px;
+    padding: 3px 10px; border-radius: 20px; letter-spacing: 0.06em;
+}
+.jamat-text {
+    font-size: 11px; color: rgba(212,160,23,0.85); font-weight: 700;
+    letter-spacing: 0.08em;
+}
+.jamat-pulse {
+    width: 8px; height: 8px; border-radius: 50%; background: #fbbf24;
+    display: inline-block;
+    animation: jamatPulse 1.8s ease-in-out infinite;
+    vertical-align: middle;
+}
+@keyframes jamatPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.7); }
+    50% { box-shadow: 0 0 0 6px rgba(251,191,36,0); }
+}
+
+/* ── Lanterns ── */
+#eidLanternLayer { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+.eid-lantern {
+    position: absolute;
+    bottom: -100px;
+    animation: lanternRise var(--dur) ease-in-out infinite var(--delay);
+    will-change: transform, opacity;
+}
+@keyframes lanternRise {
+    0% { transform: translateY(0) translateX(0) rotate(-4deg); opacity: 0; }
+    6% { opacity: var(--op); }
+    48% { opacity: var(--op); transform: translateY(-115vh) translateX(var(--dx)) rotate(4deg); }
+    55% { opacity: 0; transform: translateY(-125vh) translateX(var(--dx2)); }
+    100% { opacity: 0; transform: translateY(-130vh); }
+}
+
+/* ── Floating geometric sparkle particles ── */
+.geo-particle {
+    position: fixed; pointer-events: none;
+    z-index: 1; opacity: 0;
+    animation: geoFloat var(--dur, 6s) ease-out forwards var(--del, 0s);
+}
+@keyframes geoFloat {
+    0% { transform: translateY(0) rotate(0deg) scale(0); opacity: 0; }
+    15% { opacity: var(--op, 0.5); transform: translateY(-20px) rotate(30deg) scale(1); }
+    80% { opacity: var(--op, 0.5); }
+    100% { transform: translateY(var(--ty, -120px)) rotate(var(--rot, 180deg)) scale(0.3); opacity: 0; }
+}
+
+/* ── Confetti ── */
+.confetti-piece {
+    position: fixed; pointer-events: none; z-index: 9998;
+    width: var(--w, 8px); height: var(--h, 8px);
+    background: var(--c, #fbbf24);
+    border-radius: var(--r, 2px);
+    animation: confettiFall var(--dur, 3s) ease-out forwards var(--del, 0s);
+    left: var(--x, 50%); top: -20px;
+}
+@keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg) scaleX(1); opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(100vh) rotate(var(--spin, 720deg)) scaleX(var(--flip, -1)); opacity: 0; }
+}
+
+/* ── Header Eid enhancement ── */
+.dynamic-header {
+    position: relative;
+    background: linear-gradient(160deg,
+        #032d1d 0%, #064e3b 30%, #074c3d 55%, #0a3d55 85%, #062840 100%) !important;
+    border-bottom: 2px solid rgba(212,160,23,0.5) !important;
+    overflow: hidden;
+}
+.dynamic-header::before {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+        radial-gradient(ellipse 60% 40% at 20% 50%, rgba(212,160,23,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 80% 30%, rgba(22,163,74,0.08) 0%, transparent 60%);
+}
+.dynamic-header::after {
+    content: '';
+    position: absolute; bottom: -2px; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(212,160,23,0.7), rgba(251,191,36,1), rgba(212,160,23,0.7), transparent);
+    animation: headerGoldLine 4s ease-in-out infinite;
+}
+@keyframes headerGoldLine {
+    0%,100% { opacity: 0.6; }
+    50% { opacity: 1; box-shadow: 0 0 12px rgba(251,191,36,0.6); }
+}
+
+/* Crescent decoration top-right of header */
+.header-crescent-deco {
+    position: absolute; top: 16px; right: 20px;
+    z-index: 5; opacity: 0.35;
+    animation: crescentDeco 5s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes crescentDeco {
+    0%,100% { opacity: 0.35; transform: rotate(-8deg) scale(1); }
+    50% { opacity: 0.65; transform: rotate(8deg) scale(1.1); }
+}
+
+/* ── Glass panel Eid upgrade ── */
+.glass-panel {
+    background: var(--card-bg) !important;
+    border: 1px solid rgba(212,160,23,0.18) !important;
+    box-shadow: var(--card-shadow),
+        0 0 0 1px rgba(212,160,23,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    transition: all 0.35s ease !important;
+}
+.glass-panel:hover {
+    border-color: rgba(212,160,23,0.32) !important;
+    box-shadow: var(--card-shadow),
+        0 0 24px rgba(212,160,23,0.1),
+        0 12px 40px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    transform: translateY(-2px);
+}
+
+/* ── Tool cards ── */
+.tool-card {
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1) !important;
+    position: relative; overflow: hidden;
+}
+.tool-card::before {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(135deg, rgba(212,160,23,0.06) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.35s ease;
+}
+.tool-card:hover::before { opacity: 1; }
+.tool-card:hover {
+    border-color: rgba(212,160,23,0.4) !important;
+    box-shadow: 0 10px 35px rgba(212,160,23,0.15), 0 4px 15px rgba(0,0,0,0.1) !important;
+    transform: translateY(-3px) scale(1.01);
+}
+
+/* ── Buttons ── */
+.app-download-btn {
+    background: linear-gradient(135deg, #16a34a, #15803d, #166534) !important;
+    position: relative; overflow: hidden;
+    transition: all 0.35s ease !important;
+}
+.app-download-btn:hover {
+    box-shadow: 0 6px 24px rgba(22,163,74,0.5), 0 0 0 3px rgba(22,163,74,0.2) !important;
+    transform: translateY(-2px) !important;
+}
+.app-download-btn::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: btnShine 3s ease-in-out infinite 2s;
+}
+@keyframes btnShine { to { left: 200%; } }
+
+/* Get Directions button */
+a[href*="google.com/maps"] {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+    transition: all 0.35s ease !important;
+}
+a[href*="google.com/maps"]:hover {
+    box-shadow: 0 6px 20px rgba(212,160,23,0.3) !important;
+    transform: translateY(-2px);
+}
+
+/* ── Prayer cards ── */
+.prayer-card {
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+.prayer-card:hover {
+    transform: translateY(-3px) scale(1.04) !important;
+    box-shadow: 0 8px 20px rgba(212,160,23,0.15) !important;
+    border-color: rgba(212,160,23,0.3) !important;
+    z-index: 5;
+}
+
+/* ── Section fade-in on scroll ── */
+.eid-reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.eid-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Ayat section glow ── */
+#sec-ayat .glass-panel {
+    border-top: 3px solid rgba(212,160,23,0.5) !important;
+}
+#sec-ayat .glass-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212,160,23,0.06) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* ── Jumma block Eid upgrade ── */
+.jumma-block {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%) !important;
+    position: relative; overflow: hidden;
+}
+.jumma-block::after {
+    content: '☪';
+    position: absolute; right: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 42px; opacity: 0.08;
+    color: #92400e;
+    pointer-events: none;
+}
+
+/* ── Footer upgrade ── */
+.dynamic-footer {
+    background: #020c07 !important;
+    border-top: none !important;
+    position: relative; overflow: hidden;
+}
+.dynamic-footer::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #d4a017, #fbbf24, #d4a017, transparent);
+    animation: footerLine 4s ease-in-out infinite;
+}
+@keyframes footerLine { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+/* ── Custom gold scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #d4a017, #f59e0b);
+    border-radius: 3px;
+}
+
+/* ── Geometric pattern on body (Eid override) ── */
+#islamicPattern {
+    opacity: calc(var(--pattern-opacity) * 2.5) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cg fill='none' stroke='%23d4a017' stroke-width='0.6'%3E%3Cpolygon points='50,6 75,25 75,68 50,87 25,68 25,25'/%3E%3Cpolygon points='50,18 66,29 66,62 50,75 34,62 34,29'/%3E%3Cline x1='50' y1='6' x2='50' y2='18'/%3E%3Cline x1='75' y1='25' x2='66' y2='29'/%3E%3Cline x1='75' y1='68' x2='66' y2='62'/%3E%3Cline x1='50' y1='87' x2='50' y2='75'/%3E%3Cline x1='25' y1='68' x2='34' y2='62'/%3E%3Cline x1='25' y1='25' x2='34' y2='29'/%3E%3C/g%3E%3C/svg%3E") !important;
+    background-size: 100px 100px !important;
+    background-color: rgba(212,160,23,0.012) !important;
+}
+
+/* ── Mosque SVG footer skyline ── */
+#eidMosqueSkyline {
+    width: 100%; height: 64px;
+    display: block; margin-bottom: -2px;
+    pointer-events: none;
+}
+
+/* ── Header h1 glow ── */
+.dynamic-header h1 {
+    text-shadow: 0 0 30px rgba(212,160,23,0.3), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* ── Crescent stars sparkle row ── */
+.eid-star-row {
+    display: flex; justify-content: center; gap: 12px;
+    margin: 8px 0 0;
+}
+.eid-star-item {
+    color: rgba(212,160,23,0.6); font-size: 12px;
+    animation: starRowTwinkle 2s ease-in-out infinite;
+}
+.eid-star-item:nth-child(2) { animation-delay: 0.5s; }
+.eid-star-item:nth-child(3) { animation-delay: 1s; }
+.eid-star-item:nth-child(4) { animation-delay: 1.5s; }
+.eid-star-item:nth-child(5) { animation-delay: 0.8s; }
+@keyframes starRowTwinkle {
+    0%,100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.4); }
+}
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
+
+<!-- ══════════════════════════════════════════════
+     EID UL-FITR — NIGHT SKY CANVAS
+══════════════════════════════════════════════ -->
+<canvas id="eidCanvas"></canvas>
+
+<!-- ══════════════════════════════════════════════
+     EID UL-FITR — LANTERN LAYER
+══════════════════════════════════════════════ -->
+<div id="eidLanternLayer"></div>
+
+<!-- ══════════════════════════════════════════════
+     EID MUBARAK GREETING POPUP
+══════════════════════════════════════════════ -->
+<div id="eidGreeting">
+    <div id="eidGreetingCard">
+        <div class="popup-geo"></div>
+
+        <!-- Animated crescent moon SVG -->
+        <svg class="popup-moon-svg" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="moonGrad" cx="35%" cy="35%" r="60%">
+                    <stop offset="0%" stop-color="#fde68a"/>
+                    <stop offset="100%" stop-color="#d97706"/>
+                </radialGradient>
+            </defs>
+            <circle cx="40" cy="40" r="30" fill="url(#moonGrad)" opacity="0.12"/>
+            <circle cx="40" cy="40" r="22" fill="url(#moonGrad)" opacity="0.2"/>
+            <path d="M44 18 C28 18 16 30 16 44 C16 58 28 68 42 68 C36 64 30 58 30 50 C30 38 38 28 50 26 C48 22 46 18 44 18 Z" fill="url(#moonGrad)"/>
+            <!-- Stars around moon -->
+            <polygon points="62,20 63.5,24 68,24 64.5,26.5 66,31 62,28 58,31 59.5,26.5 56,24 60.5,24" fill="#fbbf24" opacity="0.9" transform="scale(0.65) translate(32,18)"/>
+            <polygon points="70,38 70.8,40.2 73,40.2 71.3,41.5 72,43.7 70,42.3 68,43.7 68.7,41.5 67,40.2 69.2,40.2" fill="#fde68a" opacity="0.7"/>
+        </svg>
+
+        <div class="popup-eid-text">Eid ul-Fitr Mubarak</div>
+        <div class="popup-arabic">عيد الفطر مبارك</div>
+
+        <div class="popup-stars-row">
+            <span class="popup-star">✦</span>
+            <span class="popup-star">☪</span>
+            <span class="popup-star">✦</span>
+        </div>
+
+        <p class="popup-msg">
+            May Allah accept your fasts, prayers &amp; good deeds.<br>
+            Taqabbalallahu minna wa minkum. 🤲
+        </p>
+
+        <!-- Eid Jamat info in popup -->
+        <div style="background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.25);border-radius:12px;padding:10px 16px;margin-bottom:18px;">
+            <div style="font-size:10px;color:rgba(167,243,208,0.6);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">Eid Jamat Timing</div>
+            <div style="font-family:'Cinzel Decorative',serif;font-size:22px;color:#fbbf24;font-weight:700;line-height:1;">9:30 <span style="font-size:13px;font-family:'Noto Sans',sans-serif;font-weight:600;">AM</span></div>
+            <div style="font-size:10px;color:rgba(167,243,208,0.5);margin-top:2px;">Raza Jumma Masjid, Ravetha Nagar</div>
+        </div>
+
+        <button class="popup-dismiss" onclick="dismissEidGreeting()">
+            🕌 &nbsp; Eid Mubarak — Enter Site
+        </button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     EID TOP ANNOUNCEMENT BAR
+══════════════════════════════════════════════ -->
+<div id="eidTopBar">
+    <div class="eid-bar-inner">
+        <div class="eid-bar-icons">
+            <span class="eid-bar-crescent">☪</span>
+            <span class="eid-bar-title">Eid ul-Fitr Mubarak — 1446 AH</span>
+            <span class="eid-bar-crescent" style="animation-delay:2s;">☪</span>
+        </div>
+        <div class="eid-bar-subtitle">عيد الفطر مبارك — تقبل الله منا ومنكم</div>
+    </div>
+    <div id="eidJamatStrip">
+        <span class="jamat-pulse"></span>
+        <span class="jamat-text">Eid Jamat:</span>
+        <span class="jamat-badge">🕌 9:30 AM</span>
+        <span class="jamat-text" style="color:rgba(167,243,208,0.55);">· Raza Jumma Masjid, Ravetha Nagar</span>
+    </div>
+</div>
 
 <!-- Islamic geometric pattern overlay -->
 <div id="islamicPattern"></div>
@@ -833,11 +1370,25 @@
 
     <!-- Header -->
     <header class="dynamic-header relative text-white pb-24 pt-12 overflow-hidden rounded-b-[2.5rem] shadow-2xl">
+        <!-- Eid crescent decoration -->
+        <div class="header-crescent-deco">
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 6 C12 6 4 14 4 24 C4 34 12 40 21 40 C17 37 14 33 14 28 C14 20 20 13 28 12 C26 9 24 6 22 6 Z" fill="#fbbf24"/>
+                <polygon points="35,8 36.2,11.5 40,11.5 37,13.5 38.2,17 35,15 31.8,17 33,13.5 30,11.5 33.8,11.5" fill="#fbbf24" opacity="0.8"/>
+            </svg>
+        </div>
         <div class="absolute inset-0 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');"></div>
         <div class="container mx-auto px-4 text-center relative z-10">
             <h1 class="text-4xl md:text-5xl font-bold mb-2 tracking-tight">Raza Jumma Masjid</h1>
             <p class="text-xl md:text-2xl font-light arabic-text mb-6" style="color:var(--header-sub)">رضا جمعة مسجد</p>
-            <div class="hijri-badge inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium shadow-lg">
+            <div class="eid-star-row">
+                <span class="eid-star-item">✦</span>
+                <span class="eid-star-item">☪</span>
+                <span class="eid-star-item">✦</span>
+                <span class="eid-star-item">☪</span>
+                <span class="eid-star-item">✦</span>
+            </div>
+            <div class="hijri-badge inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium shadow-lg" style="margin-top:14px;">
                 <i class="far fa-calendar-alt" style="color:var(--accent-gold)"></i>
                 <span id="hijriDate">Loading...</span>
             </div>
@@ -933,47 +1484,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Eid al-fitr Namaz Banner -->
-                <div id="eidalfirtBanner" class="mt-4 relative overflow-hidden rounded-2xl" style="background: linear-gradient(135deg, #1a0a3d 0%, #2d1b69 40%, #1a3a1f 100%); border: 2px solid #a78bfa; box-shadow: 0 0 24px rgba(167,139,250,0.25);">
-                    <!-- Animated shimmer top border -->
-                    <div class="absolute top-0 left-0 w-full h-0.5" style="background: linear-gradient(90deg, transparent, #a78bfa, #fbbf24, #a78bfa, transparent); animation: shimmerEid 2.5s ease-in-out infinite;"></div>
-                    <!-- Decorative crescent star bg -->
-                    <div class="absolute -right-4 -top-4 text-7xl opacity-[0.07] pointer-events-none select-none" style="font-size:80px;">☪</div>
-                    <div class="relative z-10 flex items-center justify-between px-5 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #7c3aed, #fbbf24); box-shadow: 0 0 12px rgba(167,139,250,0.5);">
-                                <i class="fas fa-mosque text-white text-sm"></i>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-black text-white text-base leading-tight" style="font-family:'Amiri',serif;">Eid al-fitr Namaz</span>
-                                    <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" style="background: linear-gradient(90deg,#7c3aed,#a78bfa); color:white; animation: eidPulseBadge 1.8s ease-in-out infinite;">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-white inline-block" style="animation: blink 1.4s infinite;"></span>
-                                        Upcoming
-                                    </span>
-                                </div>
-                                <div class="text-xs mt-0.5" style="color: rgba(196,181,253,0.8);">Jamaat at Masjid Ground</div>
-                            </div>
-                        </div>
-                        <div class="text-right flex-shrink-0">
-                            <div class="text-[10px] uppercase font-bold tracking-wider mb-0.5" style="color: rgba(196,181,253,0.7);">Jamaat Time</div>
-                            <div class="text-3xl font-black" style="color: #fbbf24; text-shadow: 0 0 12px rgba(251,191,36,0.5);">9:30 AM</div>
-                        </div>
-                    </div>
-                    <!-- Bottom shimmer border -->
-                    <div class="absolute bottom-0 left-0 w-full h-0.5" style="background: linear-gradient(90deg, transparent, #fbbf24, #a78bfa, #fbbf24, transparent); animation: shimmerEid 2.5s ease-in-out infinite reverse;"></div>
-                </div>
-                <style>
-                    @keyframes shimmerEid {
-                        0% { background-position: -200% center; }
-                        100% { background-position: 200% center; }
-                    }
-                    @keyframes eidPulseBadge {
-                        0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0.5); }
-                        50% { box-shadow: 0 0 0 5px rgba(167,139,250,0); }
-                    }
-                </style>
             </div>
         </section>
 
@@ -1041,7 +1551,79 @@
         </div>
     </div>
 
-    <footer class="dynamic-footer text-slate-400 py-6 text-center mt-auto text-xs px-4">
+    <!-- Mosque Skyline -->
+    <svg id="eidMosqueSkyline" viewBox="0 0 1200 64" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="rgba(212,160,23,0.6)"/>
+                <stop offset="100%" stop-color="rgba(2,12,7,1)"/>
+            </linearGradient>
+            <linearGradient id="skyGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="rgba(212,160,23,0.4)"/>
+                <stop offset="100%" stop-color="rgba(2,12,7,0.95)"/>
+            </linearGradient>
+        </defs>
+        <!-- Ground line -->
+        <rect x="0" y="58" width="1200" height="6" fill="rgba(212,160,23,0.25)"/>
+        <!-- Far left small minaret -->
+        <rect x="20" y="32" width="10" height="26" fill="url(#skyGrad2)"/>
+        <polygon points="25,18 20,32 30,32" fill="url(#skyGrad2)"/>
+        <rect x="23" y="16" width="4" height="4" fill="rgba(251,191,36,0.6)"/>
+        <!-- Left mosque -->
+        <rect x="42" y="38" width="80" height="20" fill="url(#skyGrad2)"/>
+        <ellipse cx="82" cy="38" rx="32" ry="20" fill="url(#skyGrad2)"/>
+        <!-- Left minaret 2 -->
+        <rect x="130" y="26" width="9" height="32" fill="url(#skyGrad2)"/>
+        <polygon points="134.5,14 130,26 139,26" fill="url(#skyGrad2)"/>
+        <rect x="132" y="12" width="5" height="4" fill="rgba(251,191,36,0.65)"/>
+        <!-- Secondary dome -->
+        <rect x="200" y="44" width="55" height="14" fill="url(#skyGrad2)"/>
+        <ellipse cx="227" cy="44" rx="26" ry="15" fill="url(#skyGrad2)"/>
+        <!-- CENTER GRAND MOSQUE -->
+        <!-- left tall minaret -->
+        <rect x="425" y="10" width="11" height="48" fill="url(#skyGrad)"/>
+        <polygon points="430.5,0 425,10 436,10" fill="url(#skyGrad)"/>
+        <rect x="428" y="-2" width="5" height="4" fill="rgba(251,191,36,0.9)"/>
+        <circle cx="430.5" cy="-1" r="2.5" fill="#fbbf24" opacity="0.9"/>
+        <!-- right tall minaret -->
+        <rect x="763" y="10" width="11" height="48" fill="url(#skyGrad)"/>
+        <polygon points="768.5,0 763,10 774,10" fill="url(#skyGrad)"/>
+        <rect x="766" y="-2" width="5" height="4" fill="rgba(251,191,36,0.9)"/>
+        <circle cx="768.5" cy="-1" r="2.5" fill="#fbbf24" opacity="0.9"/>
+        <!-- main building -->
+        <rect x="436" y="24" width="327" height="34" fill="url(#skyGrad)"/>
+        <!-- grand dome -->
+        <ellipse cx="600" cy="24" rx="80" ry="42" fill="url(#skyGrad)"/>
+        <!-- flanking small domes -->
+        <ellipse cx="490" cy="38" rx="32" ry="20" fill="url(#skyGrad)"/>
+        <ellipse cx="710" cy="38" rx="32" ry="20" fill="url(#skyGrad)"/>
+        <!-- windows -->
+        <circle cx="520" cy="46" r="4" fill="rgba(251,191,36,0.35)"/>
+        <circle cx="560" cy="44" r="4" fill="rgba(251,191,36,0.35)"/>
+        <circle cx="600" cy="34" r="5" fill="rgba(251,191,36,0.45)"/>
+        <circle cx="640" cy="44" r="4" fill="rgba(251,191,36,0.35)"/>
+        <circle cx="680" cy="46" r="4" fill="rgba(251,191,36,0.35)"/>
+        <!-- Right side -->
+        <rect x="820" y="42" width="60" height="16" fill="url(#skyGrad2)"/>
+        <ellipse cx="850" cy="42" rx="28" ry="17" fill="url(#skyGrad2)"/>
+        <rect x="895" y="28" width="9" height="30" fill="url(#skyGrad2)"/>
+        <polygon points="899.5,16 895,28 904,28" fill="url(#skyGrad2)"/>
+        <rect x="897" y="14" width="5" height="4" fill="rgba(251,191,36,0.6)"/>
+        <!-- Far right -->
+        <rect x="1050" y="36" width="55" height="22" fill="url(#skyGrad2)"/>
+        <ellipse cx="1077" cy="36" rx="26" ry="16" fill="url(#skyGrad2)"/>
+        <rect x="1120" y="30" width="10" height="28" fill="url(#skyGrad2)"/>
+        <polygon points="1125,18 1120,30 1130,30" fill="url(#skyGrad2)"/>
+        <rect x="1122" y="16" width="6" height="4" fill="rgba(251,191,36,0.6)"/>
+    </svg>
+
+    <footer class="dynamic-footer text-slate-400 py-8 text-center mt-auto text-xs px-4">
+        <div style="font-family:'Amiri',serif;font-size:17px;color:rgba(212,160,23,0.7);letter-spacing:0.12em;margin-bottom:6px;animation:footerLine 4s ease-in-out infinite;">
+            ✦ &nbsp; Eid ul-Fitr Mubarak — 1446 AH &nbsp; ✦
+        </div>
+        <div style="margin-bottom:4px;font-size:13px;color:rgba(167,243,208,0.4);font-family:'Amiri',serif;">
+            تقبل الله منا ومنكم
+        </div>
         &copy; 2026 Raza Jumma Masjid. All Rights Reserved
     </footer>
 
@@ -3260,6 +3842,271 @@ async function mqLogTelegram(question, answer) {
         await sendToAllAdmins(msg);
     } catch(e){}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   EID UL-FITR — FULL PREMIUM EXPERIENCE ENGINE
+═══════════════════════════════════════════════════════════ */
+(function EidEngine() {
+    'use strict';
+
+    /* ── 1. NIGHT SKY CANVAS — twinkling stars + shooting stars ── */
+    const canvas = document.getElementById('eidCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, stars = [], shooters = [];
+
+    function resizeCanvas() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+
+    function mkStars() {
+        stars = [];
+        const count = Math.min(Math.floor(W * H / 7000), 120);
+        for (let i = 0; i < count; i++) {
+            stars.push({
+                x: Math.random() * W,
+                y: Math.random() * H * 0.7,
+                r: Math.random() * 1.4 + 0.3,
+                phase: Math.random() * Math.PI * 2,
+                speed: Math.random() * 0.015 + 0.008,
+                baseAlpha: Math.random() * 0.35 + 0.1
+            });
+        }
+    }
+    mkStars();
+
+    let raf;
+    let frameCount = 0;
+    function drawCanvas() {
+        ctx.clearRect(0, 0, W, H);
+        frameCount++;
+
+        // Stars
+        stars.forEach(s => {
+            s.phase += s.speed;
+            const alpha = s.baseAlpha + Math.sin(s.phase) * s.baseAlpha * 0.6;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,248,220,${alpha.toFixed(3)})`;
+            ctx.fill();
+        });
+
+        // Shooting star occasionally
+        if (frameCount % 320 === 0 && shooters.length < 2) {
+            shooters.push({
+                x: Math.random() * W * 0.7,
+                y: Math.random() * H * 0.25,
+                vx: 5 + Math.random() * 4,
+                vy: 2 + Math.random() * 2,
+                life: 1, decay: 0.022,
+                len: 60 + Math.random() * 60
+            });
+        }
+        shooters = shooters.filter(s => {
+            s.x += s.vx; s.y += s.vy; s.life -= s.decay;
+            if (s.life <= 0) return false;
+            const grad = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * s.len / s.vx, s.y - s.vy * s.len / s.vy);
+            grad.addColorStop(0, `rgba(255,248,200,${s.life * 0.9})`);
+            grad.addColorStop(1, 'rgba(255,248,200,0)');
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(s.x - s.vx * (s.len / s.vx), s.y - s.vy * (s.len / s.vx));
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.5 * s.life;
+            ctx.stroke();
+            return true;
+        });
+
+        raf = requestAnimationFrame(drawCanvas);
+    }
+
+    // Only show canvas for night/dark themes or always subtle
+    setTimeout(() => {
+        canvas.classList.add('visible');
+        drawCanvas();
+    }, 800);
+
+    /* ── 2. FLOATING LANTERNS ── */
+    const lanternLayer = document.getElementById('eidLanternLayer');
+
+    const lanternSVGs = [
+        // Gold lantern
+        (c1,c2,glow) => `<svg width="22" height="36" viewBox="0 0 22 36" xmlns="http://www.w3.org/2000/svg">
+            <line x1="11" y1="0" x2="11" y2="4" stroke="${c1}" stroke-width="1.5"/>
+            <rect x="7.5" y="4" width="7" height="2.5" rx="1.2" fill="${c1}"/>
+            <path d="M4 6.5 Q2 15 4 25 L18 25 Q20 15 18 6.5 Z" fill="${c1}" opacity="0.88"/>
+            <path d="M4 6.5 Q2 15 4 25 L18 25 Q20 15 18 6.5 Z" fill="url(#lg${glow})" opacity="0.5"/>
+            <line x1="4" y1="12" x2="18" y2="12" stroke="rgba(255,255,255,0.2)" stroke-width="0.7"/>
+            <line x1="4" y1="18" x2="18" y2="18" stroke="rgba(255,255,255,0.2)" stroke-width="0.7"/>
+            <line x1="7.5" y1="6.5" x2="7.5" y2="25" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+            <line x1="14.5" y1="6.5" x2="14.5" y2="25" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+            <ellipse cx="11" cy="25" rx="7" ry="3.5" fill="${c2}"/>
+            <ellipse cx="11" cy="15" rx="4.5" ry="4" fill="rgba(255,240,120,0.2)"/>
+            <path d="M5 25 Q11 33 17 25 Z" fill="${c1}" opacity="0.75"/>
+        </svg>`,
+    ];
+
+    const configs = [
+        { left: 7,  col: '#c49a0e', col2: '#e8b80f', glow: 'A', op: 0.18, dur: 22, del: 0 },
+        { left: 18, col: '#8b1a1a', col2: '#c02020', glow: 'B', op: 0.14, dur: 28, del: 5 },
+        { left: 34, col: '#0d5f2c', col2: '#16a34a', glow: 'C', op: 0.15, dur: 25, del: 10 },
+        { left: 52, col: '#1a3a7a', col2: '#2563eb', glow: 'D', op: 0.13, dur: 30, del: 15 },
+        { left: 67, col: '#c49a0e', col2: '#e8b80f', glow: 'E', op: 0.17, dur: 20, del: 3 },
+        { left: 80, col: '#7a1a6a', col2: '#a855f7', glow: 'F', op: 0.12, dur: 26, del: 8 },
+        { left: 92, col: '#8b1a1a', col2: '#c02020', glow: 'G', op: 0.14, dur: 24, del: 18 },
+    ];
+
+    // Inline SVG defs for gradients
+    const svgDefs = `<svg width="0" height="0" style="position:absolute">
+        <defs>
+            ${configs.map(c => `<linearGradient id="lg${c.glow}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(255,240,180,0.3)"/>
+                <stop offset="100%" stop-color="rgba(255,200,50,0)"/>
+            </linearGradient>`).join('')}
+        </defs>
+    </svg>`;
+    lanternLayer.insertAdjacentHTML('beforeend', svgDefs);
+
+    configs.forEach((c, i) => {
+        const el = document.createElement('div');
+        el.className = 'eid-lantern';
+        const dx = (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 35);
+        const dx2 = dx * 0.4;
+        el.innerHTML = lanternSVGs[0](c.col, c.col2, c.glow);
+        el.style.cssText = `
+            left: ${c.left + (Math.random() * 3 - 1.5)}%;
+            --dur: ${c.dur}s; --delay: ${c.del}s;
+            --dx: ${dx}px; --dx2: ${dx2}px; --op: ${c.op};
+            filter: drop-shadow(0 0 6px ${c.col});
+        `;
+        lanternLayer.appendChild(el);
+    });
+
+    /* ── 3. EID GREETING POPUP ── */
+    const greetingEl = document.getElementById('eidGreeting');
+    const shown = sessionStorage.getItem('eid_greeting_shown');
+
+    function showGreeting() {
+        greetingEl.classList.add('show');
+    }
+    function dismissEidGreeting() {
+        greetingEl.classList.add('hide');
+        sessionStorage.setItem('eid_greeting_shown', '1');
+        fireConfetti();
+        setTimeout(() => { greetingEl.style.display = 'none'; }, 700);
+    }
+    window.dismissEidGreeting = dismissEidGreeting;
+
+    if (!shown) {
+        setTimeout(showGreeting, 600);
+    } else {
+        greetingEl.style.display = 'none';
+    }
+
+    /* ── 4. CONFETTI ── */
+    const confettiColors = ['#fbbf24','#f59e0b','#16a34a','#34d399','#60a5fa','#ffffff','#fde68a','#a78bfa'];
+    const shapes = ['2px','4px','6px'];
+
+    function fireConfetti() {
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < 80; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            const isCircle = Math.random() > 0.6;
+            el.style.cssText = `
+                --x: ${Math.random() * 100}%;
+                --c: ${confettiColors[Math.floor(Math.random() * confettiColors.length)]};
+                --w: ${4 + Math.random() * 6}px;
+                --h: ${4 + Math.random() * 10}px;
+                --r: ${isCircle ? '50%' : '2px'};
+                --dur: ${2.5 + Math.random() * 2}s;
+                --del: ${Math.random() * 1.2}s;
+                --spin: ${360 + Math.random() * 720}deg;
+                --flip: ${Math.random() > 0.5 ? 1 : -1};
+                left: var(--x); top: -20px;
+            `;
+            frag.appendChild(el);
+        }
+        document.body.appendChild(frag);
+        setTimeout(() => {
+            document.querySelectorAll('.confetti-piece').forEach(e => e.remove());
+        }, 5000);
+    }
+
+    /* ── 5. SCROLL REVEAL ── */
+    function initScrollReveal() {
+        const sections = document.querySelectorAll('main > section, main > .max-w-4xl, main > .max-w-5xl');
+        sections.forEach((el, i) => {
+            el.classList.add('eid-reveal');
+            el.style.transitionDelay = `${i * 0.08}s`;
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.08 });
+
+        document.querySelectorAll('.eid-reveal').forEach(el => observer.observe(el));
+    }
+
+    /* ── 6. GEOMETRIC SPARKLE PARTICLES on click ── */
+    document.addEventListener('click', function spawnSparkle(e) {
+        // Skip if on modals
+        if (e.target.closest('#eidGreeting, #zakatModal, #quranModal, #islamicAIModal')) return;
+        const colors = ['#fbbf24','#34d399','#60a5fa','#f9a8d4','#fde68a'];
+        for (let i = 0; i < 6; i++) {
+            const el = document.createElement('div');
+            el.className = 'geo-particle';
+            const angle = (i / 6) * Math.PI * 2;
+            const dist = 30 + Math.random() * 50;
+            el.innerHTML = ['✦','★','◆','✿','⬡'][Math.floor(Math.random() * 5)];
+            el.style.cssText = `
+                left: ${e.clientX}px; top: ${e.clientY}px;
+                color: ${colors[i % colors.length]};
+                font-size: ${8 + Math.random() * 8}px;
+                --dur: ${0.8 + Math.random() * 0.6}s;
+                --del: ${i * 0.05}s;
+                --op: ${0.6 + Math.random() * 0.4};
+                --ty: ${-dist * Math.sin(angle + Math.PI/2) - 40}px;
+                --rot: ${180 + Math.random() * 360}deg;
+            `;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
+    }, { passive: true });
+
+    /* ── 7. INIT on DOM ready ── */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    function init() {
+        mkStars();
+        initScrollReveal();
+        // Trigger reveals for above-fold items
+        setTimeout(() => {
+            document.querySelectorAll('.eid-reveal').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight) el.classList.add('visible');
+            });
+        }, 200);
+    }
+
+    // Cleanup on visibility change to save battery
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) { cancelAnimationFrame(raf); }
+        else { drawCanvas(); }
+    });
+
+})();
 </script>
 </body>
 </html>
