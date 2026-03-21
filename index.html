@@ -1381,10 +1381,31 @@
     function loadFestivals() {
         const now = new Date();
         const events = [
-            { name: "Ramadan", gregorianStart: "Feb 18, 2026", gregorianEnd: "Mar 19, 2026", hijri: "1 Ramadan 1447", desc: "The holy month of fasting revealed in the Quran. Fast from dawn to sunset to purify our souls, practice self-discipline, and empathize with those who are hungry.", highlight: true },
-            { name: "Eid al-Fitr", gregorianStart: "Mar 20, 2026", gregorianEnd: "Mar 22, 2026", hijri: "1 Shawwal 1447", desc: "It marks the successful completion of Ramadan. A day of joy, thanksgiving to Allah for the strength to fast, and giving Zakat al-Fitr to the poor." },
-            { name: "Eid al-Adha", gregorianStart: "May 27, 2026", gregorianEnd: "May 31, 2026", hijri: "10 Dhul Hijjah 1447", desc: "Honors the willingness of Prophet Ibrahim (AS) to sacrifice his son Ismail (AS) as an act of obedience to God." },
-            { name: "Eid Milad-un-Nabi", gregorianStart: "Aug 26, 2026", gregorianEnd: "Aug 26, 2026", hijri: "12 Rabi' al-Awwal 1448", desc: "Celebrating the birth of Prophet Muhammad (PBUH), the mercy to all worlds." }
+            // ── 2026 / 1447–1448 AH ──────────────────────────────────
+            { name: "Ramadan", gregorianStart: "Feb 18, 2026", gregorianEnd: "Mar 19, 2026", hijri: "1 Ramadan 1447", desc: "The holy month of fasting revealed in the Quran. Fast from dawn to sunset to purify our souls, practice self-discipline, and empathize with those who are hungry." },
+            { name: "Eid al-Fitr", gregorianStart: "Mar 20, 2026", gregorianEnd: "Mar 22, 2026", hijri: "1 Shawwal 1447", desc: "The festival of breaking the fast — marks the joyful end of Ramadan. A day of thanksgiving, communal prayers, feasting, and giving Zakat al-Fitr to the poor." },
+            { name: "Eid al-Adha", gregorianStart: "May 27, 2026", gregorianEnd: "May 31, 2026", hijri: "10 Dhul Hijjah 1447", desc: "The festival of sacrifice — honors Prophet Ibrahim's (AS) devotion to Allah. Muslims worldwide offer Qurbani (sacrifice) and share meat with family, neighbors, and the needy." },
+            { name: "Islamic New Year", gregorianStart: "Jun 17, 2026", gregorianEnd: "Jun 17, 2026", hijri: "1 Muharram 1448", desc: "The beginning of the Islamic Hijri calendar year 1448. A time for reflection, gratitude, and renewed intention to grow closer to Allah." },
+            { name: "Ashura", gregorianStart: "Jun 26, 2026", gregorianEnd: "Jun 26, 2026", hijri: "10 Muharram 1448", desc: "The Day of Ashura — a day of great historical importance. The Prophet Muhammad (PBUH) observed fasting on this day, as it commemorates Prophet Musa's (AS) liberation." },
+            { name: "Eid Milad-un-Nabi ﷺ", gregorianStart: "Aug 26, 2026", gregorianEnd: "Aug 26, 2026", hijri: "12 Rabi' al-Awwal 1448", desc: "Celebrating the blessed birth of our beloved Prophet Muhammad ﷺ, the mercy to all of creation. A day to send Durood, reflect on his Seerah, and spread love." },
+            { name: "Lailat al-Miraj", gregorianStart: "Dec 27, 2026", gregorianEnd: "Dec 27, 2026", hijri: "27 Rajab 1448", desc: "The Night of Ascension — the miraculous night journey of Prophet Muhammad ﷺ from Makkah to Jerusalem and then through the heavens, during which Salah was made obligatory." },
+            { name: "Shab-e-Barat", gregorianStart: "Jan 13, 2027", gregorianEnd: "Jan 13, 2027", hijri: "15 Sha'ban 1448", desc: "The Night of Forgiveness — a blessed night in the month of Sha'ban when Allah's mercy is abundant. Muslims spend the night in prayer, seeking forgiveness and blessing." },
+
+            // ── 2027 / 1448–1449 AH ──────────────────────────────────
+            { name: "Ramadan", gregorianStart: "Feb 7, 2027", gregorianEnd: "Mar 8, 2027", hijri: "1 Ramadan 1448", desc: "The holy month of fasting, prayer, and reflection. The Quran was revealed in this month. Muslims fast from Sehri to Iftari to strengthen their taqwa and connection with Allah." },
+            { name: "Eid al-Fitr", gregorianStart: "Mar 9, 2027", gregorianEnd: "Mar 11, 2027", hijri: "1 Shawwal 1448", desc: "The festival of breaking the fast — marks the joyful end of Ramadan. A day of thanksgiving, communal prayers, feasting, and giving Zakat al-Fitr to the poor." },
+            { name: "Eid al-Adha", gregorianStart: "May 17, 2027", gregorianEnd: "May 21, 2027", hijri: "10 Dhul Hijjah 1448", desc: "The festival of sacrifice — honors Prophet Ibrahim's (AS) devotion to Allah. Muslims worldwide offer Qurbani (sacrifice) and share meat with family, neighbors, and the needy." },
+            { name: "Islamic New Year", gregorianStart: "Jun 7, 2027", gregorianEnd: "Jun 7, 2027", hijri: "1 Muharram 1449", desc: "The beginning of Islamic Hijri year 1449. A blessed occasion to make sincere intentions, seek forgiveness, and begin the year with the remembrance of Allah." },
+            { name: "Ashura", gregorianStart: "Jun 16, 2027", gregorianEnd: "Jun 16, 2027", hijri: "10 Muharram 1449", desc: "The Day of Ashura — the Prophet Muhammad ﷺ fasted on this day and encouraged others to do so. It is a day of immense virtue and spiritual reward." },
+            { name: "Eid Milad-un-Nabi ﷺ", gregorianStart: "Aug 16, 2027", gregorianEnd: "Aug 16, 2027", hijri: "12 Rabi' al-Awwal 1449", desc: "Celebrating the blessed birth of our beloved Prophet Muhammad ﷺ. A day to reflect on his beautiful character, send Durood, and revive his Sunnah in our lives." },
+            { name: "Lailat al-Miraj", gregorianStart: "Dec 17, 2027", gregorianEnd: "Dec 17, 2027", hijri: "27 Rajab 1449", desc: "The Night of Ascension — commemorating the miraculous journey of the Prophet ﷺ through the heavens, the meeting with previous Prophets, and the gift of Salah for the Ummah." },
+
+            // ── 2028 / 1449–1450 AH ──────────────────────────────────
+            { name: "Shab-e-Barat", gregorianStart: "Jan 2, 2028", gregorianEnd: "Jan 2, 2028", hijri: "15 Sha'ban 1449", desc: "The Night of Forgiveness in the middle of Sha'ban — when Allah looks upon His creation with special mercy and forgives those who sincerely repent and pray." },
+            { name: "Ramadan", gregorianStart: "Jan 28, 2028", gregorianEnd: "Feb 25, 2028", hijri: "1 Ramadan 1449", desc: "The holy month of fasting — a time to detach from the worldly and attach to the divine. Every good deed is multiplied, and the doors of Jannah are opened wide." },
+            { name: "Eid al-Fitr", gregorianStart: "Feb 26, 2028", gregorianEnd: "Feb 28, 2028", hijri: "1 Shawwal 1449", desc: "The festival of breaking the fast — a joyful celebration of completing Ramadan with gratitude. Muslims gather for Eid prayers, share sweets, and give Zakat al-Fitr." },
+            { name: "Eid al-Adha", gregorianStart: "May 5, 2028", gregorianEnd: "May 9, 2028", hijri: "10 Dhul Hijjah 1449", desc: "The greatest festival of Islam — celebrating the spirit of sacrifice and total submission to Allah, as shown by Prophet Ibrahim (AS) and his son Ismail (AS)." },
+            { name: "Islamic New Year", gregorianStart: "May 25, 2028", gregorianEnd: "May 25, 2028", hijri: "1 Muharram 1450", desc: "Welcome to Hijri year 1450 — a milestone century year in the Islamic calendar. Begin it with gratitude, Tawbah, and firm resolve to serve Allah and His Deen." }
         ];
 
         function getStatus(ev) {
@@ -1396,18 +1417,20 @@
             return 'ended';
         }
 
-        // Find the featured event: running first, then next upcoming
-        let featured = events.find(e => getStatus(e) === 'running') 
-                     || events.find(e => getStatus(e) === 'upcoming') 
-                     || events[0];
+        // Featured: currently running first, then the very next upcoming — never show ended
+        let featured = events.find(e => getStatus(e) === 'running')
+                     || events.find(e => getStatus(e) === 'upcoming');
+
+        // Fallback: last event if somehow all passed
+        if(!featured) featured = events[events.length - 1];
 
         const status = getStatus(featured);
-        const statusBadge = status === 'running' 
-            ? `<span class="running-badge"><span class="blink">●</span> Happening Now</span>` 
-            : status === 'upcoming' ? `<span style="background:#f59e0b" class="running-badge">⏳ Upcoming</span>` : '';
+        const statusBadge = status === 'running'
+            ? `<span class="running-badge"><span class="blink">●</span> Happening Now</span>`
+            : `<span style="background:#f59e0b" class="running-badge">⏳ Upcoming</span>`;
 
         const featEl = document.getElementById('featuredFestival');
-        featEl.className = `rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6 ${status === 'running' ? 'event-running' : status === 'upcoming' ? 'event-upcoming' : 'event-ended bg-slate-700'}`;
+        featEl.className = `rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6 ${status === 'running' ? 'event-running' : 'event-upcoming'}`;
 
         featEl.innerHTML = `<div class="absolute right-0 top-0 opacity-10 transform translate-x-10 -translate-y-10"><i class="fas fa-mosque fa-10x"></i></div>
         <div class="relative z-10">
@@ -1420,17 +1443,20 @@
             <p class="text-white/90 text-sm leading-relaxed max-w-2xl border-l-4 border-amber-400 pl-4 bg-black/10 p-2 rounded">${featured.desc}</p>
         </div>`;
 
+        // "See More" list — show only upcoming/running events, exclude featured and ended
         const list = document.getElementById('allFestivals');
-        const others = events.filter(e => e !== featured);
-        list.innerHTML = others.map(ev => {
+        const others = events.filter(e => e !== featured && getStatus(e) !== 'ended');
+        list.innerHTML = others.length ? others.map(ev => {
             const s = getStatus(ev);
-            const badge = s === 'running' ? `<span class="running-badge text-xs"><span class="blink">●</span> Now</span>` : s === 'upcoming' ? `<span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold">${ev.gregorianStart}</span>` : `<span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded">Past</span>`;
+            const badge = s === 'running'
+                ? `<span class="running-badge text-xs"><span class="blink">●</span> Now</span>`
+                : `<span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold">${ev.gregorianStart}</span>`;
             return `<div class="bg-white p-5 rounded-xl border ${s==='running'?'border-green-400':'border-slate-100'} shadow-sm hover:shadow-md transition group">
                 <div class="flex justify-between items-start mb-2"><h5 class="font-bold text-slate-800 text-lg group-hover:text-green-700 transition">${ev.name}</h5>${badge}</div>
                 <div class="text-xs text-green-600 font-medium mb-3"><i class="fas fa-moon"></i> ${ev.hijri}</div>
                 <p class="text-xs text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-2">${ev.desc}</p>
             </div>`;
-        }).join('');
+        }).join('') : `<div class="col-span-2 text-center text-slate-400 py-6 text-sm">No more events listed for this period.</div>`;
     }
 
     function toggleFestivals() {
@@ -1490,23 +1516,21 @@
 
         const data = getRamadanData(maghribTime);
 
-        // --- SEHRI ---
-        if(activeTimings.S !== "--:--") {
-            sehriEl.innerText = activeTimings.S;
-            if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
-        } else if(data.sehri) {
+        // --- SEHRI (always auto from Ramadan schedule) ---
+        if(data.sehri) {
             sehriEl.innerText = data.sehri.s;
-            if(sehriLabelEl) sehriLabelEl.innerText = `Sehri Ends • Ramadan ${data.sehriDay}`;
+        } else {
+            sehriEl.innerText = '--:--';
         }
+        if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
 
-        // --- IFTARI ---
-        if(activeTimings.K !== "--:--") {
-            iftarEl.innerText = activeTimings.K;
-            if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
-        } else if(data.iftar) {
+        // --- IFTARI (always auto from Ramadan schedule) ---
+        if(data.iftar) {
             iftarEl.innerText = data.iftar.i;
-            if(iftarLabelEl) iftarLabelEl.innerText = `Iftar Start • Ramadan ${data.iftarDay}`;
+        } else {
+            iftarEl.innerText = '--:--';
         }
+        if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
     }
 
     // ── Helper: get IST Date object ──
@@ -1728,12 +1752,12 @@
         const lower = text.toLowerCase();
         if(lower === '/start' || lower === '/help') {
             botState[chatId] = { step: 'IDLE' };
-            await sendReply(chatId, `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`);
+            await sendReply(chatId, `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma`);
             return;
         }
         let state = botState[chatId] || { step: 'IDLE' };
         const prayers = { 'fajr':'F','zohar':'Z','asr':'A','maghrib':'M','isha':'I' };
-        const special = { 'jumma':'J','sehri':'S','iftar':'K' };
+        const special = { 'jumma':'J' };
         if(state.step === 'IDLE') {
             if(lower.startsWith('/')) {
                 const cmd = lower.substring(1);
