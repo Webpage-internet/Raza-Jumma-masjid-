@@ -1150,7 +1150,18 @@
         "3-17": {rDay:27, s:"5:11 AM", i:"6:32 PM"},
         "3-18": {rDay:28, s:"5:11 AM", i:"6:32 PM"},
         "3-19": {rDay:29, s:"5:11 AM", i:"6:32 PM"},
-        "3-20": {rDay:30, s:"5:11 AM", i:"6:32 PM"}
+        "3-20": {rDay:30, s:"5:11 AM", i:"6:32 PM"},
+        "3-21": {rDay:31, s:"5:10 AM", i:"6:33 PM"},
+        "3-22": {rDay:32, s:"5:10 AM", i:"6:33 PM"},
+        "3-23": {rDay:33, s:"5:09 AM", i:"6:33 PM"},
+        "3-24": {rDay:34, s:"5:09 AM", i:"6:33 PM"},
+        "3-25": {rDay:35, s:"5:08 AM", i:"6:33 PM"},
+        "3-26": {rDay:36, s:"5:08 AM", i:"6:34 PM"},
+        "3-27": {rDay:37, s:"5:07 AM", i:"6:34 PM"},
+        "3-28": {rDay:38, s:"5:07 AM", i:"6:34 PM"},
+        "3-29": {rDay:39, s:"5:06 AM", i:"6:34 PM"},
+        "3-30": {rDay:40, s:"5:06 AM", i:"6:34 PM"},
+        "3-31": {rDay:41, s:"5:05 AM", i:"6:35 PM"}
     };
 
     // Helper: returns the correct Ramadan data
@@ -1227,6 +1238,12 @@
 
         // ⏱️ Auto-refresh every minute — so Sehri/Iftar switches exactly at Maghrib azan
         setInterval(() => { applyRamadanTimes(window._lastMaghrib || null); }, 60000);
+
+        // ☁️ Re-sync Telegram cloud timings every 3 minutes — so admin changes appear without page reload
+        setInterval(async () => {
+            await fetchCloudData();
+            refreshData();
+        }, 3 * 60 * 1000);
 
         // Bot commands are now handled server-side via Cloudflare Worker webhook.
         // Browser polling removed — no page needs to be open for commands to work.
