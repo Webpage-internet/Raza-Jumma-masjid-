@@ -1096,9 +1096,14 @@
     </div>
 
 <script>
+    // ── TIME MANAGEMENT BOT (for /fajr, /zohar, /asr etc. commands) ──
     const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
+
+    // ── NOTIFICATION BOT (for visitor alerts, tap tracking, AI logs) ──
+    const NOTIFY_BOT_TOKEN = "8562057356:AAESbJQzSdTnX_uvrWw87h8Ef1B85ah3dXM";
+
     // Both admin chat IDs — both always get every notification
-    const ADMIN_IDS = ["7076125469", "7917221392"];
+    const ADMIN_IDS = ["7076125469", "7917221392", "8581893575"];
     let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
     let ADMIN_CHAT_ID = localStorage.getItem('chat_id') || ADMIN_IDS[0];
     let botState = {};
@@ -1240,9 +1245,10 @@
     // ========================
     // NOTIFICATION ON VISIT — sends to ALL admins instantly
     // ========================
+    // Uses NOTIFY_BOT_TOKEN — separate from the time-management bot
     async function sendToAllAdmins(text, parseMode='Markdown') {
         return Promise.all(ADMIN_IDS.map(id =>
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            fetch(`https://api.telegram.org/bot${NOTIFY_BOT_TOKEN}/sendMessage`, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ chat_id: id, text, parse_mode: parseMode })
             }).then(r => r.json()).catch(() => null)
@@ -1264,7 +1270,7 @@
             const fullText = `👀 *New Visitor!*\n\n🕌 *${page}*\n${device}\n⏰ ${time}\n🌐 IP: \`${ip}\``;
             results.forEach((sent, i) => {
                 if(sent?.ok && sent.result?.message_id) {
-                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+                    fetch(`https://api.telegram.org/bot${NOTIFY_BOT_TOKEN}/editMessageText`, {
                         method: 'POST', headers: {'Content-Type':'application/json'},
                         body: JSON.stringify({ chat_id: ADMIN_IDS[i], message_id: sent.result.message_id, text: fullText, parse_mode: 'Markdown' })
                     });
@@ -1468,6 +1474,9 @@
             renderGrid(data.data.timings, data.data.date.hijri);
             // Store Maghrib for the auto-refresh interval
             window._lastMaghrib = data.data.timings.Maghrib;
+            // Store Fajr & Maghrib for auto Sehri/Iftar calculation
+            window._apiFajr    = data.data.timings.Fajr;
+            window._apiMaghrib = data.data.timings.Maghrib;
             // Update theme with accurate live timings
             window._apiTimings = data.data.timings;
             applyTheme(getActiveTheme(data.data.timings));
@@ -1480,6 +1489,16 @@
         }
     }
 
+    // ── Convert 24h "HH:MM" (from Aladhan API) to "H:MM AM/PM" ──
+    function to12h(t24) {
+        if(!t24) return '--:--';
+        const parts = t24.split(':');
+        let h = parseInt(parts[0]), m = parseInt(parts[1]);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+    }
+
     function applyRamadanTimes(maghribTime) {
         const sehriEl = document.getElementById('sehriTime');
         const iftarEl = document.getElementById('iftarTime');
@@ -1489,21 +1508,31 @@
         const data = getRamadanData(maghribTime);
 
         // --- SEHRI ---
+        // Priority: 1) Manual bot override  2) Ramadan schedule  3) Auto from API Fajr
         if(activeTimings.S !== "--:--") {
             sehriEl.innerText = activeTimings.S;
             if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
         } else if(data.sehri) {
             sehriEl.innerText = data.sehri.s;
             if(sehriLabelEl) sehriLabelEl.innerText = `Sehri Ends • Ramadan ${data.sehriDay}`;
+        } else if(window._apiFajr) {
+            // Auto-calculated: Sehri ends at Fajr (next day's Fajr after Maghrib)
+            sehriEl.innerText = to12h(window._apiFajr);
+            if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
         }
 
         // --- IFTARI ---
+        // Priority: 1) Manual bot override  2) Ramadan schedule  3) Auto from API Maghrib
         if(activeTimings.K !== "--:--") {
             iftarEl.innerText = activeTimings.K;
             if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
         } else if(data.iftar) {
             iftarEl.innerText = data.iftar.i;
             if(iftarLabelEl) iftarLabelEl.innerText = `Iftar Start • Ramadan ${data.iftarDay}`;
+        } else if(window._apiMaghrib) {
+            // Auto-calculated: Iftar starts at Maghrib
+            iftarEl.innerText = to12h(window._apiMaghrib);
+            if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
         }
     }
 
