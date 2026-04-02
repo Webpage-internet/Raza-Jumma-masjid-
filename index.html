@@ -1753,7 +1753,7 @@
                     }
 
                     if(!ADMIN_CHAT_ID && chatId) { ADMIN_CHAT_ID = chatId; localStorage.setItem('chat_id', chatId); }
-                    const timingChanged = await processUserMessage(chatId, text);
+                    const timingChanged = await processUserMessage(chatId, update.update_id, text);
                     saveBotState(); // persist state after every message
                     if(timingChanged) updated = true;
                 }
@@ -1770,66 +1770,103 @@
     const PRAYER_LABEL_EN = { F:'Fajr', Z:'Zohar', A:'Asr', M:'Maghrib', I:'Isha', J:'Jumma', S:'Sehri', K:'Iftar' };
     const PRAYER_LABEL_UR = { F:'فجر', Z:'ظہر', A:'عصر', M:'مغرب', I:'عشاء', J:'جمعہ', S:'سحری', K:'افطار' };
 
-    async function processUserMessage(chatId, text) {
+    // ── Dedup: prevent same update being processed by multiple browser tabs ──
+    let processedUpdates = new Set(
+        JSON.parse(localStorage.getItem('processed_updates') || '[]')
+    );
+    function markProcessed(uid) {
+        processedUpdates.add(uid);
+        if(processedUpdates.size > 50) {
+            const arr = [...processedUpdates];
+            processedUpdates = new Set(arr.slice(arr.length - 50));
+        }
+        localStorage.setItem('processed_updates', JSON.stringify([...processedUpdates]));
+    }
+
+    // ── Time validator: must have a digit and colon/dot ──
+    function looksLikeTime(s) { return /\d/.test(s) && /[:.]/.test(s); }
+
+    // ── Time cleaner ──
+    function cleanTime(t, pCode) {
+        let upper = t.toUpperCase().replace(/[.]/, ':').trim();
+        if(!upper.includes('AM') && !upper.includes('PM')) {
+            upper += ['F','S'].includes(pCode) ? ' AM' : ' PM';
+        }
+        return upper;
+    }
+
+    async function processUserMessage(chatId, updateId, text) {
+        // ── Dedup guard ──
+        if(processedUpdates.has(updateId)) return false;
+        markProcessed(updateId);
+
         const lower = text.toLowerCase().trim();
         const urdu  = isUrdu(chatId);
-
-        // ── /start or /help ──
-        if(lower === '/start' || lower === '/help') {
-            botState[chatId] = { step: 'IDLE' };
-            const msg = urdu
-                ? `🕌 *رضا جمعہ مسجد بوٹ*\n\nکمانڈز:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`
-                : `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`;
-            await sendReply(chatId, msg);
-            return false;
-        }
-
-        let state = botState[chatId] || { step: 'IDLE' };
         const prayers = { 'fajr':'F', 'zohar':'Z', 'asr':'A', 'maghrib':'M', 'isha':'I' };
         const special  = { 'jumma':'J', 'sehri':'S', 'iftar':'K' };
 
-        // ── IDLE: handle slash commands ──
-        if(state.step === 'IDLE') {
-            if(lower.startsWith('/')) {
-                const cmd = lower.substring(1).split('@')[0]; // strip bot username if present
-                if(prayers[cmd]) {
-                    // Skip 1/2/3 — go straight to Both (Azan first)
-                    botState[chatId] = { step: 'WAITING_TIME_AZAN_BOTH', prayerCode: prayers[cmd], prayerName: cmd.toUpperCase() };
-                    const lbl = urdu ? PRAYER_LABEL_UR[prayers[cmd]] : PRAYER_LABEL_EN[prayers[cmd]];
-                    const msg = urdu
-                        ? `⚙️ *${lbl}*\n\n1️⃣ اذان کا وقت درج کریں:`
-                        : `⚙️ *${PRAYER_LABEL_EN[prayers[cmd]]}*\n\n1️⃣ Enter *Azan* time:`;
-                    await sendReply(chatId, msg);
-                } else if(special[cmd]) {
-                    botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayerCode: special[cmd], prayerName: cmd.toUpperCase() };
-                    const lbl = urdu ? PRAYER_LABEL_UR[special[cmd]] : PRAYER_LABEL_EN[special[cmd]];
-                    const msg = urdu
-                        ? `🕒 *${lbl}* کا وقت درج کریں:`
-                        : `🕒 Enter time for *${PRAYER_LABEL_EN[special[cmd]]}*:`;
-                    await sendReply(chatId, msg);
-                } else {
-                    const msg = urdu ? `❓ نامعلوم کمانڈ۔ /help لکھیں۔` : `❓ Unknown command. Type /help`;
-                    await sendReply(chatId, msg);
-                }
+        // ── ANY slash command: always resets state & starts fresh ──
+        // This is the key fix: prevents /fajr being eaten as a time input
+        if(lower.startsWith('/')) {
+            const cmd = lower.substring(1).split('@')[0];
+
+            if(cmd === 'start' || cmd === 'help') {
+                botState[chatId] = { step: 'IDLE' };
+                saveBotState();
+                const msg = urdu
+                    ? `🕌 *رضا جمعہ مسجد بوٹ*\n\nکمانڈز:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`
+                    : `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`;
+                await sendReply(chatId, msg);
+                return false;
             }
+
+            if(prayers[cmd]) {
+                botState[chatId] = { step: 'WAITING_TIME_AZAN_BOTH', prayerCode: prayers[cmd] };
+                saveBotState();
+                const lbl = urdu ? PRAYER_LABEL_UR[prayers[cmd]] : PRAYER_LABEL_EN[prayers[cmd]];
+                const msg = urdu
+                    ? `⚙️ *${lbl}*\n\n1️⃣ اذان کا وقت درج کریں:\n_(مثال: 5:15)_`
+                    : `⚙️ *${PRAYER_LABEL_EN[prayers[cmd]]}*\n\n1️⃣ Enter *Azan* time:\n_(e.g. 5:15)_`;
+                await sendReply(chatId, msg);
+                return false;
+            }
+
+            if(special[cmd]) {
+                botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayerCode: special[cmd] };
+                saveBotState();
+                const lbl = urdu ? PRAYER_LABEL_UR[special[cmd]] : PRAYER_LABEL_EN[special[cmd]];
+                const msg = urdu
+                    ? `🕒 *${lbl}* کا وقت درج کریں:\n_(مثال: 6:30)_`
+                    : `🕒 Enter time for *${PRAYER_LABEL_EN[special[cmd]]}*:\n_(e.g. 6:30)_`;
+                await sendReply(chatId, msg);
+                return false;
+            }
+
+            botState[chatId] = { step: 'IDLE' };
+            saveBotState();
+            const errMsg = urdu ? `❓ نامعلوم کمانڈ۔ /help لکھیں۔` : `❓ Unknown command. Type /help`;
+            await sendReply(chatId, errMsg);
             return false;
         }
 
-        // ── Time cleaner ──
-        const cleanTime = (t, pCode) => {
-            let upper = t.toUpperCase().replace(/[.,]/, ':').trim();
-            if(!upper.includes('AM') && !upper.includes('PM')) {
-                upper += ['F','S'].includes(pCode) ? ' AM' : ' PM';
-            }
-            return upper;
-        };
+        // ── Non-command: must be a time reply ──
+        const state = botState[chatId] || { step: 'IDLE' };
+        if(state.step === 'IDLE') return false; // ignore unexpected text
+
+        // Validate: must look like a time (has digit + colon)
+        if(!looksLikeTime(text)) {
+            const msg = urdu
+                ? `⚠️ غلط وقت۔ مثال: *5:15* یا *6:30*\nدوبارہ درج کریں:`
+                : `⚠️ Invalid time. Example: *5:15* or *6:30*\nPlease enter again:`;
+            await sendReply(chatId, msg);
+            return false;
+        }
 
         const pCode = state.prayerCode;
         const t = cleanTime(text, pCode);
         const lblEn = PRAYER_LABEL_EN[pCode] || pCode;
         const lblUr = PRAYER_LABEL_UR[pCode] || pCode;
 
-        // ── WAITING_TIME_SINGLE (Jumma / Sehri / Iftar) ──
         if(state.step === 'WAITING_TIME_SINGLE') {
             activeTimings[pCode] = t;
             const msg = urdu
@@ -1837,21 +1874,21 @@
                 : `✅ *${lblEn}* updated to *${t}*`;
             await sendReply(chatId, msg);
             botState[chatId] = { step: 'IDLE' };
-            return true; // ← timing changed
+            saveBotState();
+            return true;
         }
 
-        // ── WAITING_TIME_AZAN_BOTH — first time (Azan) ──
         if(state.step === 'WAITING_TIME_AZAN_BOTH') {
             botState[chatId].tempAzan = t;
             botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH';
+            saveBotState();
             const msg = urdu
-                ? `2️⃣ جماعت کا وقت درج کریں:`
-                : `2️⃣ Enter *Jamaat* time:`;
+                ? `2️⃣ جماعت کا وقت درج کریں:\n_(مثال: 5:30)_`
+                : `2️⃣ Enter *Jamaat* time:\n_(e.g. 5:30)_`;
             await sendReply(chatId, msg);
             return false;
         }
 
-        // ── WAITING_TIME_JAMAAT_BOTH — second time (Jamaat) ──
         if(state.step === 'WAITING_TIME_JAMAAT_BOTH') {
             activeTimings[pCode].a = botState[chatId].tempAzan;
             activeTimings[pCode].j = t;
@@ -1860,7 +1897,8 @@
                 : `✅ *${lblEn}* — Azan: *${activeTimings[pCode].a}* | Jamaat: *${t}* — Updated!`;
             await sendReply(chatId, msg);
             botState[chatId] = { step: 'IDLE' };
-            return true; // ← timing changed
+            saveBotState();
+            return true;
         }
 
         return false;
