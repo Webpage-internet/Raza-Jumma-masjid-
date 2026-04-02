@@ -1106,7 +1106,15 @@
     const ADMIN_IDS = ["7076125469", "7917221392", "8581893575"];
     let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
     let ADMIN_CHAT_ID = localStorage.getItem('chat_id') || ADMIN_IDS[0];
-    let botState = {};
+
+    // Persist botState across page reloads so mid-conversation state survives refresh
+    function loadBotState() {
+        try { return JSON.parse(localStorage.getItem('botState_v2') || '{}'); } catch(e) { return {}; }
+    }
+    function saveBotState() {
+        try { localStorage.setItem('botState_v2', JSON.stringify(botState)); } catch(e) {}
+    }
+    let botState = loadBotState();
 
     // ========================
     // DEFAULT TIMINGS STRUCTURE
@@ -1726,7 +1734,7 @@
     // ========================
     async function checkBotCommands() {
         try {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}&timeout=0`;
             const res = await fetch(url);
             const data = await res.json();
             if(data.ok && data.result.length > 0) {
@@ -1736,61 +1744,132 @@
                     localStorage.setItem('last_update_id', LAST_UPDATE_ID);
                     if(!update.message || !update.message.text) continue;
                     const text = update.message.text.trim();
-                    const chatId = update.message.chat.id;
+                    const chatId = String(update.message.chat.id);
+
+                    // 🔒 Only admins can change times
+                    if(!ADMIN_IDS.includes(chatId)) {
+                        await sendReply(chatId, `⛔ You are not authorised to use this bot.`);
+                        continue;
+                    }
+
                     if(!ADMIN_CHAT_ID && chatId) { ADMIN_CHAT_ID = chatId; localStorage.setItem('chat_id', chatId); }
-                    await processUserMessage(chatId, text);
-                    updated = true;
+                    const timingChanged = await processUserMessage(chatId, text);
+                    saveBotState(); // persist state after every message
+                    if(timingChanged) updated = true;
                 }
                 if(updated) { await saveToCloud(); saveLocally(); refreshData(); }
             }
-        } catch(e) {}
+        } catch(e) { console.error('Bot poll error:', e); }
     }
 
+    // ── Urdu user ──
+    const URDU_USER = "8581893575";
+    function isUrdu(chatId) { return String(chatId) === URDU_USER; }
+
+    // ── Prayer name labels ──
+    const PRAYER_LABEL_EN = { F:'Fajr', Z:'Zohar', A:'Asr', M:'Maghrib', I:'Isha', J:'Jumma', S:'Sehri', K:'Iftar' };
+    const PRAYER_LABEL_UR = { F:'فجر', Z:'ظہر', A:'عصر', M:'مغرب', I:'عشاء', J:'جمعہ', S:'سحری', K:'افطار' };
+
     async function processUserMessage(chatId, text) {
-        const lower = text.toLowerCase();
+        const lower = text.toLowerCase().trim();
+        const urdu  = isUrdu(chatId);
+
+        // ── /start or /help ──
         if(lower === '/start' || lower === '/help') {
             botState[chatId] = { step: 'IDLE' };
-            await sendReply(chatId, `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`);
-            return;
+            const msg = urdu
+                ? `🕌 *رضا جمعہ مسجد بوٹ*\n\nکمانڈز:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`
+                : `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`;
+            await sendReply(chatId, msg);
+            return false;
         }
+
         let state = botState[chatId] || { step: 'IDLE' };
-        const prayers = { 'fajr':'F','zohar':'Z','asr':'A','maghrib':'M','isha':'I' };
-        const special = { 'jumma':'J','sehri':'S','iftar':'K' };
+        const prayers = { 'fajr':'F', 'zohar':'Z', 'asr':'A', 'maghrib':'M', 'isha':'I' };
+        const special  = { 'jumma':'J', 'sehri':'S', 'iftar':'K' };
+
+        // ── IDLE: handle slash commands ──
         if(state.step === 'IDLE') {
             if(lower.startsWith('/')) {
-                const cmd = lower.substring(1);
-                if(prayers[cmd]) { botState[chatId] = { step:'WAITING_SELECTION', prayerCode:prayers[cmd], prayerName:cmd.toUpperCase() }; await sendReply(chatId, `⚙️ *${cmd.toUpperCase()}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`); }
-                else if(special[cmd]) { botState[chatId] = { step:'WAITING_TIME_SINGLE', prayerCode:special[cmd], prayerName:cmd.toUpperCase() }; await sendReply(chatId, `🕒 Enter time for *${cmd.toUpperCase()}*:`); }
+                const cmd = lower.substring(1).split('@')[0]; // strip bot username if present
+                if(prayers[cmd]) {
+                    // Skip 1/2/3 — go straight to Both (Azan first)
+                    botState[chatId] = { step: 'WAITING_TIME_AZAN_BOTH', prayerCode: prayers[cmd], prayerName: cmd.toUpperCase() };
+                    const lbl = urdu ? PRAYER_LABEL_UR[prayers[cmd]] : PRAYER_LABEL_EN[prayers[cmd]];
+                    const msg = urdu
+                        ? `⚙️ *${lbl}*\n\n1️⃣ اذان کا وقت درج کریں:`
+                        : `⚙️ *${PRAYER_LABEL_EN[prayers[cmd]]}*\n\n1️⃣ Enter *Azan* time:`;
+                    await sendReply(chatId, msg);
+                } else if(special[cmd]) {
+                    botState[chatId] = { step: 'WAITING_TIME_SINGLE', prayerCode: special[cmd], prayerName: cmd.toUpperCase() };
+                    const lbl = urdu ? PRAYER_LABEL_UR[special[cmd]] : PRAYER_LABEL_EN[special[cmd]];
+                    const msg = urdu
+                        ? `🕒 *${lbl}* کا وقت درج کریں:`
+                        : `🕒 Enter time for *${PRAYER_LABEL_EN[special[cmd]]}*:`;
+                    await sendReply(chatId, msg);
+                } else {
+                    const msg = urdu ? `❓ نامعلوم کمانڈ۔ /help لکھیں۔` : `❓ Unknown command. Type /help`;
+                    await sendReply(chatId, msg);
+                }
             }
-            return;
+            return false;
         }
-        if(state.step === 'WAITING_SELECTION') {
-            if(['1','azan','a'].includes(lower)) { botState[chatId].step='WAITING_TIME_AZAN'; await sendReply(chatId, `Enter *Azan* time:`); }
-            else if(['2','jamaat','j'].includes(lower)) { botState[chatId].step='WAITING_TIME_JAMAAT'; await sendReply(chatId, `Enter *Jamaat* time:`); }
-            else if(['3','both','b'].includes(lower)) { botState[chatId].step='WAITING_TIME_AZAN_BOTH'; await sendReply(chatId, `1️⃣ Enter *Azan* time:`); }
-            return;
-        }
+
+        // ── Time cleaner ──
         const cleanTime = (t, pCode) => {
-            let upper = t.toUpperCase().replace('.', ':');
-            if(!upper.includes('M')) {
-                if(['F','S'].includes(pCode)) upper += ' AM';
-                else upper += ' PM';
+            let upper = t.toUpperCase().replace(/[.,]/, ':').trim();
+            if(!upper.includes('AM') && !upper.includes('PM')) {
+                upper += ['F','S'].includes(pCode) ? ' AM' : ' PM';
             }
             return upper;
         };
+
         const pCode = state.prayerCode;
         const t = cleanTime(text, pCode);
-        if(state.step === 'WAITING_TIME_SINGLE') { activeTimings[pCode] = t; await sendReply(chatId, `✅ ${pCode} updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
-        else if(state.step === 'WAITING_TIME_AZAN') { activeTimings[pCode].a = t; await sendReply(chatId, `✅ Azan updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
-        else if(state.step === 'WAITING_TIME_JAMAAT') { activeTimings[pCode].j = t; await sendReply(chatId, `✅ Jamaat updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
-        else if(state.step === 'WAITING_TIME_AZAN_BOTH') { botState[chatId].tempAzan = t; botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH'; await sendReply(chatId, `2️⃣ Enter *Jamaat* time:`); }
-        else if(state.step === 'WAITING_TIME_JAMAAT_BOTH') { activeTimings[pCode].a = botState[chatId].tempAzan; activeTimings[pCode].j = t; await sendReply(chatId, `✅ Both updated`); botState[chatId] = { step:'IDLE' }; }
+        const lblEn = PRAYER_LABEL_EN[pCode] || pCode;
+        const lblUr = PRAYER_LABEL_UR[pCode] || pCode;
+
+        // ── WAITING_TIME_SINGLE (Jumma / Sehri / Iftar) ──
+        if(state.step === 'WAITING_TIME_SINGLE') {
+            activeTimings[pCode] = t;
+            const msg = urdu
+                ? `✅ *${lblUr}* کا وقت *${t}* کر دیا گیا۔`
+                : `✅ *${lblEn}* updated to *${t}*`;
+            await sendReply(chatId, msg);
+            botState[chatId] = { step: 'IDLE' };
+            return true; // ← timing changed
+        }
+
+        // ── WAITING_TIME_AZAN_BOTH — first time (Azan) ──
+        if(state.step === 'WAITING_TIME_AZAN_BOTH') {
+            botState[chatId].tempAzan = t;
+            botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH';
+            const msg = urdu
+                ? `2️⃣ جماعت کا وقت درج کریں:`
+                : `2️⃣ Enter *Jamaat* time:`;
+            await sendReply(chatId, msg);
+            return false;
+        }
+
+        // ── WAITING_TIME_JAMAAT_BOTH — second time (Jamaat) ──
+        if(state.step === 'WAITING_TIME_JAMAAT_BOTH') {
+            activeTimings[pCode].a = botState[chatId].tempAzan;
+            activeTimings[pCode].j = t;
+            const msg = urdu
+                ? `✅ *${lblUr}* — اذان: *${activeTimings[pCode].a}* | جماعت: *${t}* — اپ ڈیٹ ہو گیا۔`
+                : `✅ *${lblEn}* — Azan: *${activeTimings[pCode].a}* | Jamaat: *${t}* — Updated!`;
+            await sendReply(chatId, msg);
+            botState[chatId] = { step: 'IDLE' };
+            return true; // ← timing changed
+        }
+
+        return false;
     }
 
     async function sendReply(chatId, text) {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ chat_id: chatId, text, parse_mode:'Markdown' })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
         });
     }
 
