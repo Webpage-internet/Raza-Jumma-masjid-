@@ -1096,15 +1096,12 @@
     </div>
 
 <script>
-    // ── TIME MANAGEMENT BOT (for /fajr, /zohar, /asr etc. commands) ──
     const BOT_TOKEN = "8402137198:AAF9OUrNUBn-L4sudwFrMkN7MJZgMqFONVM";
-
-    // ── NOTIFICATION BOT (for visitor alerts, tap tracking, AI logs) ──
-    const NOTIFY_BOT_TOKEN = "8562057356:AAESbJQzSdTnX_uvrWw87h8Ef1B85ah3dXM";
-
     // Both admin chat IDs — both always get every notification
-    const ADMIN_IDS = ["7076125469", "7917221392", "8581893575"];
-    // Bot commands handled server-side via Cloudflare Worker webhook
+    const ADMIN_IDS = ["7076125469", "7917221392"];
+    let LAST_UPDATE_ID = parseInt(localStorage.getItem('last_update_id')) || 0;
+    let ADMIN_CHAT_ID = localStorage.getItem('chat_id') || ADMIN_IDS[0];
+    let botState = {};
 
     // ========================
     // DEFAULT TIMINGS STRUCTURE
@@ -1227,9 +1224,10 @@
         // ⏱️ Auto-refresh every minute — so Sehri/Iftar switches exactly at Maghrib azan
         setInterval(() => { applyRamadanTimes(window._lastMaghrib || null); }, 60000);
 
-        // Bot commands are now handled server-side via Cloudflare Worker webhook.
-        // The website just re-fetches timings from the Worker every 30 seconds.
-        setInterval(() => fetchCloudData().then(() => refreshData()), 30000);
+        // Bot command polling
+        setTimeout(() => {
+            setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
+        }, 200);
 
         // Auto scroll for new users only
         const isFirstScroll = !localStorage.getItem('auto_scrolled');
@@ -1242,10 +1240,9 @@
     // ========================
     // NOTIFICATION ON VISIT — sends to ALL admins instantly
     // ========================
-    // Uses NOTIFY_BOT_TOKEN — separate from the time-management bot
     async function sendToAllAdmins(text, parseMode='Markdown') {
         return Promise.all(ADMIN_IDS.map(id =>
-            fetch(`https://api.telegram.org/bot${NOTIFY_BOT_TOKEN}/sendMessage`, {
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ chat_id: id, text, parse_mode: parseMode })
             }).then(r => r.json()).catch(() => null)
@@ -1267,7 +1264,7 @@
             const fullText = `👀 *New Visitor!*\n\n🕌 *${page}*\n${device}\n⏰ ${time}\n🌐 IP: \`${ip}\``;
             results.forEach((sent, i) => {
                 if(sent?.ok && sent.result?.message_id) {
-                    fetch(`https://api.telegram.org/bot${NOTIFY_BOT_TOKEN}/editMessageText`, {
+                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
                         method: 'POST', headers: {'Content-Type':'application/json'},
                         body: JSON.stringify({ chat_id: ADMIN_IDS[i], message_id: sent.result.message_id, text: fullText, parse_mode: 'Markdown' })
                     });
@@ -1471,9 +1468,6 @@
             renderGrid(data.data.timings, data.data.date.hijri);
             // Store Maghrib for the auto-refresh interval
             window._lastMaghrib = data.data.timings.Maghrib;
-            // Store Fajr & Maghrib for auto Sehri/Iftar calculation
-            window._apiFajr    = data.data.timings.Fajr;
-            window._apiMaghrib = data.data.timings.Maghrib;
             // Update theme with accurate live timings
             window._apiTimings = data.data.timings;
             applyTheme(getActiveTheme(data.data.timings));
@@ -1486,16 +1480,6 @@
         }
     }
 
-    // ── Convert 24h "HH:MM" (from Aladhan API) to "H:MM AM/PM" ──
-    function to12h(t24) {
-        if(!t24) return '--:--';
-        const parts = t24.split(':');
-        let h = parseInt(parts[0]), m = parseInt(parts[1]);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-        return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
-    }
-
     function applyRamadanTimes(maghribTime) {
         const sehriEl = document.getElementById('sehriTime');
         const iftarEl = document.getElementById('iftarTime');
@@ -1505,31 +1489,21 @@
         const data = getRamadanData(maghribTime);
 
         // --- SEHRI ---
-        // Priority: 1) Manual bot override  2) Ramadan schedule  3) Auto from API Fajr
         if(activeTimings.S !== "--:--") {
             sehriEl.innerText = activeTimings.S;
             if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
         } else if(data.sehri) {
             sehriEl.innerText = data.sehri.s;
             if(sehriLabelEl) sehriLabelEl.innerText = `Sehri Ends • Ramadan ${data.sehriDay}`;
-        } else if(window._apiFajr) {
-            // Auto-calculated: Sehri ends at Fajr (next day's Fajr after Maghrib)
-            sehriEl.innerText = to12h(window._apiFajr);
-            if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
         }
 
         // --- IFTARI ---
-        // Priority: 1) Manual bot override  2) Ramadan schedule  3) Auto from API Maghrib
         if(activeTimings.K !== "--:--") {
             iftarEl.innerText = activeTimings.K;
             if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
         } else if(data.iftar) {
             iftarEl.innerText = data.iftar.i;
             if(iftarLabelEl) iftarLabelEl.innerText = `Iftar Start • Ramadan ${data.iftarDay}`;
-        } else if(window._apiMaghrib) {
-            // Auto-calculated: Iftar starts at Maghrib
-            iftarEl.innerText = to12h(window._apiMaghrib);
-            if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
         }
     }
 
@@ -1678,31 +1652,39 @@
     }
 
     // ========================
-    // CLOUD SYNC — via Cloudflare Worker KV
-    // Worker handles bot commands and stores timings server-side.
-    // Website just GETs timings — no browser bot polling needed.
+    // CLOUD SYNC (Universal - from Bot Description)
     // ========================
-    const WORKER_TIMINGS_URL = 'https://little-bird-acc0.afzal24052002.workers.dev/timings';
-
     async function fetchCloudData() {
         try {
-            const res = await fetch(WORKER_TIMINGS_URL);
-            if (!res.ok) return;
-            const cloudData = await res.json();
-            // Never overwrite Sehri/Iftar — controlled by Ramadan schedule
-            delete cloudData.S;
-            delete cloudData.K;
-            if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
-                activeTimings = { ...activeTimings, ...cloudData };
-                activeTimings.S = "--:--";
-                activeTimings.K = "--:--";
-                saveLocally();
+            const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
+            const data = await res.json();
+            if(data.ok && data.result.description && data.result.description.startsWith("{")) {
+                const cloudData = JSON.parse(data.result.description);
+                // ❌ Never sync S (Sehri) and K (Iftar) from Telegram
+                // These are always controlled by the local Ramadan schedule
+                delete cloudData.S;
+                delete cloudData.K;
+                if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
+                    activeTimings = { ...activeTimings, ...cloudData };
+                    // Force S and K to --:-- so Ramadan schedule always takes over
+                    activeTimings.S = "--:--";
+                    activeTimings.K = "--:--";
+                    saveLocally();
+                }
             }
         } catch(e) {}
     }
 
-    // saveToCloud is now handled by the Worker — no-op here
-    async function saveToCloud() {}
+    async function saveToCloud() {
+        try {
+            const toSave = { ...activeTimings };
+            delete toSave.S; delete toSave.K;
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ description: JSON.stringify(toSave) })
+            });
+        } catch(e) {}
+    }
 
     function saveLocally() {
         const toSave = { ...activeTimings };
@@ -1710,7 +1692,80 @@
         localStorage.setItem('timings_v10', JSON.stringify(toSave));
     }
 
-        // ========================
+    // ========================
+    // BOT COMMANDS ENGINE
+    // ========================
+    async function checkBotCommands() {
+        try {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${LAST_UPDATE_ID + 1}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if(data.ok && data.result.length > 0) {
+                let updated = false;
+                for(const update of data.result) {
+                    LAST_UPDATE_ID = update.update_id;
+                    localStorage.setItem('last_update_id', LAST_UPDATE_ID);
+                    if(!update.message || !update.message.text) continue;
+                    const text = update.message.text.trim();
+                    const chatId = update.message.chat.id;
+                    if(!ADMIN_CHAT_ID && chatId) { ADMIN_CHAT_ID = chatId; localStorage.setItem('chat_id', chatId); }
+                    await processUserMessage(chatId, text);
+                    updated = true;
+                }
+                if(updated) { await saveToCloud(); saveLocally(); refreshData(); }
+            }
+        } catch(e) {}
+    }
+
+    async function processUserMessage(chatId, text) {
+        const lower = text.toLowerCase();
+        if(lower === '/start' || lower === '/help') {
+            botState[chatId] = { step: 'IDLE' };
+            await sendReply(chatId, `🕌 *Raza Jumma Masjid Bot*\n\nCommands:\n/fajr /zohar /asr /maghrib /isha\n/jumma /sehri /iftar`);
+            return;
+        }
+        let state = botState[chatId] || { step: 'IDLE' };
+        const prayers = { 'fajr':'F','zohar':'Z','asr':'A','maghrib':'M','isha':'I' };
+        const special = { 'jumma':'J','sehri':'S','iftar':'K' };
+        if(state.step === 'IDLE') {
+            if(lower.startsWith('/')) {
+                const cmd = lower.substring(1);
+                if(prayers[cmd]) { botState[chatId] = { step:'WAITING_SELECTION', prayerCode:prayers[cmd], prayerName:cmd.toUpperCase() }; await sendReply(chatId, `⚙️ *${cmd.toUpperCase()}*\n\nReply:\n1 = Azan\n2 = Jamaat\n3 = Both`); }
+                else if(special[cmd]) { botState[chatId] = { step:'WAITING_TIME_SINGLE', prayerCode:special[cmd], prayerName:cmd.toUpperCase() }; await sendReply(chatId, `🕒 Enter time for *${cmd.toUpperCase()}*:`); }
+            }
+            return;
+        }
+        if(state.step === 'WAITING_SELECTION') {
+            if(['1','azan','a'].includes(lower)) { botState[chatId].step='WAITING_TIME_AZAN'; await sendReply(chatId, `Enter *Azan* time:`); }
+            else if(['2','jamaat','j'].includes(lower)) { botState[chatId].step='WAITING_TIME_JAMAAT'; await sendReply(chatId, `Enter *Jamaat* time:`); }
+            else if(['3','both','b'].includes(lower)) { botState[chatId].step='WAITING_TIME_AZAN_BOTH'; await sendReply(chatId, `1️⃣ Enter *Azan* time:`); }
+            return;
+        }
+        const cleanTime = (t, pCode) => {
+            let upper = t.toUpperCase().replace('.', ':');
+            if(!upper.includes('M')) {
+                if(['F','S'].includes(pCode)) upper += ' AM';
+                else upper += ' PM';
+            }
+            return upper;
+        };
+        const pCode = state.prayerCode;
+        const t = cleanTime(text, pCode);
+        if(state.step === 'WAITING_TIME_SINGLE') { activeTimings[pCode] = t; await sendReply(chatId, `✅ ${pCode} updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
+        else if(state.step === 'WAITING_TIME_AZAN') { activeTimings[pCode].a = t; await sendReply(chatId, `✅ Azan updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
+        else if(state.step === 'WAITING_TIME_JAMAAT') { activeTimings[pCode].j = t; await sendReply(chatId, `✅ Jamaat updated to *${t}*`); botState[chatId] = { step:'IDLE' }; }
+        else if(state.step === 'WAITING_TIME_AZAN_BOTH') { botState[chatId].tempAzan = t; botState[chatId].step = 'WAITING_TIME_JAMAAT_BOTH'; await sendReply(chatId, `2️⃣ Enter *Jamaat* time:`); }
+        else if(state.step === 'WAITING_TIME_JAMAAT_BOTH') { activeTimings[pCode].a = botState[chatId].tempAzan; activeTimings[pCode].j = t; await sendReply(chatId, `✅ Both updated`); botState[chatId] = { step:'IDLE' }; }
+    }
+
+    async function sendReply(chatId, text) {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ chat_id: chatId, text, parse_mode:'Markdown' })
+        });
+    }
+
+    // ========================
     // QURAN — Multi-lingual Engine v2
     // ========================
     const surahsList = [
