@@ -1237,10 +1237,9 @@
         // ⏱️ Auto-refresh every minute — so Sehri/Iftar switches exactly at Maghrib azan
         setInterval(() => { applyRamadanTimes(window._lastMaghrib || null); }, 60000);
 
-        // Bot command polling
-        setTimeout(() => {
-            setInterval(() => { try{ checkBotCommands(); } catch(e){} }, 3000);
-        }, 200);
+        // Bot commands are now handled server-side via Cloudflare Worker webhook.
+        // The website just re-fetches timings from the Worker every 30 seconds.
+        setInterval(() => fetchCloudData().then(() => refreshData()), 30000);
 
         // Auto scroll for new users only
         const isFirstScroll = !localStorage.getItem('auto_scrolled');
@@ -1689,39 +1688,31 @@
     }
 
     // ========================
-    // CLOUD SYNC (Universal - from Bot Description)
+    // CLOUD SYNC — via Cloudflare Worker KV
+    // Worker handles bot commands and stores timings server-side.
+    // Website just GETs timings — no browser bot polling needed.
     // ========================
+    const WORKER_TIMINGS_URL = 'https://little-bird-acc0.afzal24052002.workers.dev/timings';
+
     async function fetchCloudData() {
         try {
-            const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
-            const data = await res.json();
-            if(data.ok && data.result.description && data.result.description.startsWith("{")) {
-                const cloudData = JSON.parse(data.result.description);
-                // ❌ Never sync S (Sehri) and K (Iftar) from Telegram
-                // These are always controlled by the local Ramadan schedule
-                delete cloudData.S;
-                delete cloudData.K;
-                if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
-                    activeTimings = { ...activeTimings, ...cloudData };
-                    // Force S and K to --:-- so Ramadan schedule always takes over
-                    activeTimings.S = "--:--";
-                    activeTimings.K = "--:--";
-                    saveLocally();
-                }
+            const res = await fetch(WORKER_TIMINGS_URL);
+            if (!res.ok) return;
+            const cloudData = await res.json();
+            // Never overwrite Sehri/Iftar — controlled by Ramadan schedule
+            delete cloudData.S;
+            delete cloudData.K;
+            if(JSON.stringify(cloudData) !== JSON.stringify(activeTimings)) {
+                activeTimings = { ...activeTimings, ...cloudData };
+                activeTimings.S = "--:--";
+                activeTimings.K = "--:--";
+                saveLocally();
             }
         } catch(e) {}
     }
 
-    async function saveToCloud() {
-        try {
-            const toSave = { ...activeTimings };
-            delete toSave.S; delete toSave.K;
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyDescription`, {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ description: JSON.stringify(toSave) })
-            });
-        } catch(e) {}
-    }
+    // saveToCloud is now handled by the Worker — no-op here
+    async function saveToCloud() {}
 
     function saveLocally() {
         const toSave = { ...activeTimings };
