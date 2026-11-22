@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raza Jumma Masjid - Ravetha Nagar</title>
     <meta name="theme-color" content="#064e3b">
+    <meta name="description" content="Raza Jumma Masjid, Ravetha Nagar, Bengaluru: live namaz timings, Quran, Qibla finder, Zakat calculator, digital tasbeeh and an Islamic assistant.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Raza Jumma Masjid - Ravetha Nagar">
+    <meta property="og:description" content="Live namaz timings, Quran, Qibla finder, Zakat calculator and more.">
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -661,6 +665,37 @@
             transition: background 2s ease;
         }
     </style>
+<style id="rjm-enhancements">
+/* ===== ENHANCEMENTS (additive; nothing above is overridden except focus + reduced-motion) ===== */
+:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+.rjm-modal { background: linear-gradient(160deg,#0a1a0f 0%,#0d2318 100%); }
+.rjm-head { background: linear-gradient(135deg,#064e3b,#065f46); border-bottom: 1px solid rgba(212,160,23,.3); }
+.rjm-iconbtn { width:36px; height:36px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; cursor:pointer; transition:transform .15s; }
+.rjm-iconbtn:hover { transform: scale(1.1); }
+.rjm-chip { padding:7px 14px; border-radius:9999px; font-size:12px; font-weight:600; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); color:rgba(167,243,208,.9); cursor:pointer; white-space:nowrap; transition:background .15s, color .15s; }
+.rjm-chip.active { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; border-color:transparent; box-shadow:0 2px 8px rgba(22,163,74,.35); }
+.rjm-soft-btn { display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:12px; font-size:12px; font-weight:700; background:var(--prayer-card-bg); color:var(--text-primary); border:1px solid var(--prayer-border); cursor:pointer; transition:transform .15s, box-shadow .15s; }
+.rjm-soft-btn:active { transform: scale(.97); }
+.rjm-soft-btn i, .rjm-soft-btn svg { color: var(--accent-gold); }
+
+/* Qibla */
+#qbDial { position:relative; width:min(78vw,300px); height:min(78vw,300px); margin:8px auto 0; }
+#qbRing, #qbNeedle { position:absolute; inset:0; width:100%; height:100%; transition: transform .12s linear; will-change: transform; }
+#qbDial.aligned { filter: drop-shadow(0 0 16px rgba(251,191,36,.6)); }
+#qbKaaba { position:absolute; top:-2px; left:50%; transform:translateX(-50%); width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px; background:#0d2318; border:1px solid rgba(251,191,36,.7); }
+
+/* Tasbeeh */
+#tsbWrap { position:relative; width:min(70vw,260px); height:min(70vw,260px); margin:18px auto 0; }
+#tsbBtn { position:absolute; inset:14px; border-radius:50%; border:none; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center;
+  background: radial-gradient(circle at 30% 25%, #22c55e, #15803d 55%, #064e3b); box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 2px 6px rgba(255,255,255,.25);
+  user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition: transform .08s; }
+#tsbBtn:active { transform: scale(.95); }
+#tsbCount { font-size:64px; font-weight:800; line-height:1; font-variant-numeric: tabular-nums; }
+#tsbProgress { transition: stroke-dashoffset .2s ease; }
+</style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
 
@@ -873,6 +908,20 @@
                 </div>
                 <i class="fas fa-chevron-right" style="color:var(--text-muted)"></i>
             </div>
+            <div onclick="qbOpen()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')qbOpen()" class="tool-card glass-panel rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:opacity-90 transition group border-l-4" style="border-left-color:var(--accent-green)">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full tool-card-icon-green flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-compass fa-lg"></i></div>
+                    <div><h3 class="font-bold tool-card-text-primary text-lg">Qibla Finder</h3><p class="text-xs tool-card-text-muted">Direction of the Kaaba</p></div>
+                </div>
+                <i class="fas fa-chevron-right" style="color:var(--text-muted)"></i>
+            </div>
+            <div onclick="tsbOpen()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')tsbOpen()" class="tool-card glass-panel rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:opacity-90 transition group border-l-4" style="border-left-color:var(--accent-gold)">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full tool-card-icon-amber flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-hands-praying fa-lg"></i></div>
+                    <div><h3 class="font-bold tool-card-text-primary text-lg">Digital Tasbeeh</h3><p class="text-xs tool-card-text-muted">Tap to count your dhikr</p></div>
+                </div>
+                <i class="fas fa-chevron-right" style="color:var(--text-muted)"></i>
+            </div>
             <!-- Mumtaz Hazrat AI card — full width -->
             <div onclick="mqOpen()" class="md:col-span-2 ai-tool-card rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:opacity-90 transition group" style="border-left:4px solid rgba(255,255,255,0.3)">
                 <div class="flex items-center gap-4">
@@ -911,6 +960,17 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8" id="prayerGrid"></div>
+                <div id="prayerExtras" class="-mt-4 mb-6 flex flex-wrap items-center gap-2">
+                    <span class="rjm-soft-btn" style="cursor:default"><i class="fas fa-sun"></i> Sunrise <strong id="sunriseTime">--:--</strong></span>
+                    <button type="button" class="rjm-soft-btn" onclick="shareTimings()"><i class="fab fa-whatsapp"></i> Share today's timings</button>
+                </div>
+                <div id="fridayBanner" class="jumma-block mb-6 p-4 rounded-2xl" style="display:none;align-items:center;justify-content:space-between;gap:12px;">
+                    <div>
+                        <div class="jumma-text font-bold flex items-center gap-2"><i class="fas fa-star-and-crescent"></i> Jumu'ah Mubarak</div>
+                        <div class="text-xs jumma-subtext mt-1">Aaj Juma hai. Surah Al-Kahf padhna mustahab hai.</div>
+                    </div>
+                    <button type="button" class="rjm-soft-btn flex-shrink-0" onclick="openKahf()"><i class="fas fa-book-open"></i> Read Al-Kahf</button>
+                </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="sehri-block p-5 rounded-2xl flex justify-between items-center">
                         <div class="text-center w-1/2 pr-4" style="border-right:1px solid var(--sehri-border)">
@@ -932,6 +992,21 @@
                             <div class="text-3xl font-bold jumma-text" id="jummaTimeDisplay">--:--</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dua of the Day -->
+        <section id="sec-dua" class="max-w-4xl mx-auto">
+            <div class="glass-panel rounded-3xl p-6 md:p-8 text-center relative overflow-hidden">
+                <div class="ayat-line absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+                <div class="mb-4 inline-block"><span class="ayat-badge text-[10px] font-bold uppercase tracking-[0.2em] border px-3 py-1 rounded-full">Dua of the Day</span></div>
+                <p id="duaArabic" class="arabic-text ayat-arabic text-2xl md:text-3xl font-bold mb-4 leading-loose" style="direction:rtl"></p>
+                <p id="duaMeaning" class="ayat-translation font-medium italic text-base"></p>
+                <div id="duaRef" class="ayat-ref text-xs mt-3 font-semibold tracking-wide"></div>
+                <div class="flex flex-wrap justify-center gap-2 mt-5">
+                    <button type="button" class="rjm-soft-btn" onclick="duaNext()"><i class="fas fa-shuffle"></i> Another dua</button>
+                    <button type="button" class="rjm-soft-btn" onclick="duaShare()"><i class="fas fa-share-nodes"></i> Share</button>
                 </div>
             </div>
         </section>
@@ -1003,6 +1078,103 @@
     <footer class="dynamic-footer text-slate-400 py-6 text-center mt-auto text-xs px-4">
         &copy; 2026 Raza Jumma Masjid. All Rights Reserved
     </footer>
+
+    <!-- ===== QIBLA MODAL ===== -->
+    <div id="qiblaModal" class="rjm-modal fixed inset-0 z-[85] hidden flex flex-col" role="dialog" aria-modal="true" aria-label="Qibla Finder">
+        <div class="rjm-head flex items-center justify-between px-5 py-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(212,160,23,0.18);border:1px solid rgba(212,160,23,0.35);"><i class="fas fa-compass text-amber-400 text-sm"></i></div>
+                <div>
+                    <h3 class="font-bold text-white text-base leading-tight" style="font-family:'Amiri',serif;">Qibla Finder</h3>
+                    <p id="qbSub" class="text-xs" style="color:rgba(167,243,208,0.7);">From Raza Jumma Masjid</p>
+                </div>
+            </div>
+            <button type="button" onclick="qbClose()" class="rjm-iconbtn" aria-label="Close Qibla Finder"><i class="fas fa-times text-sm"></i></button>
+        </div>
+        <div class="flex-grow overflow-y-auto px-5 py-6 text-center">
+            <div id="qbDial">
+                <svg id="qbRing" viewBox="0 0 300 300" aria-hidden="true">
+                    <circle cx="150" cy="150" r="147" fill="rgba(255,255,255,.03)" stroke="rgba(212,160,23,.55)" stroke-width="2"/>
+                    <circle cx="150" cy="150" r="72" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+                    <line x1="150.0" y1="9.0" x2="150.0" y2="26.0" stroke="rgba(251,191,36,.9)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="186.5" y1="13.8" x2="184.9" y2="19.6" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="220.5" y1="27.9" x2="217.5" y2="33.1" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="249.7" y1="50.3" x2="241.9" y2="58.1" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="272.1" y1="79.5" x2="266.9" y2="82.5" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="286.2" y1="113.5" x2="280.4" y2="115.1" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="291.0" y1="150.0" x2="274.0" y2="150.0" stroke="rgba(251,191,36,.9)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="286.2" y1="186.5" x2="280.4" y2="184.9" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="272.1" y1="220.5" x2="266.9" y2="217.5" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="249.7" y1="249.7" x2="241.9" y2="241.9" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="220.5" y1="272.1" x2="217.5" y2="266.9" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="186.5" y1="286.2" x2="184.9" y2="280.4" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="150.0" y1="291.0" x2="150.0" y2="274.0" stroke="rgba(251,191,36,.9)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="113.5" y1="286.2" x2="115.1" y2="280.4" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="79.5" y1="272.1" x2="82.5" y2="266.9" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="50.3" y1="249.7" x2="58.1" y2="241.9" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="27.9" y1="220.5" x2="33.1" y2="217.5" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="13.8" y1="186.5" x2="19.6" y2="184.9" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="9.0" y1="150.0" x2="26.0" y2="150.0" stroke="rgba(251,191,36,.9)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="13.8" y1="113.5" x2="19.6" y2="115.1" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="27.9" y1="79.5" x2="33.1" y2="82.5" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="50.3" y1="50.3" x2="58.1" y2="58.1" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="79.5" y1="27.9" x2="82.5" y2="33.1" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="113.5" y1="13.8" x2="115.1" y2="19.6" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <text x="150.0" y="46.0" fill="#f87171" font-size="18" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Noto Sans,sans-serif">N</text>
+            <text x="254.0" y="150.0" fill="#e2e8f0" font-size="18" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Noto Sans,sans-serif">E</text>
+            <text x="150.0" y="254.0" fill="#e2e8f0" font-size="18" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Noto Sans,sans-serif">S</text>
+            <text x="46.0" y="150.0" fill="#e2e8f0" font-size="18" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Noto Sans,sans-serif">W</text>
+                </svg>
+                <div id="qbNeedle" aria-hidden="true">
+                    <svg viewBox="0 0 300 300" style="width:100%;height:100%">
+                        <polygon points="150,46 163,150 137,150" fill="#fbbf24"/>
+                        <polygon points="150,254 160,150 140,150" fill="rgba(255,255,255,.2)"/>
+                        <circle cx="150" cy="150" r="10" fill="#0d2318" stroke="#fbbf24" stroke-width="3"/>
+                    </svg>
+                    <div id="qbKaaba">🕋</div>
+                </div>
+            </div>
+            <div id="qbBearing" class="text-white text-4xl font-bold mt-6" style="font-family:'Amiri',serif;">--°</div>
+            <div id="qbStatus" class="text-sm mt-1" style="color:rgba(167,243,208,.8);min-height:20px;" aria-live="polite">Qibla bearing from the masjid. Tap Start compass for a live arrow.</div>
+            <div class="flex flex-wrap justify-center gap-2 mt-6">
+                <button type="button" id="qbStartBtn" class="rjm-chip active" onclick="qbStartCompass()"><i class="fas fa-location-crosshairs"></i> Start compass</button>
+                <button type="button" class="rjm-chip" onclick="qbUseMyLocation()"><i class="fas fa-location-dot"></i> Use my location</button>
+            </div>
+            <p class="text-xs mt-6 max-w-xs mx-auto" style="color:rgba(255,255,255,.4);">Hold your phone flat, away from metal and magnets. Phone compasses can be off by a few degrees, so confirm with the direction of the masjid's mihrab.</p>
+        </div>
+    </div>
+
+    <!-- ===== TASBEEH MODAL ===== -->
+    <div id="tasbeehModal" class="rjm-modal fixed inset-0 z-[85] hidden flex flex-col" role="dialog" aria-modal="true" aria-label="Digital Tasbeeh">
+        <div class="rjm-head flex items-center justify-between px-5 py-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(212,160,23,0.18);border:1px solid rgba(212,160,23,0.35);"><i class="fas fa-hands-praying text-amber-400 text-sm"></i></div>
+                <div>
+                    <h3 class="font-bold text-white text-base leading-tight" style="font-family:'Amiri',serif;">Digital Tasbeeh</h3>
+                    <p class="text-xs" style="color:rgba(167,243,208,0.7);">Tap the circle to count</p>
+                </div>
+            </div>
+            <button type="button" onclick="tsbClose()" class="rjm-iconbtn" aria-label="Close Tasbeeh"><i class="fas fa-times text-sm"></i></button>
+        </div>
+        <div class="flex-grow overflow-y-auto px-5 py-5 text-center">
+            <div id="tsbChips" class="flex gap-2 overflow-x-auto pb-2" style="scrollbar-width:none;"></div>
+            <p id="tsbArabic" class="arabic-text text-4xl mt-4 leading-loose" style="color:#fbbf24;direction:rtl;"></p>
+            <p id="tsbMeaning" class="text-xs" style="color:rgba(167,243,208,.75);"></p>
+            <div id="tsbWrap">
+                <svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%;" aria-hidden="true">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="3"/>
+                    <circle id="tsbProgress" cx="50" cy="50" r="46" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-dasharray="289.03" stroke-dashoffset="289.03" transform="rotate(-90 50 50)"/>
+                </svg>
+                <button type="button" id="tsbBtn" onclick="event.stopPropagation();tsbTap()" aria-label="Count one"><span id="tsbCount">0</span></button>
+            </div>
+            <div id="tsbTargets" class="flex justify-center gap-2 mt-6"></div>
+            <div class="flex justify-center gap-8 mt-6">
+                <div><div class="text-2xl font-bold text-white" id="tsbRounds">0</div><div class="text-xs" style="color:rgba(167,243,208,.6);">Rounds</div></div>
+                <div><div class="text-2xl font-bold text-white" id="tsbTotal">0</div><div class="text-xs" style="color:rgba(167,243,208,.6);">Total taps</div></div>
+            </div>
+            <button type="button" class="rjm-chip mt-6" onclick="tsbReset()"><i class="fas fa-rotate-left"></i> Reset</button>
+        </div>
+    </div>
 
     <!-- ===== CONTACT PAGE MODAL ===== -->
     <div id="contactPageModal" class="fixed inset-0 z-[150] hidden flex flex-col" style="background:linear-gradient(160deg,#0f0c29 0%,#1e1b4b 50%,#0f0c29 100%);">
@@ -1382,7 +1554,10 @@
             { name: "Ramadan", gregorianStart: "Feb 18, 2026", gregorianEnd: "Mar 19, 2026", hijri: "1 Ramadan 1447", desc: "The holy month of fasting revealed in the Quran. Fast from dawn to sunset to purify our souls, practice self-discipline, and empathize with those who are hungry.", highlight: true },
             { name: "Eid al-Fitr", gregorianStart: "Mar 20, 2026", gregorianEnd: "Mar 22, 2026", hijri: "1 Shawwal 1447", desc: "It marks the successful completion of Ramadan. A day of joy, thanksgiving to Allah for the strength to fast, and giving Zakat al-Fitr to the poor." },
             { name: "Eid al-Adha", gregorianStart: "May 27, 2026", gregorianEnd: "May 31, 2026", hijri: "10 Dhul Hijjah 1447", desc: "Honors the willingness of Prophet Ibrahim (AS) to sacrifice his son Ismail (AS) as an act of obedience to God." },
-            { name: "Eid Milad-un-Nabi", gregorianStart: "Aug 26, 2026", gregorianEnd: "Aug 26, 2026", hijri: "12 Rabi' al-Awwal 1448", desc: "Celebrating the birth of Prophet Muhammad (PBUH), the mercy to all worlds." }
+            { name: "Eid Milad-un-Nabi", gregorianStart: "Aug 26, 2026", gregorianEnd: "Aug 26, 2026", hijri: "12 Rabi' al-Awwal 1448", desc: "Celebrating the birth of Prophet Muhammad (PBUH), the mercy to all worlds."},
+            { name: "Ramadan 2027", gregorianStart: "Feb 9, 2027", gregorianEnd: "Mar 10, 2027", hijri: "1 Ramadan 1448", desc: "The blessed month of fasting returns. These are the expected dates for India; the exact start depends on moon sighting, so please confirm with the masjid committee." },
+            { name: "Eid al-Fitr 2027", gregorianStart: "Mar 10, 2027", gregorianEnd: "Mar 12, 2027", hijri: "1 Shawwal 1448", desc: "Celebrates the end of Ramadan with Eid namaz, Sadaqah al-Fitr and time with family. Expected date; it is confirmed by sighting the Shawwal moon." },
+            { name: "Eid al-Adha 2027", gregorianStart: "May 17, 2027", gregorianEnd: "May 21, 2027", hijri: "10 Dhul Hijjah 1448", desc: "The festival of sacrifice, remembering Prophet Ibrahim (AS). Expected date for India; it is confirmed by sighting the Dhul Hijjah moon." }
         ];
 
         function getStatus(ev) {
@@ -1400,9 +1575,11 @@
                      || events[0];
 
         const status = getStatus(featured);
+        const _daysLeft = Math.ceil((new Date(featured.gregorianStart) - now) / 86400000);
+        const daysLeftTxt = (status === 'upcoming' && _daysLeft > 0) ? ` · in ${_daysLeft} day${_daysLeft === 1 ? '' : 's'}` : '';
         const statusBadge = status === 'running' 
             ? `<span class="running-badge"><span class="blink">●</span> Happening Now</span>` 
-            : status === 'upcoming' ? `<span style="background:#f59e0b" class="running-badge">⏳ Upcoming</span>` : '';
+            : status === 'upcoming' ? `<span style="background:#f59e0b" class="running-badge">⏳ Upcoming${daysLeftTxt}</span>` : '';
 
         const featEl = document.getElementById('featuredFestival');
         featEl.className = `rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden mb-6 ${status === 'running' ? 'event-running' : status === 'upcoming' ? 'event-upcoming' : 'event-ended bg-slate-700'}`;
@@ -1495,6 +1672,10 @@
         } else if(data.sehri) {
             sehriEl.innerText = data.sehri.s;
             if(sehriLabelEl) sehriLabelEl.innerText = `Sehri Ends • Ramadan ${data.sehriDay}`;
+        } else if(window._apiTimings && window._apiTimings.Fajr) {
+            // No Ramadan schedule entry for today: fall back to calculated Fajr (sehri ends)
+            sehriEl.innerText = formatTime12(window._apiTimings.Fajr);
+            if(sehriLabelEl) sehriLabelEl.innerText = 'Sehri Ends';
         }
 
         // --- IFTARI ---
@@ -1504,6 +1685,10 @@
         } else if(data.iftar) {
             iftarEl.innerText = data.iftar.i;
             if(iftarLabelEl) iftarLabelEl.innerText = `Iftar Start • Ramadan ${data.iftarDay}`;
+        } else if(window._apiTimings && window._apiTimings.Maghrib) {
+            // No Ramadan schedule entry for today: fall back to calculated Maghrib (iftar)
+            iftarEl.innerText = formatTime12(window._apiTimings.Maghrib);
+            if(iftarLabelEl) iftarLabelEl.innerText = 'Iftar Start';
         }
     }
 
@@ -3219,6 +3404,322 @@ async function mqLogTelegram(question, answer) {
         await sendToAllAdmins(msg);
     } catch(e){}
 }
+</script>
+<script id="rjm-enhancements-js">
+// ============================================================
+//  ENHANCEMENTS — Qibla, Tasbeeh, Dua of the Day, Share, Friday
+//  (additive: relies on existing globals but changes none of them
+//   except wrapping renderGrid to refresh the extra strip)
+// ============================================================
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const istNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+
+  function toast(msg) {
+    if (typeof Toastify === 'function') {
+      Toastify({
+        text: msg, duration: 2200, gravity: 'top', position: 'center',
+        style: { background: 'linear-gradient(135deg,#064e3b,#16a34a)', borderRadius: '12px' }
+      }).showToast();
+    }
+  }
+
+  async function shareText(text, preferWhatsApp) {
+    try {
+      if (navigator.share) { await navigator.share({ text }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    if (preferWhatsApp) { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); return; }
+    try { await navigator.clipboard.writeText(text); toast('Copied to clipboard'); }
+    catch (e) { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
+  }
+
+  // ---------- Modal plumbing: back button + Escape ----------
+  const onHide = {};
+  function openModal(id, name) {
+    $(id).classList.remove('hidden');
+    if (typeof pushModalState === 'function') pushModalState(name);
+  }
+  function hideModal(id) {
+    $(id).classList.add('hidden');
+    if (onHide[id]) onHide[id]();
+  }
+  function closeModal(id, name) {
+    if (history.state && history.state.modal === name) history.back(); // popstate hides it
+    else hideModal(id);
+  }
+  window.addEventListener('popstate', function () {
+    ['qiblaModal', 'tasbeehModal'].forEach((id) => {
+      const el = $(id);
+      if (el && !el.classList.contains('hidden')) hideModal(id);
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('qiblaModal').classList.contains('hidden')) closeModal('qiblaModal', 'qibla');
+    else if (!$('tasbeehModal').classList.contains('hidden')) closeModal('tasbeehModal', 'tasbeeh');
+  });
+
+  // ============================================================
+  //  QIBLA
+  // ============================================================
+  const KAABA = { lat: 21.422487, lon: 39.826206 };
+  const MASJID = { lat: 13.0537, lon: 77.5367, label: 'Raza Jumma Masjid' }; // same coordinates the prayer API uses
+  const DIRS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  let qbOrigin = MASJID;
+  let qbBearing = 0, qbHeading = null;
+  let qbRing = 0, qbNeedle = 0;      // unwrapped CSS angles
+  let qbListening = false, qbAligned = false, qbRaf = 0, qbNoSignal = 0;
+
+  function bearingTo(o, t) {
+    const r = Math.PI / 180;
+    const f1 = o.lat * r, f2 = t.lat * r, dl = (t.lon - o.lon) * r;
+    const y = Math.sin(dl) * Math.cos(f2);
+    const x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl);
+    return (Math.atan2(y, x) / r + 360) % 360;
+  }
+  function distanceKm(o, t) {
+    const r = Math.PI / 180, R = 6371;
+    const dLat = (t.lat - o.lat) * r, dLon = (t.lon - o.lon) * r;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(o.lat * r) * Math.cos(t.lat * r) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  const unwrap = (prev, next) => prev + (((next - prev + 540) % 360) - 180);
+
+  function qbRefreshText() {
+    qbBearing = bearingTo(qbOrigin, KAABA);
+    $('qbBearing').textContent = Math.round(qbBearing) + '° ' + DIRS[Math.round(qbBearing / 22.5) % 16];
+    $('qbSub').textContent = 'From ' + qbOrigin.label + ' · ' + Math.round(distanceKm(qbOrigin, KAABA)).toLocaleString('en-IN') + ' km to the Kaaba';
+  }
+
+  function qbDraw() {
+    qbRaf = 0;
+    const ringTarget = qbHeading === null ? 0 : -qbHeading;
+    const needleTarget = qbHeading === null ? qbBearing : qbBearing - qbHeading;
+    qbRing = unwrap(qbRing, ringTarget);
+    qbNeedle = unwrap(qbNeedle, needleTarget);
+    $('qbRing').style.transform = 'rotate(' + qbRing + 'deg)';
+    $('qbNeedle').style.transform = 'rotate(' + qbNeedle + 'deg)';
+    if (qbHeading === null) return;
+    const diff = ((qbBearing - qbHeading + 540) % 360) - 180; // + means Qibla is to your right
+    const aligned = Math.abs(diff) < 4;
+    $('qbDial').classList.toggle('aligned', aligned);
+    $('qbStatus').textContent = aligned
+      ? 'You are facing the Qibla ✓'
+      : 'Turn ' + Math.abs(Math.round(diff)) + '° to your ' + (diff > 0 ? 'right' : 'left');
+    if (aligned && !qbAligned && navigator.vibrate) navigator.vibrate(40);
+    qbAligned = aligned;
+  }
+  const qbSchedule = () => { if (!qbRaf) qbRaf = requestAnimationFrame(qbDraw); };
+
+  function qbOnOrientation(e) {
+    let h = null;
+    if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) h = e.webkitCompassHeading;       // iOS
+    else if ((e.absolute === true || e.type === 'deviceorientationabsolute') && e.alpha != null) h = (360 - e.alpha) % 360; // Android
+    if (h === null) return;
+    clearTimeout(qbNoSignal);
+    qbHeading = qbHeading === null ? h : (qbHeading + (((h - qbHeading + 540) % 360) - 180) * 0.35 + 360) % 360;
+    qbSchedule();
+  }
+
+  function qbStop() {
+    if (qbListening) {
+      window.removeEventListener('deviceorientationabsolute', qbOnOrientation, true);
+      window.removeEventListener('deviceorientation', qbOnOrientation, true);
+      qbListening = false;
+    }
+    clearTimeout(qbNoSignal);
+    qbHeading = null; qbAligned = false;
+    $('qbDial').classList.remove('aligned');
+  }
+  onHide.qiblaModal = qbStop;
+
+  window.qbOpen = function () {
+    openModal('qiblaModal', 'qibla');
+    qbRefreshText();
+    $('qbStatus').textContent = 'Qibla bearing from the masjid. Tap Start compass for a live arrow.';
+    qbSchedule();
+  };
+  window.qbClose = function () { closeModal('qiblaModal', 'qibla'); };
+
+  window.qbStartCompass = async function () {
+    const st = $('qbStatus');
+    try {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const res = await DeviceOrientationEvent.requestPermission(); // iOS needs a tap + permission
+        if (res !== 'granted') { st.textContent = 'Motion access was denied. Allow it in your browser settings to use the live compass.'; return; }
+      }
+    } catch (e) { st.textContent = 'Could not start the compass on this device.'; return; }
+    if (!qbListening) {
+      window.addEventListener('deviceorientationabsolute', qbOnOrientation, true);
+      window.addEventListener('deviceorientation', qbOnOrientation, true);
+      qbListening = true;
+    }
+    st.textContent = 'Looking for compass… move your phone in a figure 8 to calibrate.';
+    clearTimeout(qbNoSignal);
+    qbNoSignal = setTimeout(function () {
+      if (qbHeading === null) st.textContent = 'No compass sensor found. Turn so the top of your phone points North, then follow the arrow.';
+    }, 3000);
+  };
+
+  window.qbUseMyLocation = function () {
+    const st = $('qbStatus');
+    if (!navigator.geolocation) { st.textContent = 'Location is not available on this device. Using the masjid location.'; return; }
+    st.textContent = 'Getting your location…';
+    navigator.geolocation.getCurrentPosition(function (p) {
+      qbOrigin = { lat: p.coords.latitude, lon: p.coords.longitude, label: 'your location' };
+      qbRefreshText();
+      st.textContent = 'Qibla updated for your location.';
+      qbSchedule();
+    }, function () {
+      st.textContent = 'Location permission was denied. Still using the masjid location.';
+    }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 });
+  };
+
+  // ============================================================
+  //  TASBEEH
+  // ============================================================
+  const DHIKR = [
+    { en: 'SubhanAllah',      ar: 'سُبْحَانَ اللّٰهِ',        mean: 'Allah paak hai' },
+    { en: 'Alhamdulillah',    ar: 'الْحَمْدُ لِلّٰهِ',        mean: 'Tamam tareefen Allah ke liye hain' },
+    { en: 'Allahu Akbar',     ar: 'اللّٰهُ أَكْبَرُ',          mean: 'Allah sab se bada hai' },
+    { en: 'Astaghfirullah',   ar: 'أَسْتَغْفِرُ اللّٰهَ',      mean: 'Main Allah se maafi maangta hoon' },
+    { en: 'La ilaha illallah', ar: 'لَا إِلٰهَ إِلَّا اللّٰهُ', mean: "Allah ke siwa koi ma'bood nahi" },
+    { en: 'Durood',           ar: 'اللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ', mean: 'Ya Allah, Muhammad ﷺ par rehmat naazil farma' }
+  ];
+  const TARGETS = [33, 99, 100, 0]; // 0 = no limit
+  const TSB_KEY = 'rjm_tasbeeh_v1';
+  const CIRC = 289.03;
+  let tsb = { d: 0, target: 33, count: 0, rounds: 0, total: 0 };
+  try { Object.assign(tsb, JSON.parse(localStorage.getItem(TSB_KEY) || '{}')); } catch (e) {}
+  if (!DHIKR[tsb.d]) tsb.d = 0;
+  if (!TARGETS.includes(tsb.target)) tsb.target = 33;
+  const tsbSave = () => { try { localStorage.setItem(TSB_KEY, JSON.stringify(tsb)); } catch (e) {} };
+
+  function tsbBuild() {
+    $('tsbChips').innerHTML = DHIKR.map((d, i) =>
+      `<button type="button" class="rjm-chip" data-d="${i}" onclick="tsbSelect(${i})">${d.en}</button>`).join('');
+    $('tsbTargets').innerHTML = TARGETS.map((t) =>
+      `<button type="button" class="rjm-chip" data-t="${t}" onclick="tsbTarget(${t})">${t === 0 ? '∞' : t}</button>`).join('');
+  }
+  function tsbRender(showFull) {
+    const d = DHIKR[tsb.d];
+    $('tsbArabic').textContent = d.ar;
+    $('tsbMeaning').textContent = d.en + ' · ' + d.mean;
+    $('tsbCount').textContent = tsb.count;
+    $('tsbRounds').textContent = tsb.rounds;
+    $('tsbTotal').textContent = tsb.total;
+    document.querySelectorAll('#tsbChips .rjm-chip').forEach((b) => b.classList.toggle('active', +b.dataset.d === tsb.d));
+    document.querySelectorAll('#tsbTargets .rjm-chip').forEach((b) => b.classList.toggle('active', +b.dataset.t === tsb.target));
+    const frac = showFull ? 1 : (tsb.target ? tsb.count / tsb.target : 0);
+    $('tsbProgress').style.strokeDashoffset = CIRC * (1 - frac);
+  }
+
+  let wakeLock = null;
+  async function tsbWake() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
+  function tsbRelease() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; }
+  onHide.tasbeehModal = tsbRelease;
+
+  window.tsbOpen = function () { openModal('tasbeehModal', 'tasbeeh'); tsbRender(); tsbWake(); };
+  window.tsbClose = function () { closeModal('tasbeehModal', 'tasbeeh'); };
+  window.tsbSelect = function (i) { tsb.d = i; tsb.count = 0; tsbSave(); tsbRender(); };
+  window.tsbTarget = function (t) { tsb.target = t; tsb.count = 0; tsbSave(); tsbRender(); };
+  window.tsbReset = function () { tsb.count = 0; tsb.rounds = 0; tsb.total = 0; tsbSave(); tsbRender(); };
+  window.tsbTap = function () {
+    tsb.count++; tsb.total++;
+    let done = false;
+    if (tsb.target && tsb.count >= tsb.target) { tsb.rounds++; tsb.count = 0; done = true; }
+    if (navigator.vibrate) navigator.vibrate(done ? [70, 50, 70] : 12);
+    if (done) { toast('Round complete ✓  ' + tsb.target); setTimeout(() => tsbRender(), 350); }
+    tsbSave();
+    tsbRender(done);
+  };
+  tsbBuild();
+  tsbRender();
+
+  // ============================================================
+  //  DUA OF THE DAY (rotates daily, all from the Quran)
+  // ============================================================
+  const DUAS = [
+    { ar: 'رَبِّ زِدْنِي عِلْمًا', mean: 'Aye mere Rab, mere ilm mein izafa farma.', ref: 'Surah Ta-Ha: 114' },
+    { ar: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ', mean: 'Aye hamare Rab, hamein duniya mein bhi bhalai de aur aakhirat mein bhi bhalai de, aur hamein aag ke azaab se bacha.', ref: 'Surah Al-Baqarah: 201' },
+    { ar: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ', mean: 'Hamein Allah kaafi hai aur woh behtareen kaarsaaz hai.', ref: 'Surah Aal-e-Imran: 173' },
+    { ar: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', mean: 'Aye mere Rab, mera seena khol de aur mera kaam aasaan farma de.', ref: 'Surah Ta-Ha: 25-26' },
+    { ar: 'رَّبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا', mean: 'Aye mere Rab, un dono (walidain) par reham farma jaise unhon ne bachpan mein meri parwarish ki.', ref: 'Surah Al-Isra: 24' },
+    { ar: 'لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ', mean: "Tere siwa koi ma'bood nahi, tu paak hai, beshak main hi zulm karne walon mein se tha.", ref: 'Surah Al-Anbiya: 87' },
+    { ar: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً ۚ إِنَّكَ أَنتَ الْوَهَّابُ', mean: 'Aye hamare Rab, hidayat dene ke baad hamare dilon ko tedha na kar, aur apni taraf se hum par rahmat ata farma, beshak tu hi bahut ata karne wala hai.', ref: 'Surah Aal-e-Imran: 8' },
+    { ar: 'رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا', mean: 'Aye hamare Rab, hamein hamari biwiyon aur aulaad se aankhon ki thandak ata farma aur hamein parhezgaron ka imam bana.', ref: 'Surah Al-Furqan: 74' },
+    { ar: 'رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ', mean: 'Aye mere Rab, mujhe namaz qayam karne wala bana aur meri aulaad mein se bhi. Aye hamare Rab, meri dua qubool farma.', ref: 'Surah Ibrahim: 40' },
+    { ar: 'رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا', mean: 'Aye hamare Rab, agar hum bhool jayen ya khata kar baithen to hamein na pakadna.', ref: 'Surah Al-Baqarah: 286' },
+    { ar: 'رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرٍ فَقِيرٌ', mean: 'Aye mere Rab, jo bhi bhalai tu mujh par naazil farma de, main us ka mohtaaj hoon.', ref: 'Surah Al-Qasas: 24' },
+    { ar: 'رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ', mean: 'Aye hamare Rab, humne apni jaanon par zulm kiya. Agar tu hamein na bakhshe aur reham na farmaye to hum zaroor nuqsan uthane walon mein se ho jayenge.', ref: 'Surah Al-A\'raf: 23' }
+  ];
+  function duaDayIndex() {
+    const n = istNow();
+    return Math.floor((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) - Date.UTC(n.getFullYear(), 0, 0)) / 86400000);
+  }
+  let duaIdx = duaDayIndex() % DUAS.length;
+  function duaRender() {
+    const d = DUAS[duaIdx];
+    $('duaArabic').textContent = d.ar;
+    $('duaMeaning').textContent = '"' + d.mean + '"';
+    $('duaRef').textContent = '(' + d.ref + ')';
+  }
+  window.duaNext = function () { duaIdx = (duaIdx + 1) % DUAS.length; duaRender(); };
+  window.duaShare = function () {
+    const d = DUAS[duaIdx];
+    shareText(d.ar + '\n\n' + d.mean + '\n(' + d.ref + ')\n\n— Raza Jumma Masjid, Bengaluru');
+  };
+  duaRender();
+
+  // ============================================================
+  //  SHARE TIMINGS + SUNRISE + FRIDAY BANNER
+  // ============================================================
+  window.shareTimings = function () {
+    const cards = document.querySelectorAll('#prayerGrid .prayer-card');
+    if (!cards.length) { toast('Timings are still loading'); return; }
+    const icons = { Fajr: '🌅', Zohar: '☀️', Asr: '🌤️', Maghrib: '🌇', Isha: '🌙' };
+    const rows = [];
+    cards.forEach(function (c) {
+      const nameEl = c.querySelector('.uppercase');
+      const times = c.querySelectorAll('.text-base');
+      if (!nameEl || times.length < 2) return;
+      const name = nameEl.textContent.trim();
+      rows.push((icons[name] || '🕌') + ' ' + name + ' — Azan ' + times[0].textContent.trim() + ' | Jamaat ' + times[1].textContent.trim());
+    });
+    const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
+    const hijri = ($('hijriDate') || {}).textContent || '';
+    const jumma = ($('jummaTimeDisplay') || {}).textContent || '';
+    const lines = ['🕌 *Raza Jumma Masjid* — Ravetha Nagar, Bengaluru', '📅 ' + today];
+    if (hijri && hijri.indexOf('--') === -1 && hijri !== 'Loading...') lines.push('🌙 ' + hijri);
+    lines.push('', ...rows);
+    if (jumma && jumma.indexOf('--') === -1) lines.push('', "🕌 Jumu'ah Jamaat: " + jumma);
+    if (/^https?:/.test(location.href)) lines.push('', '🔗 ' + location.href.split('#')[0]);
+    shareText(lines.join('\n'), true);
+  };
+
+  window.openKahf = function () {
+    if (typeof openQuran !== 'function' || typeof readSurah !== 'function') return;
+    openQuran();
+    readSurah(18, 'Al-Kahf', 110);
+  };
+
+  function updateExtras() {
+    const t = window._lastApiTimings;
+    if (t && t.Sunrise && typeof formatTime12 === 'function') $('sunriseTime').textContent = formatTime12(t.Sunrise);
+    const fb = $('fridayBanner');
+    if (fb) fb.style.display = (istNow().getDay() === 5) ? 'flex' : 'none';
+  }
+  if (typeof renderGrid === 'function') {
+    const originalRenderGrid = renderGrid;
+    window.renderGrid = function () {
+      const out = originalRenderGrid.apply(this, arguments);
+      try { updateExtras(); } catch (e) {}
+      return out;
+    };
+  }
+  updateExtras();
+})();
+
 </script>
 </body>
 </html>
